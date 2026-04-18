@@ -310,9 +310,9 @@ Resultados:
 
 ## Troubleshooting
 
-### Build falha por variavel `VITE_*`
+### Build falha ou tela branca por variavel `VITE_*`
 
-Verifique se todas as variaveis do Firebase estao cadastradas na Vercel e no `.env` local.
+Verifique se todas as variaveis do Firebase estao cadastradas na Vercel e no `.env` local. Se a tela ficar azul/branca sem conteúdo, verifique o Console do Desenvolvedor (F12). O erro `auth/invalid-api-key` indica que as chaves do Firebase não foram propagadas corretamente para o ambiente de produção.
 
 ### `/api/process-audio` retorna erro 500
 

@@ -12,6 +12,11 @@ const firebaseConfig = {
     appId: import.meta.env.VITE_FIREBASE_APP_ID
 };
 
+// Validação básica para ajudar no debug de deploy
+if (!firebaseConfig.apiKey) {
+    console.error('ERRO: VITE_FIREBASE_API_KEY não foi encontrada. Verifique as variáveis de ambiente na Vercel.');
+}
+
 const app = initializeApp(firebaseConfig);
 
 export const auth = getAuth(app);
@@ -19,3 +24,4 @@ export const db = getFirestore(app);
 export const storage = getStorage(app);
 
 export default app;
+
