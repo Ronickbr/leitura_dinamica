@@ -142,9 +142,10 @@ const ReadingPage = () => {
             }
 
             navigate('/resultados', { state: { result } });
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error('Erro ao processar leitura:', err);
-            alert(`Erro ao processar leitura: ${err.message || 'Erro desconhecido'}`);
+            const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido';
+            alert(`Erro ao processar leitura: ${errorMessage}`);
         } finally {
             setProcessing(false);
         }
