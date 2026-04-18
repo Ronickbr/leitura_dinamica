@@ -15,20 +15,18 @@ O **Fluência Leitora PCM** foi desenvolvido para transformar o processo manual 
 
 ## 🚀 Tecnologias Utilizadas
 
-O projeto utiliza uma stack moderna e de alta performance para garantir rapidez e segurança:
+O projeto utiliza uma stack unificada em JavaScript/TypeScript para máxima performance e facilidade de deploy:
 
 ### **Frontend**
 - **React 19 & Vite**: Interface reativa de alta velocidade.
-- **TypeScript**: Garantia de robustez e segurança de tipos no código.
-- **Firebase (Auth & Firestore)**: Gestão de usuários e banco de dados real-time altamente escalável.
-- **Framer Motion**: Animações fluidas para uma experiência de usuário premium.
-- **Vanilla CSS (Glassmorphism)**: Estilização moderna com efeitos de transparência e desfoque.
+- **TypeScript**: Segurança de tipos e robustez.
+- **Firebase (Auth & Firestore)**: Autenticação e banco de dados real-time.
+- **Vanilla CSS (Glassmorphism)**: Estética moderna e fluida.
 
 ### **Backend**
-- **FastAPI (Python)**: Framework de alto desempenho para orquestração da IA e serviços de áudio.
-- **Groq Cloud (Whisper-large-v3)**: LDI (Large Language Model) especializado em áudio para transcrição ultra-rápida (STT).
-- **OpenRouter (GPT-4o-mini)**: Modelo de IA avançado para análise pedagógica detalhada.
-- **PyInstaller & PyStray**: Ferramentas para gerar o executável (.exe) com integração à bandeja do sistema (System Tray).
+- **Node.js & Express**: API robusta e escalável para orquestração de IA.
+- **Groq Cloud (Whisper-large-v3)**: Transcrição de áudio ultra-rápida (STT).
+- **OpenRouter (GPT-4o-mini)**: Diagnóstico pedagógico e análise inteligente.
 
 ---
 
@@ -36,11 +34,9 @@ O projeto utiliza uma stack moderna e de alta performance para garantir rapidez 
 
 ```text
 leitura_dinamica/
-├── backend/                # Módulo Servidor (Python)
-│   ├── app/                # Lógica central da aplicação
-│   ├── main.py             # Ponto de entrada da API e System Tray
-│   ├── pcm_utils.py        # Algoritmos de cálculo de PCM e níveis
-│   ├── build_exe.py        # Script de empacotamento para Windows
+├── backend/                # Módulo Servidor (Node.js)
+│   ├── index.js            # Ponto de entrada da API
+│   ├── pcmUtils.js         # Algoritmos de cálculo de PCM e níveis
 │   └── .env                # Configurações sensíveis (API Keys)
 ├── frontend/               # Módulo Cliente (React)
 │   ├── src/
@@ -49,13 +45,37 @@ leitura_dinamica/
 │   │   ├── components/     # UI reusable components
 │   │   └── services/       # Integração direta com Firebase
 │   └── dist/               # Build compilado do frontend
-├── unificar_build.py       # Script utilitário para unificação de módulos
+├── unificar_build.py       # Script utilitário
 └── README.md               # Documentação principal
 ```
 
 ---
 
-## �️ Novidades da Versão 1.2.0
+## 🛠️ Configuração do Ambiente (Stack JS)
+
+### 1. Backend (Node.js)
+Navegue até a pasta `backend` e configure o `.env`:
+```env
+GROQ_API_KEY=sua_chave
+OPENROUTER_API_KEY=sua_chave
+PORT=8000
+```
+Instale e execute:
+```bash
+npm install
+node index.js
+```
+
+### 2. Frontend (React)
+Navegue até a pasta `frontend` e configure o `.env` com suas chaves do Firebase:
+```bash
+npm install
+npm run dev
+```
+
+---
+
+## ️ Novidades da Versão 1.2.0
 
 - **Histórico Renovado**: Interface focada no aluno, facilitando a identificação de quem precisa de mais atenção.
 - **Gráficos Premium**: Sparklines suaves com gradientes dinâmicos que mudam de cor conforme o nível de fluência (Fase Inicial -> Fluente).
