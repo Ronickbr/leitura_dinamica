@@ -26,6 +26,7 @@ O sistema permite que professores:
 - gerem diagnostico pedagogico com IA;
 - acompanhem historico e evolucao diretamente pelo painel;
 - exportem relatórios completos em Excel filtrados;
+- exportem relatórios pedagógicos detalhados com diagnósticos de IA;
 - exportem datasets anonimizados para pesquisa academica e artigos cientificos.
 
 ## Stack Atual
@@ -281,7 +282,9 @@ Isso permite usar `BrowserRouter` com URLs limpas em vez de `HashRouter`.
 - correcao de erros de tipagem e lint que impediam o build de producao;
 - correcao no processamento de audio usando `toFile` para garantir compatibilidade com Groq;
 - implementacao da interface de Gerenciamento de Alunos (`StudentsManagementPage`);
-- implementacao de graficos de evolucao de desempenho no Historico.
+- implementacao de graficos de evolucao de desempenho no Historico;
+- implementacao da exportação de relatórios pedagógicos detalhados em Excel;
+- restrição de acesso ao sistema para contas autorizadas.
 
 ## Validacao Executada
 
