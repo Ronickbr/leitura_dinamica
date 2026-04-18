@@ -6,7 +6,7 @@ const formidable = require("formidable");
 const { processReadingAudio } = require("../backend/analysisService");
 
 const maxFileSizeInBytes = 25 * 1024 * 1024;
-const allowedAudioMimeTypes = new Set([
+const allowedAudioMimeTypes = [
   "audio/mpeg",
   "audio/mp3",
   "audio/mp4",
@@ -14,7 +14,8 @@ const allowedAudioMimeTypes = new Set([
   "audio/wav",
   "audio/webm",
   "video/webm",
-]);
+];
+
 
 function parseMultipartForm(req) {
   const uploadDir = path.join(os.tmpdir(), "leitura-uploads");
@@ -28,8 +29,9 @@ function parseMultipartForm(req) {
     keepExtensions: true,
     filter: ({ mimetype }) => {
       // Bloqueia uploads inesperados antes do arquivo chegar ao pipeline de IA.
-      return Boolean(mimetype && allowedAudioMimeTypes.has(mimetype));
+      return Boolean(mimetype && allowedAudioMimeTypes.some(type => mimetype.startsWith(type)));
     },
+
   });
 
   return new Promise((resolve, reject) => {

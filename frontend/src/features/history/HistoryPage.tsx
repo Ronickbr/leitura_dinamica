@@ -7,6 +7,7 @@ import {
     buildAnonymizedResearchDataset,
     downloadAnonymizedDatasetAsExcel,
 } from '../../lib/researchExport';
+import { downloadFullReportAsExcel } from '../../lib/reportExport';
 
 // Ícones simplificados
 const SearchIcon = () => <span>🔍</span>;
@@ -261,8 +262,16 @@ const HistoryPage = () => {
                         <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem' }}>Evolução da fluência leitora por estudante.</p>
                     </div>
                     <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-                        <button className="btn-primary" onClick={() => void handleExportAnonymizedDataset()} disabled={exporting}>
-                            <DownloadIcon /> {exporting ? 'Gerando Excel...' : 'Excel Anonimizado'}
+                        <button className="btn-primary" onClick={() => void downloadFullReportAsExcel(filteredEvaluations)}>
+                            <DownloadIcon /> Baixar Relatório
+                        </button>
+                        <button
+                            style={{ background: 'rgba(255,255,255,0.05)', color: 'white', border: '1px solid var(--glass-border)' }}
+                            className="btn-primary"
+                            onClick={() => void handleExportAnonymizedDataset()}
+                            disabled={exporting}
+                        >
+                            <DownloadIcon /> {exporting ? 'Gerando...' : 'Excel Anonimizado'}
                         </button>
                     </div>
                 </div>

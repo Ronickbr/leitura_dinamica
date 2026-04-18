@@ -24,7 +24,8 @@ O sistema permite que professores:
 - enviem o audio para transcricao;
 - calculem PCM e precisao automaticamente;
 - gerem diagnostico pedagogico com IA;
-- acompanhem historico e evolucao diretamente pelo painel.
+- acompanhem historico e evolucao diretamente pelo painel;
+- exportem relatórios completos em Excel filtrados;
 - exportem datasets anonimizados para pesquisa academica e artigos cientificos.
 
 ## Stack Atual

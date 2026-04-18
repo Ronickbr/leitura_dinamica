@@ -73,33 +73,58 @@ const ReadingPage = () => {
     }, [isRecording, stopRecording, timeLeft]);
 
     const startRecording = async () => {
+        console.log("Iniciando gravação...");
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            const mediaRecorder = new MediaRecorder(stream);
+
+            // Tenta mimetypes comuns, priorizando webm
+            const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+                ? 'audio/webm;codecs=opus'
+                : (MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : '');
+
+            console.log("MIME Type selecionado:", mimeType);
+
+            const mediaRecorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
             mediaRecorderRef.current = mediaRecorder;
             audioChunksRef.current = [];
-            mediaRecorder.ondataavailable = (e) => audioChunksRef.current.push(e.data);
+
+            mediaRecorder.ondataavailable = (e) => {
+                if (e.data.size > 0) {
+                    audioChunksRef.current.push(e.data);
+                }
+            };
+
             mediaRecorder.onstop = () => {
-                const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+                console.log("Gravação parada. Processando chunks...");
+                const finalMime = mediaRecorder.mimeType || 'audio/webm';
+                const audioBlob = new Blob(audioChunksRef.current, { type: finalMime });
+                console.log(`Blob gerado: ${audioBlob.size} bytes, tipo: ${audioBlob.type}`);
                 setAudioUrl(URL.createObjectURL(audioBlob));
                 setIsFinished(true);
             };
+
             mediaRecorder.start();
             setIsRecording(true);
             setTimeLeft(60);
-        } catch {
-            alert('Erro ao acessar o microfone.');
+        } catch (err) {
+            console.error('Erro ao acessar o microfone:', err);
+            alert('Erro ao acessar o microfone. Verifique as permissões.');
         }
     };
 
     const handleFinish = async () => {
         if (!audioUrl || !texto) return;
+        console.log("Iniciando processamento da leitura...");
         setProcessing(true);
         try {
             const audioBlob = await fetch(audioUrl).then(r => r.blob());
-            const result = await processAudio(audioBlob, texto.conteudo);
+            console.log("Audio blob recuperado, enviando para API...");
 
-            await saveAvaliacao({
+            const result = await processAudio(audioBlob, texto.conteudo);
+            console.log("API retornou sucesso:", result);
+
+            console.log("Salvando avaliação no banco de dados...");
+            const evaluationId = await saveAvaliacao({
                 alunoId: alunoId || '',
                 textoId: texto.id,
                 pcm: result.pcm,
@@ -110,9 +135,16 @@ const ReadingPage = () => {
                 metricasQualitativas: result.analysis.metricas_qualitativas
             });
 
+            if (evaluationId) {
+                console.log("Avaliação salva com ID:", evaluationId);
+            } else {
+                console.warn("Avaliação foi processada mas não pôde ser salva no banco.");
+            }
+
             navigate('/resultados', { state: { result } });
-        } catch {
-            alert('Erro ao processar leitura.');
+        } catch (err: any) {
+            console.error('Erro ao processar leitura:', err);
+            alert(`Erro ao processar leitura: ${err.message || 'Erro desconhecido'}`);
         } finally {
             setProcessing(false);
         }

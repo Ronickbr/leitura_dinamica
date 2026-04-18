@@ -15,7 +15,7 @@ const app = express();
 const port = Number(process.env.PORT || 8000);
 const maxFileSizeInBytes = 25 * 1024 * 1024;
 const uploadDir = path.join(os.tmpdir(), "leitura-uploads");
-const allowedAudioMimeTypes = new Set([
+const allowedAudioMimeTypes = [
   "audio/mpeg",
   "audio/mp3",
   "audio/mp4",
@@ -23,7 +23,8 @@ const allowedAudioMimeTypes = new Set([
   "audio/wav",
   "audio/webm",
   "video/webm",
-]);
+];
+
 const allowedOrigins = (process.env.CORS_ORIGINS || "http://localhost:5173")
   .split(",")
   .map((origin) => origin.trim())
@@ -46,14 +47,20 @@ const upload = multer({
     files: 1,
   },
   fileFilter: (req, file, callback) => {
-    // Aceita apenas formatos de audio suportados no navegador e no pipeline de IA.
-    if (!allowedAudioMimeTypes.has(file.mimetype)) {
-      return callback(new Error("Formato de audio nao suportado."));
+    console.log(`Recebendo arquivo: ${file.originalname} (${file.mimetype})`);
+
+    // Aceita se o tipo MIME começar com algum dos permitidos (ignora parâmetros como codecs)
+    const isAllowed = allowedAudioMimeTypes.some(type => file.mimetype.startsWith(type));
+
+    if (!isAllowed) {
+      console.error(`MimeType rejeitado: ${file.mimetype}`);
+      return callback(new Error(`Formato de audio "${file.mimetype}" nao suportado.`));
     }
 
     return callback(null, true);
   },
 });
+
 
 app.use(helmet());
 app.use(compression());
@@ -90,13 +97,16 @@ app.post("/api/process-audio", upload.single("file"), async (req, res) => {
   }
 
   try {
+    console.log(`Processando audio para texto: "${req.body.original_text?.substring(0, 30)}..."`);
     const result = await processReadingAudio({
       filePath: uploadedFile.path,
       originalText: req.body.original_text,
       filename: uploadedFile.originalname,
     });
 
+    console.log("Processamento concluido com sucesso");
     return res.json(result);
+
   } catch (error) {
     console.error("Erro no processamento:", error);
     fs.appendFileSync("api-errors.log", `${new Date().toISOString()} - Erro no processamento: ${error.stack}\n`);

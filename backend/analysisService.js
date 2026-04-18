@@ -94,19 +94,21 @@ async function getPedagogicalDiagnosis(openRouter, pcm, level, originalText, tra
   4. Recomende uma intervencao pratica que o professor possa aplicar em sala de aula.
 
   REGRAS DE RESPOSTA (JSON):
-  Retorne APENAS um objeto JSON no seguinte formato (sem explicacoes extras):
+  Retorne APENAS um objeto JSON no seguinte formato:
   {
     "diagnostico": "Maximo 3 linhas. Foque no comportamento leitor observado.",
     "intervencao": "Maximo 2 linhas. Uma atividade pratica e especifica.",
     "metricas_qualitativas": {
-      "leitura_precisa": boolean,
-      "leitura_silabada": boolean,
-      "boa_entonacao": boolean,
-      "interpretacao": boolean,
-      "pontuacao": boolean
+      "leitura_precisa": boolean (true se a precisao for alta e poucas palavras foram trocadas),
+      "leitura_silabada": boolean (true se o aluno ler pausadamente silaba por silaba),
+      "boa_entonacao": boolean (true se houver expressividade na leitura),
+      "interpretacao": boolean (true se a leitura sugerir compreensao do texto),
+      "pontuacao": boolean (true se respeitar virgulas e pontos)
     },
     "padrao_de_erro_detectado": "Descreva em poucas palavras o erro mais frequente."
   }
+
+  ATENCAO: Analise cuidadosamente a transcricao para preencher as 'metricas_qualitativas'. Por exemplo, se voce observar falta de pontuacao no diagnostico, marque 'pontuacao' como false. Se citar silabacao, marque 'leitura_silabada' como true.
   `;
 
   try {
@@ -151,7 +153,7 @@ async function processReadingAudio({ filePath, originalText, filename }) {
   }
 
   const { groq, openRouter } = createAIClients();
-
+  console.log(`Iniciando transcricao Groq para arquivo: ${filename}`);
   const transcriptionResponse = await groq.audio.transcriptions.create({
     file: await toFile(fs.createReadStream(filePath), filename || "audio.webm"),
     model: "whisper-large-v3",
@@ -160,9 +162,15 @@ async function processReadingAudio({ filePath, originalText, filename }) {
   });
 
   const transcription = transcriptionResponse.text || "";
+  console.log(`Transcricao concluida: "${transcription.substring(0, 50)}..."`);
+
   const metrics = calculatePCM(sanitizedOriginalText, transcription);
   const pcm = metrics.corretas;
   const level = getPerformanceLevel(pcm);
+
+  console.log(`Metricas: PCM=${pcm}, Nivel=${level}`);
+  console.log("Iniciando diagnostico OpenRouter...");
+
   const analysis = await getPedagogicalDiagnosis(
     openRouter,
     pcm,
@@ -170,6 +178,9 @@ async function processReadingAudio({ filePath, originalText, filename }) {
     sanitizedOriginalText,
     transcription,
   );
+
+  console.log("Diagnostico OpenRouter finalizado");
+
 
   return {
     filename: filename || "audio.webm",
