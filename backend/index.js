@@ -25,15 +25,25 @@ const allowedAudioMimeTypes = [
   "video/webm",
 ];
 
-const allowedOrigins = (process.env.CORS_ORIGINS || "http://localhost:5173")
+const configuredOrigins = (process.env.CORS_ORIGINS || "")
   .split(",")
   .map((origin) => origin.trim())
   .filter(Boolean);
+const localDevOriginPattern = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i;
 
 fs.mkdirSync(uploadDir, { recursive: true });
 
 function isAllowedOrigin(origin) {
-  return !origin || allowedOrigins.includes(origin);
+  if (!origin) {
+    return true;
+  }
+
+  if (configuredOrigins.length > 0) {
+    return configuredOrigins.includes(origin);
+  }
+
+  // Permite dev e preview locais sem precisar alinhar manualmente a porta do frontend.
+  return localDevOriginPattern.test(origin);
 }
 
 function sendError(res, statusCode, message) {

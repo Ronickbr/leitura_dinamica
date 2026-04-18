@@ -1,9 +1,24 @@
 import { auth } from '../lib/firebase';
 
-const configuredBaseUrl = (import.meta.env.VITE_API_BASE_URL || '/api').trim();
-const BASE_URL = configuredBaseUrl.endsWith('/')
-    ? configuredBaseUrl.slice(0, -1)
-    : configuredBaseUrl;
+function normalizeBaseUrl(baseUrl: string) {
+    return baseUrl.endsWith('/')
+        ? baseUrl.slice(0, -1)
+        : baseUrl;
+}
+
+function resolveBaseUrl() {
+    const configuredBaseUrl = import.meta.env.VITE_API_BASE_URL?.trim();
+
+    if (configuredBaseUrl) {
+        return normalizeBaseUrl(configuredBaseUrl);
+    }
+
+    // Em build/preview local nao existe o proxy do Vite, entao apontamos direto para a API.
+    const isLocalhost = ['localhost', '127.0.0.1'].includes(window.location.hostname);
+    return normalizeBaseUrl(isLocalhost ? 'http://localhost:8000/api' : '/api');
+}
+
+const BASE_URL = resolveBaseUrl();
 
 export const apiRequest = async (endpoint: string, options: RequestInit = {}) => {
     const user = auth.currentUser;
