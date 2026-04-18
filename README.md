@@ -1,4 +1,4 @@
-# Leitura
+# Leitura v1.3.7
 
 Plataforma de avaliacao de fluencia leitora com frontend React/Vite, persistencia em Firebase e processamento de audio via IA. O projeto foi refatorado para ter deploy compativel com a Vercel usando build estatico do frontend e funcoes serverless em `api/`.
 
