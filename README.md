@@ -1,4 +1,4 @@
-# Fluência Leitora PCM - Sistema de Avaliação com IA
+# Fluência Leitora PCM - v1.2.0 - Sistema de Avaliação com IA
 
 Sistema digital inteligente para automação de diagnóstico de fluência leitora (Palavras Corretas por Minuto - PCM), utilizando Inteligência Artificial para transcrição e diagnóstico pedagógico avançado.
 
