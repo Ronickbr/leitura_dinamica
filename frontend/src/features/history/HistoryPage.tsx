@@ -2,29 +2,54 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getAllAvaliacoes, type Avaliacao } from '../../services/evaluationsService';
 import { getAlunos, type Aluno } from '../../services/studentsService';
+import { getTextos, type Texto } from '../../services/textsService';
+import {
+    buildAnonymizedResearchDataset,
+    downloadAnonymizedDatasetAsExcel,
+} from '../../lib/researchExport';
 
 // Ícones simplificados
 const SearchIcon = () => <span>🔍</span>;
 const AwardIcon = () => <span>🏆</span>;
 const CalendarIcon = () => <span>📅</span>;
 const UserIcon = () => <span>👤</span>;
+const DownloadIcon = () => <span>📥</span>;
+
+interface AvaliacaoComAluno extends Avaliacao {
+    alunoNome: string;
+    turma: string;
+    serie: string;
+}
+
+interface AlunoAgrupado {
+    id: string;
+    nome: string;
+    turma: string;
+    serie: string;
+    history: AvaliacaoComAluno[];
+}
+
 const HistoryPage = () => {
-    const [avaliacoes, setAvaliacoes] = useState<any[]>([]);
+    const [avaliacoes, setAvaliacoes] = useState<AvaliacaoComAluno[]>([]);
     const [alunos, setAlunos] = useState<Aluno[]>([]);
+    const [textos, setTextos] = useState<Texto[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedTurma, setSelectedTurma] = useState('Todas');
     const [loading, setLoading] = useState(true);
+    const [exporting, setExporting] = useState(false);
     const navigate = useNavigate();
 
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const [evals, students] = await Promise.all([
+                const [evals, students, texts] = await Promise.all([
                     getAllAvaliacoes(),
-                    getAlunos()
+                    getAlunos(),
+                    getTextos()
                 ]);
 
                 setAlunos(students);
+                setTextos(texts);
 
                 const enriched = evals.map((ev: Avaliacao) => ({
                     ...ev,
@@ -43,6 +68,27 @@ const HistoryPage = () => {
         fetchData();
     }, []);
 
+    const handleExportAnonymizedDataset = async () => {
+        if (filteredEvaluations.length === 0) {
+            alert('Nao ha avaliacoes filtradas para exportar.');
+            return;
+        }
+
+        setExporting(true);
+
+        try {
+            const dataset = buildAnonymizedResearchDataset({
+                alunos,
+                avaliacoes: filteredEvaluations,
+                textos,
+            });
+
+            await downloadAnonymizedDatasetAsExcel(dataset);
+        } finally {
+            setExporting(false);
+        }
+    };
+
     const turmas = ['Todas', ...Array.from(new Set(alunos.map(a => a.turma).filter(Boolean)))].sort();
 
     const filteredEvaluations = avaliacoes.filter(ev => {
@@ -52,7 +98,7 @@ const HistoryPage = () => {
     });
 
     // Agrupa avaliações por aluno para mostrar o gráfico de evolução
-    const studentsMap = new Map<string, any>();
+    const studentsMap = new Map<string, AlunoAgrupado>();
     filteredEvaluations.forEach(ev => {
         if (!studentsMap.has(ev.alunoId)) {
             studentsMap.set(ev.alunoId, {
@@ -63,7 +109,10 @@ const HistoryPage = () => {
                 history: []
             });
         }
-        studentsMap.get(ev.alunoId).history.push(ev);
+        const groupedStudent = studentsMap.get(ev.alunoId);
+        if (groupedStudent) {
+            groupedStudent.history.push(ev);
+        }
     });
 
     const groupedStudents = Array.from(studentsMap.values()).map(student => ({
@@ -206,8 +255,20 @@ const HistoryPage = () => {
     return (
         <div className="animate-in" style={{ paddingBottom: '4rem' }}>
             <header style={{ marginBottom: '3rem' }}>
-                <h2 style={{ fontSize: '2.5rem', fontWeight: 800, marginBottom: '0.5rem' }}>Histórico de <span style={{ color: 'var(--primary)' }}>Desempenho</span></h2>
-                <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem' }}>Evolução da fluência leitora por estudante.</p>
+                <div style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem', alignItems: 'flex-start', flexWrap: 'wrap' }}>
+                    <div>
+                        <h2 style={{ fontSize: '2.5rem', fontWeight: 800, marginBottom: '0.5rem' }}>Histórico de <span style={{ color: 'var(--primary)' }}>Desempenho</span></h2>
+                        <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem' }}>Evolução da fluência leitora por estudante.</p>
+                    </div>
+                    <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+                        <button className="btn-primary" onClick={() => void handleExportAnonymizedDataset()} disabled={exporting}>
+                            <DownloadIcon /> {exporting ? 'Gerando Excel...' : 'Excel Anonimizado'}
+                        </button>
+                    </div>
+                </div>
+                <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '1rem', maxWidth: '860px' }}>
+                    A exportacao anonima remove nome, observacoes, transcricao bruta, diagnostico detalhado, professor responsavel e datas exatas, mantendo apenas indicadores agregados uteis para pesquisa academica.
+                </p>
             </header>
 
             {/* Sumário de Métricas */}

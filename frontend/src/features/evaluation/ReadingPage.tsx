@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getAlunoById, type Aluno } from '../../services/studentsService';
 import { getTextos, type Texto } from '../../services/textsService';
@@ -56,6 +56,13 @@ const ReadingPage = () => {
         fetchData();
     }, [alunoId]);
 
+    const stopRecording = useCallback(() => {
+        if (mediaRecorderRef.current && isRecording) {
+            mediaRecorderRef.current.stop();
+            setIsRecording(false);
+        }
+    }, [isRecording]);
+
     useEffect(() => {
         if (isRecording && timeLeft > 0) {
             timerRef.current = setInterval(() => setTimeLeft(prev => prev - 1), 1000);
@@ -63,7 +70,7 @@ const ReadingPage = () => {
             stopRecording();
         }
         return () => { if (timerRef.current) clearInterval(timerRef.current); };
-    }, [isRecording, timeLeft]);
+    }, [isRecording, stopRecording, timeLeft]);
 
     const startRecording = async () => {
         try {
@@ -80,15 +87,8 @@ const ReadingPage = () => {
             mediaRecorder.start();
             setIsRecording(true);
             setTimeLeft(60);
-        } catch (err) {
+        } catch {
             alert('Erro ao acessar o microfone.');
-        }
-    };
-
-    const stopRecording = () => {
-        if (mediaRecorderRef.current && isRecording) {
-            mediaRecorderRef.current.stop();
-            setIsRecording(false);
         }
     };
 
@@ -111,7 +111,7 @@ const ReadingPage = () => {
             });
 
             navigate('/resultados', { state: { result } });
-        } catch (error) {
+        } catch {
             alert('Erro ao processar leitura.');
         } finally {
             setProcessing(false);

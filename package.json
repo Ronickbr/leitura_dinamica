@@ -1,0 +1,39 @@
+{
+  "name": "leitura",
+  "private": true,
+  "version": "1.3.1",
+  "description": "Plataforma de avaliacao de fluencia leitora com frontend Vite e funcoes serverless na Vercel.",
+  "workspaces": [
+    "frontend"
+  ],
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "scripts": {
+    "dev": "concurrently \"npm run dev:api\" \"npm run dev:frontend\"",
+    "dev:api": "node backend/index.js",
+    "dev:frontend": "npm run dev --workspace frontend",
+    "build": "npm run build --workspace frontend",
+    "lint": "npm run lint --workspace frontend",
+    "preview": "npm run preview --workspace frontend",
+    "check": "npm run lint && npm run build",
+    "start": "node backend/index.js",
+    "vercel-build": "npm run build",
+    "deploy:preview": "vercel",
+    "deploy:prod": "vercel --prod"
+  },
+  "dependencies": {
+    "compression": "^1.8.1",
+    "cors": "^2.8.5",
+    "dotenv": "^17.4.2",
+    "express": "^5.1.0",
+    "formidable": "^3.5.4",
+    "helmet": "^8.1.0",
+    "multer": "^2.0.2",
+    "openai": "^6.4.0"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1",
+    "vercel": "^41.7.3"
+  }
+}

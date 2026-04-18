@@ -24,9 +24,10 @@ const LoginPage = () => {
         try {
             await signInWithEmailAndPassword(auth, email, password);
             navigate('/');
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error('Login error:', err);
-            const errorMsg = err.code === 'auth/invalid-credential'
+            const authError = err as { code?: string };
+            const errorMsg = authError.code === 'auth/invalid-credential'
                 ? 'E-mail ou senha incorretos.'
                 : 'Erro ao acessar o portal. Tente novamente.';
             setError(errorMsg);

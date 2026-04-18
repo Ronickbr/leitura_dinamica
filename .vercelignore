@@ -1,0 +1,5 @@
+backend/package-lock.json
+frontend/package-lock.json
+frontend/node_modules/
+backend/node_modules/
+**/dist-ssr/

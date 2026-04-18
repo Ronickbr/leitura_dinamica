@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { getAlunos } from '../../services/studentsService';
-import { getAllAvaliacoes } from '../../services/evaluationsService';
+import { getAllAvaliacoes, type Avaliacao } from '../../services/evaluationsService';
 
 // Ícones simplificados
 const UsersIcon = () => <span>👥</span>;
@@ -11,6 +11,24 @@ const MicIcon = () => <span>🎤</span>;
 const HistoryIcon = () => <span>🕒</span>;
 const LightbulbIcon = () => <span>💡</span>;
 
+interface RecentEvaluation extends Avaliacao {
+    alunoNome: string;
+}
+
+interface MetricCardProps {
+    title: string;
+    value: number;
+    icon: ReactNode;
+    color: string;
+    suffix?: string;
+}
+
+interface QuickLinkProps {
+    to: string;
+    label: string;
+    icon: ReactNode;
+}
+
 const DashboardPage = () => {
     const [stats, setStats] = useState({
         totalStudents: 0,
@@ -18,7 +36,7 @@ const DashboardPage = () => {
         avgPCM: 0,
         totalEvaluations: 0
     });
-    const [recentEvaluations, setRecentEvaluations] = useState<any[]>([]);
+    const [recentEvaluations, setRecentEvaluations] = useState<RecentEvaluation[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -161,7 +179,7 @@ const DashboardPage = () => {
     );
 };
 
-const MetricCard = ({ title, value, icon, color, suffix = "" }: any) => (
+const MetricCard = ({ title, value, icon, color, suffix = "" }: MetricCardProps) => (
     <div className="glass-card" style={{ borderLeft: `4px solid ${color}`, position: 'relative', overflow: 'hidden' }}>
         <div style={{ position: 'absolute', right: '-10px', top: '-10px', fontSize: '4rem', opacity: 0.05, transform: 'rotate(15deg)' }}>{icon}</div>
         <div style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>{title}</div>
@@ -172,7 +190,7 @@ const MetricCard = ({ title, value, icon, color, suffix = "" }: any) => (
     </div>
 );
 
-const QuickLink = ({ to, label, icon }: any) => (
+const QuickLink = ({ to, label, icon }: QuickLinkProps) => (
     <Link to={to} style={{
         display: 'flex',
         alignItems: 'center',

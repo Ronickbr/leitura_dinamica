@@ -1,9 +1,10 @@
 import React from 'react';
+import type { User } from 'firebase/auth';
 import Header from './Header';
 
 interface LayoutProps {
     children: React.ReactNode;
-    user: any;
+    user: User | null;
 }
 
 const Layout: React.FC<LayoutProps> = ({ children, user }) => {

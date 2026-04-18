@@ -1,8 +1,9 @@
 import { useNavigate, Link, useLocation } from 'react-router-dom';
+import type { User } from 'firebase/auth';
 import { auth } from '../../lib/firebase';
 
 interface HeaderProps {
-    user: any;
+    user: User | null;
 }
 
 const Header = ({ user }: HeaderProps) => {

@@ -1,6 +1,14 @@
 import { collection, query, where, getDocs, addDoc, orderBy, Timestamp } from 'firebase/firestore';
 import { db, auth } from '../lib/firebase';
 
+export interface MetricasQualitativas {
+    leitura_precisa: boolean;
+    leitura_silabada: boolean;
+    boa_entonacao: boolean;
+    interpretacao: boolean;
+    pontuacao: boolean;
+}
+
 export interface Avaliacao {
     id?: string;
     alunoId: string;
@@ -10,14 +18,8 @@ export interface Avaliacao {
     transcricao: string;
     diagnosticoIA: string;
     intervencaoIA: string;
-    metricasQualitativas?: {
-        leitura_precisa: boolean;
-        leitura_silabada: boolean;
-        boa_entonacao: boolean;
-        interpretacao: boolean;
-        pontuacao: boolean;
-    };
-    data: any;
+    metricasQualitativas?: MetricasQualitativas;
+    data: Timestamp | { seconds?: number; toDate?: () => Date } | null;
     professorId: string;
 }
 

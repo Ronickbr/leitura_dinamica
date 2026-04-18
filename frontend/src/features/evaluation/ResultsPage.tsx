@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
-import { getAvaliacaoById } from '../../services/evaluationsService';
+import { getAvaliacaoById, type Avaliacao, type MetricasQualitativas } from '../../services/evaluationsService';
 
 // Ícones simplificados
 const AwardIcon = () => <span>🏆</span>;
@@ -8,12 +8,41 @@ const AlertTriangleIcon = () => <span>⚠️</span>;
 const ChevronLeftIcon = () => <span>⬅️</span>;
 const DownloadIcon = () => <span>📥</span>;
 
+interface ResultadoAnalise {
+    diagnostico?: string;
+    intervencao?: string;
+    metricas_qualitativas?: MetricasQualitativas;
+    padrao_de_erro_detectado?: string;
+}
+
+interface ResultadoLeitura extends Partial<Avaliacao> {
+    pcm: number;
+    level?: string;
+    metrics?: {
+        precisao?: number;
+    };
+    analysis?: ResultadoAnalise;
+    metricasQualitativas?: MetricasQualitativas;
+    padraoDeErro?: string;
+}
+
+const qualitativeMetricLabels: Array<{
+    key: keyof MetricasQualitativas;
+    label: string;
+}> = [
+    { key: 'leitura_precisa', label: 'Leitura Precisa' },
+    { key: 'leitura_silabada', label: 'Silabação' },
+    { key: 'boa_entonacao', label: 'Entonação' },
+    { key: 'interpretacao', label: 'Interpretação' },
+    { key: 'pontuacao', label: 'Pontuação' }
+];
+
 const ResultsPage = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const { id } = useParams();
-
-    const [result, setResult] = useState<any>(location.state?.result || null);
+    const initialResult = (location.state as { result?: ResultadoLeitura } | null)?.result || null;
+    const [result, setResult] = useState<ResultadoLeitura | Avaliacao | null>(initialResult);
     const [loading, setLoading] = useState(!result && !!id);
 
     useEffect(() => {
@@ -26,7 +55,7 @@ const ResultsPage = () => {
             }
         };
         fetchResult();
-    }, [id]);
+    }, [id, result]);
 
     if (loading) {
         return (
@@ -45,13 +74,15 @@ const ResultsPage = () => {
         );
     }
 
+    const currentResult = result as ResultadoLeitura;
+
     // Adaptador de estrutura (caso venha do histórico ou da leitura direta)
-    const metrics = result.metrics || { precisao: result.precisao };
-    const analysis = result.analysis || {
-        diagnostico: result.diagnosticoIA,
-        intervencao: result.intervencaoIA,
-        metricas_qualitativas: result.metricasQualitativas,
-        padrao_de_erro_detectado: result.padraoDeErro
+    const metrics = currentResult.metrics || { precisao: currentResult.precisao };
+    const analysis = currentResult.analysis || {
+        diagnostico: currentResult.diagnosticoIA,
+        intervencao: currentResult.intervencaoIA,
+        metricas_qualitativas: currentResult.metricasQualitativas,
+        padrao_de_erro_detectado: currentResult.padraoDeErro
     };
 
     return (
@@ -81,7 +112,7 @@ const ResultsPage = () => {
                             fontWeight: 700,
                             border: '1px solid rgba(99, 102, 241, 0.2)'
                         }}>
-                            {result.level || 'Resultado'}
+                            {currentResult.level || 'Resultado'}
                         </div>
 
                         <div style={{ marginTop: '3rem', textAlign: 'left' }}>
@@ -117,13 +148,7 @@ const ResultsPage = () => {
                         </p>
 
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '1rem' }}>
-                            {[
-                                { key: 'leitura_precisa', label: 'Leitura Precisa' },
-                                { key: 'leitura_silabada', label: 'Silabação' },
-                                { key: 'boa_entonacao', label: 'Entonação' },
-                                { key: 'interpretacao', label: 'Interpretação' },
-                                { key: 'pontuacao', label: 'Pontuação' }
-                            ].map(item => {
+                            {qualitativeMetricLabels.map(item => {
                                 const val = analysis.metricas_qualitativas?.[item.key];
                                 return (
                                     <div key={item.key} style={{

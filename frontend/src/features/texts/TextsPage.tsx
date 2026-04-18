@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { getTextos, addTexto, updateTexto, deleteTexto, type Texto } from '../../services/textsService';
 
 // Ícones simplificados
@@ -16,21 +16,41 @@ const TextsManagementPage = () => {
     const [titulo, setTitulo] = useState('');
     const [conteudo, setConteudo] = useState('');
     const [serie, setSerie] = useState('');
-    const [numeroPalavras, setNumeroPalavras] = useState(0);
+
+    const numeroPalavras = useMemo(() => {
+        const trimmedContent = conteudo.trim();
+        return trimmedContent === '' ? 0 : trimmedContent.split(/\s+/).length;
+    }, [conteudo]);
 
     const fetchTextos = async () => {
         try {
             const data = await getTextos();
             setTextos(data);
-        } catch (err) { }
+        } catch (error) {
+            console.error('Erro ao carregar textos:', error);
+        }
     };
 
-    useEffect(() => { fetchTextos(); }, []);
-
     useEffect(() => {
-        const count = conteudo.trim() === '' ? 0 : conteudo.trim().split(/\s+/).length;
-        setNumeroPalavras(count);
-    }, [conteudo]);
+        let isMounted = true;
+
+        const loadTextos = async () => {
+            try {
+                const data = await getTextos();
+                if (isMounted) {
+                    setTextos(data);
+                }
+            } catch (error) {
+                console.error('Erro ao carregar textos:', error);
+            }
+        };
+
+        void loadTextos();
+
+        return () => {
+            isMounted = false;
+        };
+    }, []);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();

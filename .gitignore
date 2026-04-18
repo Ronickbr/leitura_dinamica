@@ -1,16 +1,9 @@
 # Node
 node_modules/
 dist/
+frontend/dist/
+.vercel/
 .env
-
-# Python
-__pycache__/
-.venv/
-.python-version
-backend/dist/
-backend/build/
-*.spec
-temp_*
 
 # OS
 .DS_Store
@@ -24,3 +17,4 @@ Thumbs.db
 !*.schema.json
 .env
 .env.*
+!.env.example

@@ -1,8 +1,9 @@
 import { auth } from '../lib/firebase';
 
-const BASE_URL = window.location.hostname === 'localhost' && window.location.port === '5173'
-    ? 'http://localhost:8000/api'
-    : '/api';
+const configuredBaseUrl = (import.meta.env.VITE_API_BASE_URL || '/api').trim();
+const BASE_URL = configuredBaseUrl.endsWith('/')
+    ? configuredBaseUrl.slice(0, -1)
+    : configuredBaseUrl;
 
 export const apiRequest = async (endpoint: string, options: RequestInit = {}) => {
     const user = auth.currentUser;
