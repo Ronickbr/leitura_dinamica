@@ -3,7 +3,7 @@ const os = require("os");
 const path = require("path");
 const formidable = require("formidable");
 
-const { processReadingAudio } = require("../backend/analysisService");
+const { processReadingAudio } = require("./lib/analysisService");
 
 const maxFileSizeInBytes = 25 * 1024 * 1024;
 const allowedAudioMimeTypes = [
