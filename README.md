@@ -1,349 +1,228 @@
-# Leitura v1.3.7
+# Leitura v2.0.0
 
-Plataforma de avaliacao de fluencia leitora com frontend React/Vite, persistencia em Firebase e processamento de audio via IA. O projeto foi refatorado para ter deploy compativel com a Vercel usando build estatico do frontend e funcoes serverless em `api/`.
+Plataforma de avaliação de fluência leitora com Next.js (App Router), persistência em Firebase e processamento de áudio via IA. O projeto foi refatorado para um monorepo Next.js unificado com API routes serverless.
 
-## Sumario
+## Sumário
 
-- [Visao Geral](#visao-geral)
+- [Visão Geral](#visão-geral)
 - [Stack Atual](#stack-atual)
-- [Banco de Dados Confirmado](#banco-de-dados-confirmado)
+- [Banco de Dados](#banco-de-dados)
 - [Estrutura do Projeto](#estrutura-do-projeto)
-- [Variaveis de Ambiente](#variaveis-de-ambiente)
-- [Scripts Disponiveis](#scripts-disponiveis)
+- [Variáveis de Ambiente](#variáveis-de-ambiente)
+- [Scripts Disponíveis](#scripts-disponíveis)
 - [Desenvolvimento Local](#desenvolvimento-local)
 - [Deploy na Vercel](#deploy-na-vercel)
-- [Mudancas Realizadas](#mudancas-realizadas)
-- [Validacao Executada](#validacao-executada)
-- [Troubleshooting](#troubleshooting)
+- [Migração Realizada](#migração-realizada)
 
-## Visao Geral
+## Visão Geral
 
 O sistema permite que professores:
 
 - gravem leituras de alunos;
-- enviem o audio para transcricao;
-- calculem PCM e precisao automaticamente;
-- gerem diagnostico pedagogico com IA;
-- acompanhem historico e evolucao diretamente pelo painel;
+- enviem o áudio para transcrição;
+- calculem PCM e precisão automaticamente;
+- gerem diagnóstico pedagógico com IA;
+- acompanhem histórico e evolução diretamente pelo painel;
 - exportem relatórios completos em Excel filtrados;
 - exportem relatórios pedagógicos detalhados com diagnósticos de IA;
-- exportem datasets anonimizados para pesquisa academica e artigos cientificos.
+- exportem datasets anonimizados para pesquisa acadêmica e artigos científicos.
 
 ## Stack Atual
 
-- **Frontend**: React 19, TypeScript, Vite 8, React Router 7
-- **Persistencia**: Firebase Auth, Firestore e Storage
-- **Backend local**: Node.js + Express
-- **Serverless para Vercel**: funcoes Node em `api/`
+- **Framework**: Next.js 16 (App Router)
+- **Frontend**: React 19, TypeScript
+- **Persistência**: Firebase Auth, Firestore e Storage
+- **API**: Next.js API Routes (serverless)
 - **IA**: Groq Whisper Large V3 + OpenRouter GPT-4o Mini
-- **Deploy**: Vercel com `vercel.json` na raiz
+- **Deploy**: Vercel
 
-## Banco de Dados Confirmado
+## Banco de Dados
 
-O banco usado pelo codigo atual foi verificado diretamente no projeto, sem depender de cache externo:
+O projeto utiliza **Firebase Firestore** como banco principal:
 
-- `frontend/src/lib/firebase.ts` inicializa **Firebase App**, **Auth**, **Firestore** e **Storage**
-- `frontend/src/services/studentsService.ts` grava e le a colecao `alunos`
-- `frontend/src/services/textsService.ts` grava e le a colecao `textos`
-- `frontend/src/services/evaluationsService.ts` grava e le a colecao `avaliacoes`
-
-Conclusao: o projeto atual usa **Firestore** como banco principal. Nao ha integracao ativa com PostgreSQL, MySQL, Prisma, Supabase ou outro banco na trilha principal de deploy.
+- `lib/firebase.ts` inicializa Firebase App, Auth, Firestore e Storage
+- `lib/services.ts` gerencia a coleção `alunos`
+- `lib/textsService.ts` gerencia a coleção `textos`
+- `lib/evaluationsService.ts` gerencia a coleção `avaliacoes`
 
 ## Estrutura do Projeto
 
 ```text
 leitura/
-├── api/                      # Funcoes serverless usadas pela Vercel
-│   ├── health.js
-│   └── process-audio.js
-├── backend/                  # Servidor local para desenvolvimento
-│   ├── analysisService.js
-│   ├── index.js
-│   └── pcmUtils.js
-├── frontend/                 # Aplicacao React/Vite
-│   ├── public/
-│   ├── src/
-│   ├── package.json
-│   └── vite.config.ts
-├── .env.example              # Mapa central de variaveis
-├── .vercelignore             # Exclusoes do bundle de deploy
-├── package.json              # Scripts e dependencias canonicas
-├── package-lock.json         # Lockfile unificado
-├── vercel.json               # Configuracao oficial da Vercel
+├── app/                      # Next.js App Router
+│   ├── api/                  # API Routes (serverless)
+│   │   ├── health/
+│   │   └── process-audio/
+│   ├── (auth)/login/         # Página de login
+│   ├── evaluations/          # Avaliações
+│   ├── students/             # Gerenciamento de alunos
+│   ├── texts/                # Biblioteca de textos
+│   ├── history/              # Histórico de avaliações
+│   ├── components/           # Componentes compartilhados
+│   ├── layout.tsx            # Layout principal
+│   ├── page.tsx              # Dashboard
+│   └── globals.css           # Estilos globais
+├── lib/                      # Serviços e utilitários
+│   ├── firebase.ts           # Configuração Firebase
+│   ├── auth.ts               # Autenticação
+│   ├── services.ts           # CRUD alunos
+│   ├── textsService.ts       # CRUD textos
+│   ├── evaluationsService.ts # Avaliações + processAudio
+│   ├── analysisService.ts    # IA (Groq + OpenRouter)
+│   └── pcmUtils.ts           # Utilitários PCM
+├── docs/                     # Documentação
+├── .env                      # Variáveis de ambiente
+├── .env.example              # Template de variáveis
+├── next.config.ts            # Configuração Next.js
+├── package.json              # Scripts e dependências
+├── tsconfig.json             # Configuração TypeScript
+├── vercel.json               # Configuração Vercel
 └── README.md
 ```
 
-## Variaveis de Ambiente
+## Variáveis de Ambiente
 
 Copie `.env.example` para `.env` em ambiente local:
 
 ```bash
-# Copia o arquivo de exemplo para o ambiente local
 Copy-Item .env.example .env
 ```
 
-### Frontend
+### Frontend (NEXT_PUBLIC_*)
 
-| Variavel | Obrigatoria | Descricao |
+| Variável | Obrigatória | Descrição |
 | --- | --- | --- |
-| `VITE_FIREBASE_API_KEY` | Sim | Chave publica do projeto Firebase |
-| `VITE_FIREBASE_AUTH_DOMAIN` | Sim | Dominio de autenticacao do Firebase |
-| `VITE_FIREBASE_PROJECT_ID` | Sim | ID do projeto Firebase |
-| `VITE_FIREBASE_STORAGE_BUCKET` | Sim | Bucket do Storage |
-| `VITE_FIREBASE_MESSAGING_SENDER_ID` | Sim | Sender ID do Firebase |
-| `VITE_FIREBASE_APP_ID` | Sim | App ID do Firebase |
-| `VITE_API_BASE_URL` | Nao | Base da API; em producao use `/api` |
+| `NEXT_PUBLIC_FIREBASE_API_KEY` | Sim | Chave pública do projeto Firebase |
+| `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN` | Sim | Domínio de autenticação do Firebase |
+| `NEXT_PUBLIC_FIREBASE_PROJECT_ID` | Sim | ID do projeto Firebase |
+| `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET` | Sim | Bucket do Storage |
+| `NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID` | Sim | Sender ID do Firebase |
+| `NEXT_PUBLIC_FIREBASE_APP_ID` | Sim | App ID do Firebase |
 
 ### Backend / Serverless
 
-| Variavel | Obrigatoria | Descricao |
+| Variável | Obrigatória | Descrição |
 | --- | --- | --- |
-| `GROQ_API_KEY` | Sim | Chave para transcricao de audio |
-| `OPENROUTER_API_KEY` | Sim | Chave para analise pedagogica |
-| `OPENROUTER_SITE_URL` | Nao | URL publica enviada no header da OpenRouter |
-| `OPENROUTER_APP_NAME` | Nao | Nome da aplicacao enviado no header da OpenRouter |
+| `GROQ_API_KEY` | Sim | Chave para transcrição de áudio |
+| `OPENROUTER_API_KEY` | Sim | Chave para análise pedagógica |
+| `OPENROUTER_SITE_URL` | Não | URL pública enviada no header da OpenRouter |
+| `OPENROUTER_APP_NAME` | Não | Nome da aplicação enviado no header da OpenRouter |
 
-## Anonimizacao para Pesquisa
+## Scripts Disponíveis
 
-O historico agora possui exportacao anonima em Excel para uso em pesquisas e publicacoes.
-
-O dataset exportado:
-
-- substitui IDs reais por codigos anonimizados deterministas;
-- remove nome do aluno, observacoes e professor responsavel;
-- remove transcricao bruta, diagnostico textual da IA e intervencao textual da IA;
-- reduz datas para periodo de referencia no formato `YYYY-MM`;
-- preserva apenas indicadores quantitativos e qualitativos uteis para analise academica.
-
-Campos preservados no dataset anonimo:
-
-- `participante_id`
-- `avaliacao_id`
-- `texto_id`
-- `texto_serie`
-- `turma_id`
-- `serie`
-- `periodo_referencia`
-- `pcm`
-- `precisao`
-- `possui_diagnostico_informado`
-- metricas qualitativas da leitura
-- tamanho da transcricao em caracteres
-
-### Observacoes para a Vercel
-
-- Variaveis `VITE_*` precisam estar configuradas no projeto da Vercel antes do build.
-- Variaveis sem prefixo `VITE_` ficam apenas no servidor.
-- `VITE_API_BASE_URL` pode ficar vazia ou como `/api` em producao.
-- O endpoint `/api/health` ajuda a validar se as chaves privadas foram carregadas.
-
-## Scripts Disponiveis
-
-Todos os scripts oficiais agora ficam na raiz:
-
-| Comando | Descricao |
+| Comando | Descrição |
 | --- | --- |
-| `npm install` | Instala dependencias da raiz e do workspace `frontend` |
-| `npm run dev` | Sobe backend local em `:8000` e frontend Vite em `:5173` |
-| `npm run build` | Gera o build de producao do frontend |
-| `npm run lint` | Executa ESLint no frontend |
-| `npm run check` | Executa `lint` + `build` |
-| `npm run preview` | Abre preview do build do frontend |
-| `npm run start` | Inicia apenas a API local em Node/Express |
+| `npm run dev` | Inicia o servidor de desenvolvimento em `:3000` |
+| `npm run build` | Gera o build de produção |
+| `npm run start` | Inicia o servidor de produção |
+| `npm run lint` | Executa ESLint |
 | `npm run deploy:preview` | Dispara deploy preview via Vercel CLI |
-| `npm run deploy:prod` | Dispara deploy de producao via Vercel CLI |
+| `npm run deploy:prod` | Dispara deploy de produção via Vercel CLI |
 
 ## Desenvolvimento Local
 
-### 1. Instalar dependencias
+### 1. Instalar dependências
 
 ```bash
-# Instala tudo a partir da raiz
 npm install
 ```
 
 ### 2. Configurar ambiente
 
 ```bash
-# Cria o arquivo local de variaveis
 Copy-Item .env.example .env
 ```
 
 Preencha o `.env` com:
-
-- credenciais do Firebase;
+- credenciais do Firebase (prefixo `NEXT_PUBLIC_*`);
 - `GROQ_API_KEY`;
 - `OPENROUTER_API_KEY`.
 
 ### 3. Rodar o projeto
 
 ```bash
-# Sobe frontend e backend local juntos
 npm run dev
 ```
 
-Ambientes locais esperados:
-
-- frontend: `http://localhost:5173`
-- backend local: `http://localhost:8000`
-- healthcheck: `http://localhost:8000/api/health`
+O projeto estará disponível em `http://localhost:3000`.
 
 ### 4. Validar antes de subir
 
 ```bash
-# Replica a checagem usada no fluxo de deploy
-npm run check
+npm run build
 ```
 
 ## Deploy na Vercel
 
-### Arquivos oficiais de deploy
-
-- `package.json`
-- `package-lock.json`
-- `vercel.json`
-- `.env.example`
-- `.vercelignore`
-
 ### O que a Vercel vai fazer
 
 1. executar `npm install` na raiz;
-2. instalar o workspace `frontend`;
-3. executar `npm run build`;
-4. publicar `frontend/dist`;
-5. disponibilizar as funcoes `api/health.js` e `api/process-audio.js`.
+2. executar `npm run build`;
+3. publicar `.next/`;
+4. disponibilizar as API routes `app/api/health` e `app/api/process-audio`.
 
-### Configuracao recomendada no painel
+### Configuração no painel da Vercel
 
-- **Framework Preset**: `Other`
-- **Root Directory**: raiz do repositorio
+- **Framework Preset**: `Next.js`
+- **Root Directory**: raiz do repositório
 - **Install Command**: `npm install`
 - **Build Command**: `npm run build`
-- **Output Directory**: `frontend/dist`
 
-### Configurar variaveis na Vercel
+### Variáveis na Vercel
 
 Adicione no painel do projeto:
 
 ```env
 # Frontend
-VITE_FIREBASE_API_KEY=
-VITE_FIREBASE_AUTH_DOMAIN=
-VITE_FIREBASE_PROJECT_ID=
-VITE_FIREBASE_STORAGE_BUCKET=
-VITE_FIREBASE_MESSAGING_SENDER_ID=
-VITE_FIREBASE_APP_ID=
-VITE_API_BASE_URL=/api
+NEXT_PUBLIC_FIREBASE_API_KEY=
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=
+NEXT_PUBLIC_FIREBASE_APP_ID=
 
 # Backend
 GROQ_API_KEY=
 OPENROUTER_API_KEY=
-OPENROUTER_SITE_URL=https://SEU-DOMINIO
-OPENROUTER_APP_NAME=Fluencia Leitora
+OPENROUTER_SITE_URL=https://seu-dominio.vercel.app
+OPENROUTER_APP_NAME=Fluência Leitora
 ```
 
 ### Deploy via CLI
 
 ```bash
-# Faz login na Vercel
-npx vercel login
-
 # Cria ou atualiza um deploy preview
 npm run deploy:preview
 
-# Publica em producao
+# Publica em produção
 npm run deploy:prod
 ```
 
-### Rewrites configurados
+## Migração Realizada
 
-O `vercel.json` ja contem rewrite para SPA:
+Esta versão (v2.0.0) trouxe uma refatoração significativa:
 
-- rotas do frontend sem extensao fisica voltam para `index.html`;
-- rotas `api/*` continuam indo para funcoes serverless;
-- assets estaticos nao sao interceptados.
-
-Isso permite usar `BrowserRouter` com URLs limpas em vez de `HashRouter`.
-
-## Mudancas Realizadas
-
-- unificacao da configuracao oficial de deploy na raiz;
-- criacao de `package.json` raiz com workspaces e scripts canonicos;
-- criacao de `vercel.json` com `buildCommand`, `outputDirectory`, `functions` e `rewrites`;
-- criacao de `.env.example` centralizado;
-- criacao de `.vercelignore` para excluir codigo fora da trilha de deploy;
-- extracao da logica de analise para `backend/analysisService.js`;
-- criacao das funcoes serverless `api/health.js` e `api/process-audio.js`;
-- refatoracao do backend local para validacao de upload, CORS e limpeza de arquivos temporarios;
-- migracao do frontend de `HashRouter` para `BrowserRouter`;
-- remocao do acoplamento do frontend com `http://localhost:8000/api`;
-- adicao de proxy local no `vite.config.ts`;
-- remocao dos lockfiles fragmentados e geracao de `package-lock.json` unificado;
-- correcao de erros de tipagem e lint que impediam o build de producao;
-- correcao no processamento de audio usando `toFile` para garantir compatibilidade com Groq;
-- implementacao da interface de Gerenciamento de Alunos (`StudentsManagementPage`);
-- implementacao de graficos de evolucao de desempenho no Historico;
-- implementacao da exportação de relatórios pedagógicos detalhados em Excel;
-- restrição de acesso ao sistema para contas autorizadas.
-
-## Validacao Executada
-
-Validacoes feitas localmente apos a refatoracao:
-
-```bash
-# Instala dependencias e gera lockfile unificado
-npm install
-
-# Valida lint + build de producao
-npm run check
-
-# Verifica o endpoint de saude do servidor local
-Invoke-RestMethod http://localhost:8000/api/health | ConvertTo-Json -Depth 4
-```
-
-Resultados:
-
-- `npm install`: concluido com sucesso;
-- `npm run check`: concluido com sucesso;
-- `vite build`: concluido com sucesso;
-- `GET /api/health`: respondendo corretamente no servidor local.
+- **Remoção**: pastas `frontend/` (Vite) e `backend/` (Express) separadas
+- **Unificação**: tudo теперь está no Next.js App Router
+- **API Routes**: `/api/health` e `/api/process-audio` agora são Next.js API routes
+- **Serviços**: todos os serviços movidos para `lib/`
+- **Layout**: navegação integrada no layout do Next.js
+- **Firebase**: configuração modernizada para Next.js
 
 ## Troubleshooting
 
-### Build falha ou tela branca por variavel `VITE_*`
+### Build falha ou tela branca
 
-Verifique se todas as variaveis do Firebase estao cadastradas na Vercel e no `.env` local. Se a tela ficar azul/branca sem conteúdo, verifique o Console do Desenvolvedor (F12). O erro `auth/invalid-api-key` indica que as chaves do Firebase não foram propagadas corretamente para o ambiente de produção.
+Verifique se todas as variáveis do Firebase estão cadastradas na Vercel e no `.env` local.
 
 ### `/api/process-audio` retorna erro 500
 
 Confirme:
-
 - `GROQ_API_KEY` configurada;
 - `OPENROUTER_API_KEY` configurada;
-- formato do audio suportado;
+- formato do áudio suportado;
 - tamanho do arquivo abaixo de 25 MB.
 
-### Rotas do frontend quebram ao atualizar a pagina
+### Auth/invalid-api-key no build
 
-Confirme se o deploy esta usando o `vercel.json` da raiz. O rewrite para `index.html` precisa estar ativo.
-
-### O projeto sobe localmente, mas a API nao responde
-
-Teste:
-
-```bash
-# Valida se o backend local subiu corretamente
-Invoke-RestMethod http://localhost:8000/api/health | ConvertTo-Json -Depth 4
-```
-
-### Existe algum backend legado ainda no repositorio?
-
-Nao. O codigo Python legado e os utilitarios antigos foram removidos para deixar o repositorio alinhado apenas ao fluxo atual em React, Node local e Vercel Functions.
-
-## Manutencao Futura
-
-- mantenha novos scripts e configuracoes sempre na raiz;
-- use `npm run check` antes de cada deploy;
-- nao reintroduza URLs fixas de `localhost` no frontend;
-- preserve `api/` como camada serverless oficial;
-- se houver troca de banco ou autenticacao, atualize primeiro `.env.example` e este README.
+O Next.js tenta inicializar o Firebase durante o build estático. Use a verificação `typeof window !== 'undefined'` no `lib/firebase.ts` para evitar isso.
