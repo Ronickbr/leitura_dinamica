@@ -126,6 +126,7 @@ export default function EvaluationDetailsPage() {
                         <h3 style={{ fontSize: '1rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>Aluno & Texto</h3>
                         <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                             <li><span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Nome:</span> <strong>{aluno?.nome || 'Desconhecido'}</strong></li>
+                            <li><span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Série:</span> {aluno?.serie || '-'}</li>
                             <li><span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Turma:</span> {aluno?.turma || '-'}</li>
                         </ul>
                     </div>
@@ -134,25 +135,35 @@ export default function EvaluationDetailsPage() {
                         <div className="glass-card" style={{ padding: '1.5rem' }}>
                             <h3 style={{ fontSize: '1rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>Métricas Qualitativas</h3>
                             <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.8rem', fontSize: '0.9rem' }}>
-                                <li style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                <li style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                     <span>Leitura Precisa</span>
-                                    <span>{avaliacao.metricasQualitativas.leitura_precisa ? '✅' : '❌'}</span>
+                                    {avaliacao.metricasQualitativas.leitura_precisa
+                                        ? <span style={{ color: 'var(--success)', fontWeight: 700 }}>Sim ✅</span>
+                                        : <span style={{ color: 'var(--accent)', fontWeight: 700 }}>Não ❌</span>}
                                 </li>
-                                <li style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                <li style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                     <span>Leitura Silabada</span>
-                                    <span>{avaliacao.metricasQualitativas.leitura_silabada ? '✅' : '❌'}</span>
+                                    {avaliacao.metricasQualitativas.leitura_silabada
+                                        ? <span style={{ color: 'var(--warning)', fontWeight: 700 }}>Sim ⚠️</span>
+                                        : <span style={{ color: 'var(--success)', fontWeight: 700 }}>Não ✅</span>}
                                 </li>
-                                <li style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                <li style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                     <span>Boa Entonação</span>
-                                    <span>{avaliacao.metricasQualitativas.boa_entonacao ? '✅' : '❌'}</span>
+                                    {avaliacao.metricasQualitativas.boa_entonacao
+                                        ? <span style={{ color: 'var(--success)', fontWeight: 700 }}>Sim ✅</span>
+                                        : <span style={{ color: 'var(--accent)', fontWeight: 700 }}>Não ❌</span>}
                                 </li>
-                                <li style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                <li style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                     <span>Interpretação</span>
-                                    <span>{avaliacao.metricasQualitativas.interpretacao ? '✅' : '❌'}</span>
+                                    {avaliacao.metricasQualitativas.interpretacao
+                                        ? <span style={{ color: 'var(--success)', fontWeight: 700 }}>Sim ✅</span>
+                                        : <span style={{ color: 'var(--accent)', fontWeight: 700 }}>Não ❌</span>}
                                 </li>
-                                <li style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                <li style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                     <span>Pontuação</span>
-                                    <span>{avaliacao.metricasQualitativas.pontuacao ? '✅' : '❌'}</span>
+                                    {avaliacao.metricasQualitativas.pontuacao
+                                        ? <span style={{ color: 'var(--success)', fontWeight: 700 }}>Sim ✅</span>
+                                        : <span style={{ color: 'var(--accent)', fontWeight: 700 }}>Não ❌</span>}
                                 </li>
                             </ul>
                         </div>

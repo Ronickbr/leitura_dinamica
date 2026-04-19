@@ -24,6 +24,7 @@ O sistema permite que professores:
 - gerem diagnóstico pedagógico com IA;
 - acompanhem o histórico geral e a evolução da fluência;
 - visualizem detalhes completos de cada avaliação (transcrição gerada, PCM, métricas formativas e IA);
+- exportem histórico agrupado e formatado em Excel (Relatório Excel de Histórico);
 - exportem relatórios completos em Excel filtrados;
 - exportem relatórios pedagógicos detalhados com diagnósticos de IA;
 - exportem datasets anonimizados para pesquisa acadêmica e artigos científicos.
