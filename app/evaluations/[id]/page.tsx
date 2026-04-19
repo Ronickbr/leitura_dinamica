@@ -14,7 +14,7 @@ export default function ReadingPage() {
   const params = useParams();
   const router = useRouter();
   const alunoId = params.id as string;
-  
+
   const [isRecording, setIsRecording] = useState(false);
   const [timeLeft, setTimeLeft] = useState(60);
   const [aluno, setAluno] = useState<Aluno | null>(null);
@@ -130,7 +130,7 @@ export default function ReadingPage() {
         console.log("Avaliação salva com ID:", evaluationId);
       }
 
-      router.push('/history');
+      router.push(`/history/${evaluationId}`);
     } catch (err: unknown) {
       console.error('Erro ao processar leitura:', err);
       const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido';
