@@ -180,18 +180,22 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             </p>
 
             <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", marginBottom: "1.5rem" }}>
-              {['alunos', 'textos', 'avaliacoes'].map((col) => (
-                <label key={col} style={{ display: "flex", alignItems: "center", gap: "0.5rem", cursor: "pointer", fontSize: "1.1rem" }}>
+              {[
+                { id: 'alunos', label: 'Alunos' },
+                { id: 'textos', label: 'Textos' },
+                { id: 'avaliacoes', label: 'Histórico (Avaliações)' }
+              ].map((col) => (
+                <label key={col.id} style={{ display: "flex", alignItems: "center", gap: "0.5rem", cursor: "pointer", fontSize: "1.1rem" }}>
                   <input
                     type="checkbox"
-                    checked={selectedCollections.includes(col)}
+                    checked={selectedCollections.includes(col.id)}
                     onChange={(e) => {
-                      if (e.target.checked) setSelectedCollections(prev => [...prev, col]);
-                      else setSelectedCollections(prev => prev.filter(c => c !== col));
+                      if (e.target.checked) setSelectedCollections(prev => [...prev, col.id]);
+                      else setSelectedCollections(prev => prev.filter(c => c !== col.id));
                     }}
                     style={{ width: "18px", height: "18px" }}
                   />
-                  {col.charAt(0).toUpperCase() + col.slice(1)}
+                  {col.label}
                 </label>
               ))}
             </div>
