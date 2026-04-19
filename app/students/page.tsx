@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { getAlunos, addAluno, deleteAluno, type Aluno } from "@/lib/services";
+import { getAlunos, addAluno, updateAluno, deleteAluno, type Aluno } from "@/lib/services";
 import { useSettings } from "../components/SettingsProvider";
 
 export default function StudentsPage() {
@@ -9,6 +9,8 @@ export default function StudentsPage() {
   const [alunos, setAlunos] = useState<Aluno[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [viewingAluno, setViewingAluno] = useState<Aluno | null>(null);
   const [formData, setFormData] = useState({ nome: '', turma: '', serie: '', turno: '', observacoes: '' });
   const [saving, setSaving] = useState(false);
 
@@ -32,8 +34,13 @@ export default function StudentsPage() {
     e.preventDefault();
     setSaving(true);
     try {
-      await addAluno(formData as Omit<Aluno, 'id'>);
+      if (editingId) {
+        await updateAluno(editingId, formData);
+      } else {
+        await addAluno(formData as Omit<Aluno, 'id'>);
+      }
       setShowForm(false);
+      setEditingId(null);
       setFormData({ nome: '', turma: '', serie: '', turno: '', observacoes: '' });
       loadAlunos();
     } catch (err) {
@@ -57,13 +64,14 @@ export default function StudentsPage() {
           <h2 style={{ fontSize: '2.5rem', fontWeight: 800, marginBottom: '0.5rem' }}>Gerenciar <span style={{ color: 'var(--primary)' }}>Alunos</span></h2>
           <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem' }}>Cadastre e gerencie os estudantes.</p>
         </div>
-        <button onClick={() => setShowForm(!showForm)} className="btn-primary">
+        <button onClick={() => { if (showForm) { setEditingId(null); setFormData({ nome: '', turma: '', serie: '', turno: '', observacoes: '' }); } setShowForm(!showForm); }} className="btn-primary">
           {showForm ? 'Cancelar' : '+ Novo Aluno'}
         </button>
       </header>
 
       {showForm && (
         <div className="glass-card" style={{ marginBottom: '2rem', padding: '2rem' }}>
+          <h3 style={{ marginBottom: '1rem', fontSize: '1.2rem', fontWeight: 800 }}>{editingId ? '✏️ Editar Aluno' : '✨ Novo Aluno'}</h3>
           <form onSubmit={handleSubmit}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
               <input
@@ -151,7 +159,11 @@ export default function StudentsPage() {
                     )}
                   </td>
                   <td style={{ padding: '1.25rem 2rem', textAlign: 'right' }}>
-                    <button onClick={() => handleDelete(aluno.id)} className="btn-icon" title="Excluir" style={{ marginLeft: "auto" }}>🗑️</button>
+                    <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+                      <button onClick={() => setViewingAluno(aluno)} className="btn-icon" title="Visualizar">👁️</button>
+                      <button onClick={() => { setFormData({ nome: aluno.nome, turma: aluno.turma, serie: aluno.serie, turno: aluno.turno || '', observacoes: aluno.observacoes || '' }); setEditingId(aluno.id); setShowForm(true); window.scrollTo(0, 0); }} className="btn-icon" title="Editar">✏️</button>
+                      <button onClick={() => handleDelete(aluno.id)} className="btn-icon" title="Excluir">🗑️</button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -163,6 +175,24 @@ export default function StudentsPage() {
       {!loading && alunos.length === 0 && (
         <div className="glass-card" style={{ textAlign: 'center', padding: '4rem' }}>
           <p style={{ color: 'var(--text-muted)' }}>Nenhum aluno cadastrado.</p>
+        </div>
+      )}
+
+      {viewingAluno && (
+        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.8)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "2rem" }}>
+          <div className="glass-card" style={{ maxWidth: "450px", width: "100%", background: "var(--bg-dark)" }}>
+            <h2 style={{ marginBottom: "1.5rem", fontSize: "1.3rem", fontWeight: 800, color: "var(--primary)", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+              <span>👤</span> Visualizar Aluno
+            </h2>
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.8rem", marginBottom: "2rem" }}>
+              <p style={{ fontSize: "1.05rem" }}><strong style={{ color: "var(--text-muted)", marginRight: "0.5rem", display: "inline-block", width: "100px" }}>Nome:</strong> {anonymizeName(viewingAluno.id, viewingAluno.nome)}</p>
+              <p style={{ fontSize: "1.05rem" }}><strong style={{ color: "var(--text-muted)", marginRight: "0.5rem", display: "inline-block", width: "100px" }}>Turma:</strong> {viewingAluno.turma}</p>
+              <p style={{ fontSize: "1.05rem" }}><strong style={{ color: "var(--text-muted)", marginRight: "0.5rem", display: "inline-block", width: "100px" }}>Série:</strong> {viewingAluno.serie}</p>
+              <p style={{ fontSize: "1.05rem" }}><strong style={{ color: "var(--text-muted)", marginRight: "0.5rem", display: "inline-block", width: "100px" }}>Turno:</strong> {viewingAluno.turno || '-'}</p>
+              <p style={{ fontSize: "1.05rem" }}><strong style={{ color: "var(--text-muted)", marginRight: "0.5rem", display: "inline-block", width: "100px" }}>Observações:</strong> {viewingAluno.observacoes ? anonymizeText(viewingAluno.observacoes) : '-'}</p>
+            </div>
+            <button onClick={() => setViewingAluno(null)} className="btn-outline" style={{ width: "100%", padding: "0.75rem" }}>Fechar</button>
+          </div>
         </div>
       )}
     </div>
