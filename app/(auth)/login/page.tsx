@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import { signInWithEmailAndPassword } from "firebase/auth";
 import { useFirebase } from "@/app/components/FirebaseProvider";
 
 export default function LoginPage() {
@@ -10,18 +10,25 @@ export default function LoginPage() {
   const { auth, initialized, error: firebaseError } = useFirebase();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
-  const handleLogin = async () => {
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
     if (!auth) {
       setError("Firebase não está disponível. Verifique a configuração.");
+      return;
+    }
+
+    if (!email || !password) {
+      setError("Por favor, preencha e-mail e senha.");
       return;
     }
 
     setLoading(true);
     setError("");
     try {
-      const provider = new GoogleAuthProvider();
-      await signInWithPopup(auth, provider);
+      await signInWithEmailAndPassword(auth, email, password);
       router.push("/");
     } catch (err: any) {
       console.error("Erro no login:", err);
@@ -33,10 +40,10 @@ export default function LoginPage() {
 
   if (!initialized) {
     return (
-      <div className="animate-in" style={{ 
-        minHeight: "100vh", 
-        display: "flex", 
-        alignItems: "center", 
+      <div className="animate-in" style={{
+        minHeight: "100vh",
+        display: "flex",
+        alignItems: "center",
         justifyContent: "center",
         padding: "2rem"
       }}>
@@ -48,10 +55,10 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="animate-in" style={{ 
-      minHeight: "100vh", 
-      display: "flex", 
-      alignItems: "center", 
+    <div className="animate-in" style={{
+      minHeight: "100vh",
+      display: "flex",
+      alignItems: "center",
       justifyContent: "center",
       padding: "2rem"
     }}>
@@ -64,10 +71,10 @@ export default function LoginPage() {
         </p>
 
         {(error || firebaseError) && (
-          <div style={{ 
-            background: "rgba(239, 68, 68, 0.1)", 
+          <div style={{
+            background: "rgba(239, 68, 68, 0.1)",
             border: "1px solid rgba(239, 68, 68, 0.3)",
-            padding: "0.75rem 1rem", 
+            padding: "0.75rem 1rem",
             borderRadius: "12px",
             marginBottom: "1.5rem",
             color: "#ef4444",
@@ -77,14 +84,48 @@ export default function LoginPage() {
           </div>
         )}
 
-        <button 
-          onClick={handleLogin}
-          disabled={loading}
-          className="btn-primary"
-          style={{ width: "100%", padding: "1rem", fontSize: "1rem" }}
-        >
-          {loading ? "Entrando..." : "Entrar com Google"}
-        </button>
+        <form onSubmit={handleLogin} style={{ width: "100%", display: "flex", flexDirection: "column", gap: "1rem" }}>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="E-mail"
+            required
+            style={{
+              width: "100%",
+              padding: "1rem",
+              borderRadius: "8px",
+              border: "1px solid var(--glass-border)",
+              background: "rgba(0,0,0,0.2)",
+              color: "white",
+              fontSize: "1rem"
+            }}
+          />
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Senha"
+            required
+            style={{
+              width: "100%",
+              padding: "1rem",
+              borderRadius: "8px",
+              border: "1px solid var(--glass-border)",
+              background: "rgba(0,0,0,0.2)",
+              color: "white",
+              fontSize: "1rem"
+            }}
+          />
+          <button
+            type="submit"
+            disabled={loading}
+            className="btn-primary"
+            style={{ width: "100%", padding: "1rem", fontSize: "1rem", marginTop: "0.5rem" }}
+          >
+            {loading ? "Entrando..." : "Entrar"}
+          </button>
+        </form>
       </div>
     </div>
   );

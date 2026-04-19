@@ -208,6 +208,7 @@ Esta versão (v2.0.0) trouxe uma refatoração significativa:
 - **Serviços**: todos os serviços movidos para `lib/`
 - **Layout**: navegação integrada no layout do Next.js
 - **Firebase**: configuração modernizada para Next.js
+- **Autenticação**: atualizada para fluxo de E-mail e Senha ao invés do login com o Google.
 
 ## Troubleshooting
 
