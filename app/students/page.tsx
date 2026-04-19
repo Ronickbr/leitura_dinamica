@@ -9,7 +9,7 @@ export default function StudentsPage() {
   const [alunos, setAlunos] = useState<Aluno[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
-  const [formData, setFormData] = useState({ nome: '', turma: '', serie: '', diagnostico: '', observacoes: '' });
+  const [formData, setFormData] = useState({ nome: '', turma: '', serie: '', turno: '', observacoes: '' });
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -34,7 +34,7 @@ export default function StudentsPage() {
     try {
       await addAluno(formData as Omit<Aluno, 'id'>);
       setShowForm(false);
-      setFormData({ nome: '', turma: '', serie: '', diagnostico: '', observacoes: '' });
+      setFormData({ nome: '', turma: '', serie: '', turno: '', observacoes: '' });
       loadAlunos();
     } catch (err) {
       console.error("Erro ao salvar:", err);
@@ -99,16 +99,17 @@ export default function StudentsPage() {
                 <option value="5º Ano">5º Ano</option>
               </select>
               <select
-                value={formData.diagnostico}
-                onChange={e => setFormData({ ...formData, diagnostico: e.target.value })}
+                value={formData.turno}
+                onChange={e => setFormData({ ...formData, turno: e.target.value })}
+                required
                 className="glass-panel"
                 style={{ padding: '0.75rem 1rem', color: 'white', border: '1px solid var(--glass-border)' }}
               >
-                <option value="">Nenhum diagnóstico</option>
-                <option value="TEA">TEA</option>
-                <option value="TDAH">TDAH</option>
-                <option value="Dislexia">Dislexia</option>
-                <option value="Outros">Outros</option>
+                <option value="">Selecione o Turno</option>
+                <option value="Manhã">Manhã</option>
+                <option value="Tarde">Tarde</option>
+                <option value="Integral">Integral</option>
+                <option value="Noite">Noite</option>
               </select>
             </div>
             <button type="submit" disabled={saving} className="btn-primary">
@@ -127,7 +128,7 @@ export default function StudentsPage() {
               <tr style={{ background: 'rgba(255,255,255,0.03)', borderBottom: '1px solid var(--glass-border)' }}>
                 <th style={{ padding: '1.25rem 2rem', textAlign: 'left', fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 800 }}>NOME</th>
                 <th style={{ padding: '1.25rem 2rem', textAlign: 'left', fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 800 }}>TURMA E SÉRIE</th>
-                <th style={{ padding: '1.25rem 2rem', textAlign: 'left', fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 800 }}>DIAGNÓSTICO</th>
+                <th style={{ padding: '1.25rem 2rem', textAlign: 'left', fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 800 }}>TURNO</th>
                 <th style={{ padding: '1.25rem 2rem', textAlign: 'right', fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 800 }}>AÇÕES</th>
               </tr>
             </thead>
@@ -141,9 +142,9 @@ export default function StudentsPage() {
                     {aluno.serie} - Turma {aluno.turma}
                   </td>
                   <td style={{ padding: '1.25rem 2rem' }}>
-                    {aluno.diagnostico ? (
+                    {aluno.turno ? (
                       <span style={{ padding: '0.4rem 0.75rem', background: 'rgba(99, 102, 241, 0.1)', borderRadius: '8px', fontSize: '0.8rem', color: 'var(--primary)', fontWeight: 600 }}>
-                        {anonymizeText(aluno.diagnostico)}
+                        {aluno.turno}
                       </span>
                     ) : (
                       <span style={{ color: 'var(--text-muted)' }}>-</span>

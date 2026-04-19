@@ -1,14 +1,14 @@
-import { 
-  collection, 
-  query, 
-  where, 
-  getDocs, 
-  doc, 
-  getDoc, 
-  addDoc, 
-  updateDoc, 
-  deleteDoc, 
-  Timestamp, 
+import {
+  collection,
+  query,
+  where,
+  getDocs,
+  doc,
+  getDoc,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  Timestamp,
   orderBy,
   Firestore
 } from 'firebase/firestore';
@@ -27,7 +27,8 @@ export interface Aluno {
   nome: string;
   turma: string;
   serie: string;
-  diagnostico: string;
+  turno?: string;
+  diagnostico?: string;
   observacoes?: string;
   professorId?: string;
 }
