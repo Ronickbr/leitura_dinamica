@@ -121,23 +121,41 @@ export default function StudentsPage() {
       {loading ? (
         <div style={{ textAlign: 'center', padding: '5rem', color: 'var(--text-muted)' }} className="animate-pulse">Carregando...</div>
       ) : (
-        <div className="grid-cards">
-          {alunos.map(aluno => (
-            <div key={aluno.id} className="glass-card">
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                <div>
-                  <h3 style={{ fontWeight: 800, fontSize: '1.2rem', marginBottom: '0.5rem' }}>{anonymizeName(aluno.id, aluno.nome)}</h3>
-                  <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>{aluno.serie} - Turma {aluno.turma}</p>
-                </div>
-                <button onClick={() => handleDelete(aluno.id)} className="btn-icon" title="Excluir">🗑️</button>
-              </div>
-              {aluno.diagnostico && (
-                <div style={{ marginTop: '1rem', padding: '0.5rem 0.75rem', background: 'rgba(99, 102, 241, 0.1)', borderRadius: '8px', fontSize: '0.8rem', color: 'var(--primary)' }}>
-                  {anonymizeText(aluno.diagnostico)}
-                </div>
-              )}
-            </div>
-          ))}
+        <div className="glass-card" style={{ padding: 0, overflow: 'hidden' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <thead>
+              <tr style={{ background: 'rgba(255,255,255,0.03)', borderBottom: '1px solid var(--glass-border)' }}>
+                <th style={{ padding: '1.25rem 2rem', textAlign: 'left', fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 800 }}>NOME</th>
+                <th style={{ padding: '1.25rem 2rem', textAlign: 'left', fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 800 }}>TURMA E SÉRIE</th>
+                <th style={{ padding: '1.25rem 2rem', textAlign: 'left', fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 800 }}>DIAGNÓSTICO</th>
+                <th style={{ padding: '1.25rem 2rem', textAlign: 'right', fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 800 }}>AÇÕES</th>
+              </tr>
+            </thead>
+            <tbody>
+              {alunos.map(aluno => (
+                <tr key={aluno.id} className="hover-row" style={{ borderBottom: '1px solid var(--glass-border)' }}>
+                  <td style={{ padding: '1.25rem 2rem', fontWeight: 700 }}>
+                    {anonymizeName(aluno.id, aluno.nome)}
+                  </td>
+                  <td style={{ padding: '1.25rem 2rem', color: 'var(--text-muted)' }}>
+                    {aluno.serie} - Turma {aluno.turma}
+                  </td>
+                  <td style={{ padding: '1.25rem 2rem' }}>
+                    {aluno.diagnostico ? (
+                      <span style={{ padding: '0.4rem 0.75rem', background: 'rgba(99, 102, 241, 0.1)', borderRadius: '8px', fontSize: '0.8rem', color: 'var(--primary)', fontWeight: 600 }}>
+                        {anonymizeText(aluno.diagnostico)}
+                      </span>
+                    ) : (
+                      <span style={{ color: 'var(--text-muted)' }}>-</span>
+                    )}
+                  </td>
+                  <td style={{ padding: '1.25rem 2rem', textAlign: 'right' }}>
+                    <button onClick={() => handleDelete(aluno.id)} className="btn-icon" title="Excluir" style={{ marginLeft: "auto" }}>🗑️</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
 
