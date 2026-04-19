@@ -5,13 +5,15 @@ import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { onAuthStateChanged, signOut, User } from "firebase/auth";
 import { useFirebase } from "./FirebaseProvider";
-import { resetFullDatabase } from "@/lib/resetDatabaseService";
+import { resetDatabase } from "@/lib/resetDatabaseService";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const { auth, db, initialized } = useFirebase();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [resetting, setResetting] = useState(false);
+  const [showResetModal, setShowResetModal] = useState(false);
+  const [selectedCollections, setSelectedCollections] = useState<string[]>(['alunos', 'textos', 'avaliacoes']);
   const router = useRouter();
   const pathname = usePathname();
 
@@ -62,16 +64,19 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const isAdmin = user?.email === process.env.NEXT_PUBLIC_ADMIN_EMAIL;
 
   const handleResetDb = async () => {
-    const confirmText = window.prompt("AÇÃO DESTRUTIVA!\n\nTem certeza que deseja apagar TODOS os dados do Firebase (Alunos, Textos e Avaliações)?\n\nDigite 'RESETAR' para continuar:");
-    if (confirmText !== "RESETAR") return;
+    if (selectedCollections.length === 0) return;
+
+    const confirmText = window.prompt(`AÇÃO DESTRUTIVA!\n\nTem certeza que deseja apagar permanentemente as coleções abaixo?\n[ ${selectedCollections.join(', ')} ]\n\nDigite 'APAGAR' para confirmar:`);
+    if (confirmText !== "APAGAR") return;
 
     if (!db) return;
 
     setResetting(true);
     try {
-      const success = await resetFullDatabase(db);
+      const success = await resetDatabase(db, selectedCollections);
       if (success) {
-        alert("Banco de dados resetado com sucesso.");
+        alert("Coleções selecionadas apagadas com sucesso.");
+        setShowResetModal(false);
         router.push("/");
       } else {
         alert("Falha ao resetar banco de dados. Verifique o console ou suas regras de segurança do Firebase.");
@@ -133,7 +138,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
             {isAdmin && (
               <button
-                onClick={handleResetDb}
+                onClick={() => setShowResetModal(true)}
                 disabled={resetting}
                 className="btn-outline"
                 style={{
@@ -143,9 +148,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                   fontSize: "0.80rem",
                   gap: "0.25rem"
                 }}
-                title="Resetar todos os dados"
+                title="Resetar dados seletivos"
               >
-                {resetting ? "⏳ Limpando..." : "⚠️ Resetar BD"}
+                ⚠️ Resetar BD
               </button>
             )}
             {user.photoURL && (
@@ -165,6 +170,53 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       <main className="container" style={{ padding: "2rem", flex: 1 }}>
         {children}
       </main>
+
+      {showResetModal && (
+        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.8)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "2rem" }}>
+          <div className="glass-card" style={{ maxWidth: "450px", width: "100%", background: "var(--bg-dark)" }}>
+            <h2 style={{ marginBottom: "1rem", color: "var(--error)" }}>⚠️ Resetar Banco de Dados</h2>
+            <p style={{ marginBottom: "1.5rem", fontSize: "0.95rem", color: "var(--text-muted)" }}>
+              Selecione quais coleções deseja <strong>apagar permanentemente</strong>.
+            </p>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", marginBottom: "1.5rem" }}>
+              {['alunos', 'textos', 'avaliacoes'].map((col) => (
+                <label key={col} style={{ display: "flex", alignItems: "center", gap: "0.5rem", cursor: "pointer", fontSize: "1.1rem" }}>
+                  <input
+                    type="checkbox"
+                    checked={selectedCollections.includes(col)}
+                    onChange={(e) => {
+                      if (e.target.checked) setSelectedCollections(prev => [...prev, col]);
+                      else setSelectedCollections(prev => prev.filter(c => c !== col));
+                    }}
+                    style={{ width: "18px", height: "18px" }}
+                  />
+                  {col.charAt(0).toUpperCase() + col.slice(1)}
+                </label>
+              ))}
+            </div>
+
+            <div style={{ display: "flex", gap: "1rem" }}>
+              <button
+                onClick={() => setShowResetModal(false)}
+                className="btn-outline"
+                style={{ flex: 1 }}
+                disabled={resetting}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleResetDb}
+                className="btn-primary"
+                style={{ flex: 1, background: "var(--error)", color: "white", border: "none" }}
+                disabled={resetting || selectedCollections.length === 0}
+              >
+                {resetting ? "⏳ Limpando..." : "Apagar Dados"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

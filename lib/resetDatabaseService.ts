@@ -1,9 +1,7 @@
 import { collection, getDocs, writeBatch, Firestore } from 'firebase/firestore';
 
-export async function resetFullDatabase(db: Firestore): Promise<boolean> {
+export async function resetDatabase(db: Firestore, collectionsToClear: string[]): Promise<boolean> {
     try {
-        const collectionsToClear = ['alunos', 'textos', 'avaliacoes'];
-
         for (const coll of collectionsToClear) {
             const q = collection(db, coll);
             const querySnapshot = await getDocs(q);
