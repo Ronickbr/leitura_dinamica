@@ -5,11 +5,13 @@ import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { onAuthStateChanged, signOut, User } from "firebase/auth";
 import { useFirebase } from "./FirebaseProvider";
+import { resetFullDatabase } from "@/lib/resetDatabaseService";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
-  const { auth, initialized } = useFirebase();
+  const { auth, db, initialized } = useFirebase();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [resetting, setResetting] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
 
@@ -54,6 +56,31 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       router.push("/login");
     } catch (error) {
       console.error("Erro ao fazer logout:", error);
+    }
+  };
+
+  const isAdmin = user?.email === process.env.NEXT_PUBLIC_ADMIN_EMAIL;
+
+  const handleResetDb = async () => {
+    const confirmText = window.prompt("AÇÃO DESTRUTIVA!\n\nTem certeza que deseja apagar TODOS os dados do Firebase (Alunos, Textos e Avaliações)?\n\nDigite 'RESETAR' para continuar:");
+    if (confirmText !== "RESETAR") return;
+
+    if (!db) return;
+
+    setResetting(true);
+    try {
+      const success = await resetFullDatabase(db);
+      if (success) {
+        alert("Banco de dados resetado com sucesso.");
+        router.push("/");
+      } else {
+        alert("Falha ao resetar banco de dados. Verifique o console ou suas regras de segurança do Firebase.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Erro grave ao tentar resetar.");
+    } finally {
+      setResetting(false);
     }
   };
 
@@ -104,6 +131,23 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           </nav>
 
           <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+            {isAdmin && (
+              <button
+                onClick={handleResetDb}
+                disabled={resetting}
+                className="btn-outline"
+                style={{
+                  borderColor: "var(--error)",
+                  color: "var(--error)",
+                  padding: "0.4rem 0.8rem",
+                  fontSize: "0.80rem",
+                  gap: "0.25rem"
+                }}
+                title="Resetar todos os dados"
+              >
+                {resetting ? "⏳ Limpando..." : "⚠️ Resetar BD"}
+              </button>
+            )}
             {user.photoURL && (
               <img
                 src={user.photoURL}

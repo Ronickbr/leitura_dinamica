@@ -98,6 +98,7 @@ Copy-Item .env.example .env
 | `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET` | Sim | Bucket do Storage |
 | `NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID` | Sim | Sender ID do Firebase |
 | `NEXT_PUBLIC_FIREBASE_APP_ID` | Sim | App ID do Firebase |
+| `NEXT_PUBLIC_ADMIN_EMAIL` | Não | E-mail do administrador com permissão para Resetar BD |
 
 ### Backend / Serverless
 
