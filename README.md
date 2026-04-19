@@ -22,7 +22,7 @@ O sistema permite que professores:
 - enviem o áudio para transcrição;
 - calculem PCM e precisão automaticamente;
 - gerem diagnóstico pedagógico com IA;
-- acompanhem o histórico geral e a evolução da fluência;
+- acompanhem o histórico geral e a evolução da fluência com gráficos de linha;
 - visualizem detalhes completos de cada avaliação (transcrição gerada, PCM, métricas formativas e IA);
 - exportem histórico agrupado e formatado em Excel (Relatório Excel de Histórico);
 - exportem relatórios completos em Excel filtrados;

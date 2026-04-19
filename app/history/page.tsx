@@ -257,27 +257,55 @@ export default function HistoryPage() {
                         <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: '0.4rem', fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
                           Evolução PCM
                         </div>
-                        <div style={{ width: '100px', height: '36px', display: 'flex', alignItems: 'flex-end', gap: '4px' }}>
-                          {chartData.map((ev, i) => {
-                            const maxPcm = Math.max(1, ...chartData.map(c => c.pcm || 0));
-                            const heightPct = Math.max(10, ((ev.pcm || 0) / maxPcm) * 100);
-                            return (
-                              <div
-                                key={i}
-                                title={`${ev.pcm} PCM em ${formatDate(ev.data)}`}
-                                style={{
-                                  flex: 1,
-                                  height: `${heightPct}%`,
-                                  background: getLevelColor(ev.pcm),
-                                  borderRadius: '3px 3px 0 0',
-                                  opacity: 0.85,
-                                  transition: 'height 0.3s ease, opacity 0.3s ease'
-                                }}
-                                onMouseOver={(e) => e.currentTarget.style.opacity = '1'}
-                                onMouseOut={(e) => e.currentTarget.style.opacity = '0.85'}
-                              />
-                            );
-                          })}
+                        <div style={{ width: '100px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <svg width="100" height="36" viewBox="0 0 100 36" style={{ overflow: 'visible' }}>
+                            {(() => {
+                              const maxPcm = Math.max(1, ...chartData.map(c => c.pcm || 0));
+                              const points = chartData.map((ev, i) => {
+                                const x = chartData.length === 1 ? 50 : (i / (chartData.length - 1)) * 100;
+                                // Inverter Y para SVG, adicionando padding de 4px para os círculos
+                                const y = 32 - ((ev.pcm || 0) / maxPcm) * 28;
+                                return { x, y, pcm: ev.pcm, date: ev.data, color: getLevelColor(ev.pcm) };
+                              });
+
+                              return (
+                                <>
+                                  {points.length > 1 && (
+                                    <polyline
+                                      fill="none"
+                                      stroke="rgba(255, 255, 255, 0.2)"
+                                      strokeWidth="2"
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      points={points.map(p => `${p.x},${p.y}`).join(' ')}
+                                    />
+                                  )}
+                                  {points.map((p, i) => (
+                                    <circle
+                                      key={i}
+                                      cx={p.x}
+                                      cy={p.y}
+                                      r="3.5"
+                                      fill={p.color}
+                                      stroke="var(--glass-border)"
+                                      strokeWidth="1"
+                                      style={{ cursor: 'pointer', transition: 'all 0.2s ease', opacity: 0.9 }}
+                                      onMouseOver={(e) => {
+                                        e.currentTarget.setAttribute('r', '5');
+                                        e.currentTarget.style.opacity = '1';
+                                      }}
+                                      onMouseOut={(e) => {
+                                        e.currentTarget.setAttribute('r', '3.5');
+                                        e.currentTarget.style.opacity = '0.9';
+                                      }}
+                                    >
+                                      <title>{`${p.pcm} PCM em ${formatDate(p.date)}`}</title>
+                                    </circle>
+                                  ))}
+                                </>
+                              );
+                            })()}
+                          </svg>
                         </div>
                       </div>
                     )}
