@@ -1,0 +1,138 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { getTextos, addTexto, deleteTexto, type Texto } from "@/lib/textsService";
+
+export default function TextsPage() {
+  const [textos, setTextos] = useState<Texto[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showForm, setShowForm] = useState(false);
+  const [formData, setFormData] = useState({ titulo: '', conteudo: '', serie: '3º Ano' });
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    loadTextos();
+  }, []);
+
+  async function loadTextos() {
+    setLoading(true);
+    try {
+      const data = await getTextos();
+      setTextos(data);
+    } catch (err) {
+      console.error("Erro:", err);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      const words = formData.conteudo.trim().split(/\s+/).length;
+      await addTexto({ ...formData, numeroPalavras: words } as Omit<Texto, 'id'>);
+      setShowForm(false);
+      setFormData({ titulo: '', conteudo: '', serie: '3º Ano' });
+      loadTextos();
+    } catch (err) {
+      console.error("Erro ao salvar:", err);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleDelete(id: string) {
+    if (confirm('Tem certeza que deseja excluir?')) {
+      await deleteTexto(id);
+      loadTextos();
+    }
+  }
+
+  return (
+    <div className="animate-in" style={{ paddingBottom: '4rem' }}>
+      <header style={{ marginBottom: '2.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <div>
+          <h2 style={{ fontSize: '2.5rem', fontWeight: 800, marginBottom: '0.5rem' }}>Biblioteca de <span style={{ color: 'var(--primary)' }}>Textos</span></h2>
+          <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem' }}>Gerencie os textos para avaliação.</p>
+        </div>
+        <button onClick={() => setShowForm(!showForm)} className="btn-primary">
+          {showForm ? 'Cancelar' : '+ Novo Texto'}
+        </button>
+      </header>
+
+      {showForm && (
+        <div className="glass-card" style={{ marginBottom: '2rem', padding: '2rem' }}>
+          <form onSubmit={handleSubmit}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 150px', gap: '1rem', marginBottom: '1rem' }}>
+              <input
+                type="text"
+                placeholder="Título do texto"
+                value={formData.titulo}
+                onChange={e => setFormData({ ...formData, titulo: e.target.value })}
+                required
+                className="glass-panel"
+                style={{ padding: '0.75rem 1rem', color: 'white', border: '1px solid var(--glass-border)' }}
+              />
+              <select
+                value={formData.serie}
+                onChange={e => setFormData({ ...formData, serie: e.target.value })}
+                required
+                className="glass-panel"
+                style={{ padding: '0.75rem 1rem', color: 'white', border: '1px solid var(--glass-border)' }}
+              >
+                <option value="1º Ano">1º Ano</option>
+                <option value="2º Ano">2º Ano</option>
+                <option value="3º Ano">3º Ano</option>
+                <option value="4º Ano">4º Ano</option>
+                <option value="5º Ano">5º Ano</option>
+              </select>
+            </div>
+            <textarea
+              placeholder="Cole o texto aqui..."
+              value={formData.conteudo}
+              onChange={e => setFormData({ ...formData, conteudo: e.target.value })}
+              required
+              rows={6}
+              className="glass-panel"
+              style={{ width: '100%', padding: '0.75rem 1rem', color: 'white', border: '1px solid var(--glass-border)', marginBottom: '1.5rem', resize: 'vertical' }}
+            />
+            <button type="submit" disabled={saving} className="btn-primary">
+              {saving ? 'Salvando...' : 'Salvar Texto'}
+            </button>
+          </form>
+        </div>
+      )}
+
+      {loading ? (
+        <div style={{ textAlign: 'center', padding: '5rem', color: 'var(--text-muted)' }} className="animate-pulse">Carregando...</div>
+      ) : (
+        <div className="grid-cards">
+          {textos.map(texto => (
+            <div key={texto.id} className="glass-card">
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
+                <div>
+                  <h3 style={{ fontWeight: 800, fontSize: '1.1rem' }}>{texto.titulo}</h3>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', background: 'rgba(255,255,255,0.05)', padding: '2px 8px', borderRadius: '4px' }}>{texto.serie}</span>
+                </div>
+                <button onClick={() => handleDelete(texto.id)} className="btn-icon" title="Excluir">🗑️</button>
+              </div>
+              <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', lineHeight: 1.6, display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                {texto.conteudo}
+              </p>
+              <div style={{ marginTop: '1rem', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                {texto.numeroPalavras} palavras
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {!loading && textos.length === 0 && (
+        <div className="glass-card" style={{ textAlign: 'center', padding: '4rem' }}>
+          <p style={{ color: 'var(--text-muted)' }}>Nenhum texto cadastrado.</p>
+        </div>
+      )}
+    </div>
+  );
+}
