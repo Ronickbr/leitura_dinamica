@@ -2,8 +2,10 @@
 
 import { useState, useEffect } from "react";
 import { getAlunos, addAluno, deleteAluno, type Aluno } from "@/lib/services";
+import { useSettings } from "../components/SettingsProvider";
 
 export default function StudentsPage() {
+  const { anonymizeName, anonymizeText } = useSettings();
   const [alunos, setAlunos] = useState<Aluno[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -124,14 +126,14 @@ export default function StudentsPage() {
             <div key={aluno.id} className="glass-card">
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                 <div>
-                  <h3 style={{ fontWeight: 800, fontSize: '1.2rem', marginBottom: '0.5rem' }}>{aluno.nome}</h3>
+                  <h3 style={{ fontWeight: 800, fontSize: '1.2rem', marginBottom: '0.5rem' }}>{anonymizeName(aluno.id, aluno.nome)}</h3>
                   <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>{aluno.serie} - Turma {aluno.turma}</p>
                 </div>
                 <button onClick={() => handleDelete(aluno.id)} className="btn-icon" title="Excluir">🗑️</button>
               </div>
               {aluno.diagnostico && (
                 <div style={{ marginTop: '1rem', padding: '0.5rem 0.75rem', background: 'rgba(99, 102, 241, 0.1)', borderRadius: '8px', fontSize: '0.8rem', color: 'var(--primary)' }}>
-                  {aluno.diagnostico}
+                  {anonymizeText(aluno.diagnostico)}
                 </div>
               )}
             </div>

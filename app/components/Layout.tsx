@@ -13,6 +13,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [resetting, setResetting] = useState(false);
   const [showResetModal, setShowResetModal] = useState(false);
+  const [showUserDropdown, setShowUserDropdown] = useState(false);
   const [selectedCollections, setSelectedCollections] = useState<string[]>(['alunos', 'textos', 'avaliacoes']);
   const router = useRouter();
   const pathname = usePathname();
@@ -135,34 +136,60 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             ))}
           </nav>
 
-          <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-            {isAdmin && (
-              <button
-                onClick={() => setShowResetModal(true)}
-                disabled={resetting}
-                className="btn-outline"
-                style={{
-                  borderColor: "var(--error)",
-                  color: "var(--error)",
-                  padding: "0.4rem 0.8rem",
-                  fontSize: "0.80rem",
-                  gap: "0.25rem"
-                }}
-                title="Resetar dados seletivos"
-              >
-                ⚠️ Resetar BD
-              </button>
-            )}
-            {user.photoURL && (
-              <img
-                src={user.photoURL}
-                alt={user.displayName || "Usuário"}
-                style={{ width: "36px", height: "36px", borderRadius: "50%" }}
-              />
-            )}
-            <button onClick={handleLogout} className="btn-icon" title="Sair">
-              <span>🚪</span>
+          <div style={{ display: "flex", alignItems: "center", gap: "1rem", position: "relative" }}>
+            <button
+              onClick={() => setShowUserDropdown(!showUserDropdown)}
+              style={{ background: "transparent", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: "0.5rem" }}
+            >
+              {user.photoURL ? (
+                <img src={user.photoURL} alt={user.displayName || "Usuário"} style={{ width: "36px", height: "36px", borderRadius: "50%" }} />
+              ) : (
+                <div style={{ width: "36px", height: "36px", borderRadius: "50%", background: "var(--primary)", display: "flex", alignItems: "center", justifyContent: "center", color: "white", fontWeight: "bold" }}>
+                  {user.email?.charAt(0).toUpperCase() || "U"}
+                </div>
+              )}
             </button>
+
+            {showUserDropdown && (
+              <div className="glass-card" style={{
+                position: "absolute",
+                top: "100%",
+                right: 0,
+                marginTop: "0.5rem",
+                padding: "0.5rem",
+                display: "flex",
+                flexDirection: "column",
+                gap: "0.25rem",
+                minWidth: "220px"
+              }}>
+                <div style={{ padding: "0.75rem", borderBottom: "1px solid var(--glass-border)", marginBottom: "0.5rem" }}>
+                  <span style={{ fontSize: "0.75rem", color: "var(--text-muted)", display: "block" }}>Logado como</span>
+                  <strong style={{ fontSize: "0.9rem", wordBreak: "break-all" }}>{user.email}</strong>
+                </div>
+
+                <Link href="/settings" onClick={() => setShowUserDropdown(false)} className="hover-row" style={{ padding: "0.5rem", borderRadius: "8px", textDecoration: "none", color: "white", display: "flex", gap: "0.5rem", alignItems: "center" }}>
+                  <span style={{ fontSize: "1.2rem" }}>⚙️</span> Configurações
+                </Link>
+
+                {isAdmin && (
+                  <button
+                    onClick={() => { setShowUserDropdown(false); setShowResetModal(true); }}
+                    className="hover-row"
+                    style={{ padding: "0.5rem", borderRadius: "8px", background: "transparent", border: "none", color: "var(--error)", cursor: "pointer", textAlign: "left", display: "flex", gap: "0.5rem", width: "100%", alignItems: "center", fontSize: "1rem" }}
+                  >
+                    <span style={{ fontSize: "1.2rem" }}>⚠️</span> Excluir DB
+                  </button>
+                )}
+
+                <button
+                  onClick={handleLogout}
+                  className="hover-row"
+                  style={{ padding: "0.5rem", borderRadius: "8px", background: "transparent", border: "none", color: "white", cursor: "pointer", textAlign: "left", display: "flex", gap: "0.5rem", width: "100%", alignItems: "center", fontSize: "1rem", marginTop: "0.25rem" }}
+                >
+                  <span style={{ fontSize: "1.2rem" }}>🚪</span> Sair
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </header>

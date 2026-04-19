@@ -4,8 +4,10 @@ import { useState, useEffect } from "react";
 import { getAllAvaliacoes, type Avaliacao } from "@/lib/evaluationsService";
 import { getAlunos } from "@/lib/services";
 import Link from "next/link";
+import { useSettings } from "../components/SettingsProvider";
 
 export default function HistoryPage() {
+  const { anonymizeName, anonymizeText } = useSettings();
   const [evaluations, setEvaluations] = useState<Avaliacao[]>([]);
   const [alunos, setAlunos] = useState<Map<string, string>>(new Map());
   const [loading, setLoading] = useState(true);
@@ -73,13 +75,15 @@ export default function HistoryPage() {
               {evaluations.map(ev => (
                 <tr key={ev.id} className="hover-row" style={{ borderBottom: '1px solid var(--glass-border)' }}>
                   <td style={{ padding: '1.25rem 2rem', color: 'var(--text-muted)' }}>{formatDate(ev.data)}</td>
-                  <td style={{ padding: '1.25rem 2rem', fontWeight: 700 }}>{alunos.get(ev.alunoId) || 'Desconhecido'}</td>
+                  <td style={{ padding: '1.25rem 2rem', fontWeight: 700 }}>
+                    {anonymizeName(ev.alunoId, alunos.get(ev.alunoId) || 'Desconhecido')}
+                  </td>
                   <td style={{ padding: '1.25rem 2rem' }}>
                     <span style={{ color: getLevelColor(ev.pcm), fontWeight: 900 }}>{ev.pcm}</span>
                   </td>
                   <td style={{ padding: '1.25rem 2rem' }}>{ev.precisao}%</td>
                   <td style={{ padding: '1.25rem 2rem', maxWidth: '300px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                    {ev.diagnosticoIA}
+                    {anonymizeText(ev.diagnosticoIA)}
                   </td>
                 </tr>
               ))}

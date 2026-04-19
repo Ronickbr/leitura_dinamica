@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import Layout from "./components/Layout";
 import { FirebaseProvider } from "./components/FirebaseProvider";
+import { SettingsProvider } from "./components/SettingsProvider";
 
 export const metadata: Metadata = {
   title: "Fluência Leitora",
@@ -17,7 +18,9 @@ export default function RootLayout({
     <html lang="pt-BR">
       <body>
         <FirebaseProvider>
-          <Layout>{children}</Layout>
+          <SettingsProvider>
+            <Layout>{children}</Layout>
+          </SettingsProvider>
         </FirebaseProvider>
       </body>
     </html>
