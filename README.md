@@ -223,6 +223,9 @@ Confirme:
 - formato do áudio suportado;
 - tamanho do arquivo abaixo de 25 MB.
 
+### Tela de login em branco
+Caso a tela de login não apareça, certifique-se de estar usando a versão mais recente com a correção do componente `Layout` que impede bloqueio de renderização do formulário.
+
 ### Auth/invalid-api-key no build
 
 O Next.js tenta inicializar o Firebase durante o build estático. Use a verificação `typeof window !== 'undefined'` no `lib/firebase.ts` para evitar isso.

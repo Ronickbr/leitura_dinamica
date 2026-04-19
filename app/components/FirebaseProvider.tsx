@@ -36,74 +36,88 @@ interface FirebaseProviderProps {
 }
 
 export function FirebaseProvider({ children }: FirebaseProviderProps) {
-  const [state, setState] = useState<FirebaseContextType>({
-    app: null,
-    auth: null,
-    db: null,
-    storage: null,
+  const [state, setState] = useState<{ initialized: boolean; value: FirebaseContextType }>({
     initialized: false,
-    error: null
+    value: {
+      app: null,
+      auth: null,
+      db: null,
+      storage: null,
+      initialized: false,
+      error: null
+    }
   });
 
   useEffect(() => {
-    const initFirebase = () => {
-      if (typeof window === 'undefined') return;
+    if (state.initialized) return;
 
-      const apiKey = process.env.NEXT_PUBLIC_FIREBASE_API_KEY;
-      const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
+    const apiKey = process.env.NEXT_PUBLIC_FIREBASE_API_KEY;
+    const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
 
-      if (!apiKey || !projectId) {
-        console.error('Firebase não configurado. Variáveis NEXT_PUBLIC_FIREBASE_* ausentes.');
-        setState(prev => ({
-          ...prev,
+    if (!apiKey || !projectId) {
+      console.error('Firebase não configurado. Variáveis NEXT_PUBLIC_FIREBASE_* ausentes.');
+      setState({
+        initialized: true,
+        value: {
+          app: null,
+          auth: null,
+          db: null,
+          storage: null,
           initialized: true,
           error: 'Firebase não configurado. Verifique as variáveis NEXT_PUBLIC_FIREBASE_* no ambiente.'
-        }));
-        return;
-      }
+        }
+      });
+      return;
+    }
 
-      const firebaseConfig = {
-        apiKey,
-        authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-        projectId,
-        storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-        messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-        appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID
-      };
+    const firebaseConfig = {
+      apiKey,
+      authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+      projectId,
+      storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+      messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+      appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID
+    };
 
-      try {
-        const app = getApps().length > 0 ? getApps()[0] : initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-        const storage = getStorage(app);
+    try {
+      const app = getApps().length > 0 ? getApps()[0] : initializeApp(firebaseConfig);
+      const auth = getAuth(app);
+      const db = getFirestore(app);
+      const storage = getStorage(app);
 
-        setServicesInstances(db, auth);
-        setEvaluationsInstances(db, auth);
-        setFirebaseDbInstance(db);
+      setServicesInstances(db, auth);
+      setEvaluationsInstances(db, auth);
+      setFirebaseDbInstance(db);
 
-        setState({
+      setState({
+        initialized: true,
+        value: {
           app,
           auth,
           db,
           storage,
           initialized: true,
           error: null
-        });
-      } catch (error) {
-        console.error('Erro ao inicializar Firebase:', error);
-        setState(prev => ({
-          ...prev,
+        }
+      });
+    } catch (error) {
+      console.error('Erro ao inicializar Firebase:', error);
+      setState({
+        initialized: true,
+        value: {
+          app: null,
+          auth: null,
+          db: null,
+          storage: null,
           initialized: true,
           error: 'Erro ao inicializar Firebase'
-        }));
-      }
-    };
-
-    initFirebase();
+        }
+      });
+    }
   }, []);
 
   return (
-    <FirebaseContext.Provider value={state}>
+    <FirebaseContext.Provider value={state.value}>
       {children}
     </FirebaseContext.Provider>
   );

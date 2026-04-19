@@ -40,6 +40,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   }
 
   if (!user) {
+    if (pathname === '/login') {
+      return <>{children}</>;
+    }
     return null;
   }
 
