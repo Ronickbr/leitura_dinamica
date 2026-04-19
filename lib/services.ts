@@ -9,9 +9,18 @@ import {
   updateDoc, 
   deleteDoc, 
   Timestamp, 
-  orderBy 
+  orderBy,
+  Firestore
 } from 'firebase/firestore';
-import { db, auth } from './firebase';
+import { Auth } from 'firebase/auth';
+
+let cachedDb: Firestore | null = null;
+let cachedAuth: Auth | null = null;
+
+export function setFirebaseInstances(dbInstance: Firestore, authInstance: Auth) {
+  cachedDb = dbInstance;
+  cachedAuth = authInstance;
+}
 
 export interface Aluno {
   id: string;
@@ -24,9 +33,9 @@ export interface Aluno {
 }
 
 export const getAlunos = async (turma?: string): Promise<Aluno[]> => {
-  if (!db) return [];
+  if (!cachedDb) return [];
   try {
-    let q = query(collection(db, 'alunos'), orderBy('nome', 'asc'));
+    let q = query(collection(cachedDb, 'alunos'), orderBy('nome', 'asc'));
 
     if (turma && turma !== 'Todas') {
       q = query(q, where('turma', '==', turma));
@@ -44,9 +53,9 @@ export const getAlunos = async (turma?: string): Promise<Aluno[]> => {
 };
 
 export const getAlunoById = async (id: string): Promise<Aluno | null> => {
-  if (!db) return null;
+  if (!cachedDb) return null;
   try {
-    const docRef = doc(db, 'alunos', id);
+    const docRef = doc(cachedDb, 'alunos', id);
     const docSnap = await getDoc(docRef);
     if (docSnap.exists()) {
       return { id: docSnap.id, ...docSnap.data() } as Aluno;
@@ -59,12 +68,12 @@ export const getAlunoById = async (id: string): Promise<Aluno | null> => {
 };
 
 export const addAluno = async (aluno: Omit<Aluno, 'id'>): Promise<string | null> => {
-  if (!db || !auth) return null;
+  if (!cachedDb || !cachedAuth) return null;
   try {
-    const currentUser = auth.currentUser;
+    const currentUser = cachedAuth.currentUser;
     if (!currentUser) throw new Error("Usuário não autenticado");
 
-    const docRef = await addDoc(collection(db, 'alunos'), {
+    const docRef = await addDoc(collection(cachedDb, 'alunos'), {
       ...aluno,
       professorId: currentUser.uid,
       createdAt: Timestamp.now()
@@ -77,9 +86,9 @@ export const addAluno = async (aluno: Omit<Aluno, 'id'>): Promise<string | null>
 };
 
 export const updateAluno = async (id: string, data: Partial<Aluno>): Promise<boolean> => {
-  if (!db) return false;
+  if (!cachedDb) return false;
   try {
-    const docRef = doc(db, 'alunos', id);
+    const docRef = doc(cachedDb, 'alunos', id);
     await updateDoc(docRef, data);
     return true;
   } catch (error) {
@@ -89,9 +98,9 @@ export const updateAluno = async (id: string, data: Partial<Aluno>): Promise<boo
 };
 
 export const deleteAluno = async (id: string): Promise<boolean> => {
-  if (!db) return false;
+  if (!cachedDb) return false;
   try {
-    const docRef = doc(db, 'alunos', id);
+    const docRef = doc(cachedDb, 'alunos', id);
     await deleteDoc(docRef);
     return true;
   } catch (error) {

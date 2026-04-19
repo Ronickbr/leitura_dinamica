@@ -8,28 +8,37 @@ import {
   onAuthStateChanged,
   User
 } from "firebase/auth";
-import { auth } from "./firebase";
+import { auth as firebaseAuth } from "./firebase";
+
+const getAuth = () => {
+  if (!firebaseAuth) {
+    throw new Error("Firebase não foi inicializado. Verifique as variáveis NEXT_PUBLIC_FIREBASE_*");
+  }
+  return firebaseAuth;
+};
 
 export const signInWithGoogle = async () => {
-  if (!auth) throw new Error("Firebase não inicializado");
+  const auth = getAuth();
   const provider = new GoogleAuthProvider();
   return signInWithPopup(auth, provider);
 };
 
 export const signInWithEmail = async (email: string, password: string) => {
-  if (!auth) throw new Error("Firebase não inicializado");
+  const auth = getAuth();
   return signInWithEmailAndPassword(auth, email, password);
 };
 
 export const logOut = async () => {
-  if (!auth) throw new Error("Firebase não inicializado");
+  const auth = getAuth();
   return signOut(auth);
 };
 
 export const onAuthChange = (callback: (user: User | null) => void) => {
-  if (!auth) {
+  try {
+    const auth = getAuth();
+    return onAuthStateChanged(auth, callback);
+  } catch (error) {
     callback(null);
     return () => {};
   }
-  return onAuthStateChanged(auth, callback);
 };

@@ -7,9 +7,18 @@ import {
   orderBy, 
   Timestamp,
   doc,
-  getDoc 
+  getDoc,
+  Firestore
 } from 'firebase/firestore';
-import { db, auth } from './firebase';
+import { Auth } from 'firebase/auth';
+
+let cachedDb: Firestore | null = null;
+let cachedAuth: Auth | null = null;
+
+export function setFirebaseInstances(dbInstance: Firestore, authInstance: Auth) {
+  cachedDb = dbInstance;
+  cachedAuth = authInstance;
+}
 
 export interface MetricasQualitativas {
   leitura_precisa: boolean;
@@ -34,7 +43,7 @@ export interface Avaliacao {
 }
 
 export const processAudio = async (audioBlob: Blob, originalText: string) => {
-  const user = auth?.currentUser;
+  const user = cachedAuth?.currentUser;
   const token = user ? await user.getIdToken() : null;
 
   const formData = new FormData();
@@ -58,12 +67,12 @@ export const processAudio = async (audioBlob: Blob, originalText: string) => {
 };
 
 export const saveAvaliacao = async (avaliacao: Omit<Avaliacao, 'id' | 'data' | 'professorId'>): Promise<string | null> => {
-  if (!db || !auth) return null;
+  if (!cachedDb || !cachedAuth) return null;
   try {
-    const currentUser = auth.currentUser;
+    const currentUser = cachedAuth.currentUser;
     if (!currentUser) throw new Error("Usuário não autenticado");
 
-    const docRef = await addDoc(collection(db, 'avaliacoes'), {
+    const docRef = await addDoc(collection(cachedDb, 'avaliacoes'), {
       ...avaliacao,
       professorId: currentUser.uid,
       data: Timestamp.now()
@@ -76,10 +85,10 @@ export const saveAvaliacao = async (avaliacao: Omit<Avaliacao, 'id' | 'data' | '
 };
 
 export const getAvaliacoesPorAluno = async (alunoId: string): Promise<Avaliacao[]> => {
-  if (!db) return [];
+  if (!cachedDb) return [];
   try {
     const q = query(
-      collection(db, 'avaliacoes'),
+      collection(cachedDb, 'avaliacoes'),
       where('alunoId', '==', alunoId),
       orderBy('data', 'desc')
     );
@@ -95,10 +104,10 @@ export const getAvaliacoesPorAluno = async (alunoId: string): Promise<Avaliacao[
 };
 
 export const getAllAvaliacoes = async (): Promise<Avaliacao[]> => {
-  if (!db) return [];
+  if (!cachedDb) return [];
   try {
     const q = query(
-      collection(db, 'avaliacoes'),
+      collection(cachedDb, 'avaliacoes'),
       orderBy('data', 'desc')
     );
     const querySnapshot = await getDocs(q);
@@ -113,9 +122,9 @@ export const getAllAvaliacoes = async (): Promise<Avaliacao[]> => {
 };
 
 export const getAvaliacaoById = async (id: string): Promise<Avaliacao | null> => {
-  if (!db) return null;
+  if (!cachedDb) return null;
   try {
-    const docRef = doc(db, 'avaliacoes', id);
+    const docRef = doc(cachedDb, 'avaliacoes', id);
     const docSnap = await getDoc(docRef);
     if (docSnap.exists()) {
       return { id: docSnap.id, ...docSnap.data() } as Avaliacao;

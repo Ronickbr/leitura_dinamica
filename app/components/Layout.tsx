@@ -3,17 +3,18 @@
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
-import { onAuthStateChanged, signOut } from "firebase/auth";
-import { auth } from "@/lib/firebase";
+import { onAuthStateChanged, signOut, User } from "firebase/auth";
+import { useFirebase } from "./FirebaseProvider";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<any>(null);
+  const { auth, initialized } = useFirebase();
+  const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
   const pathname = usePathname();
 
   useEffect(() => {
-    if (!auth) {
+    if (!initialized || !auth) {
       setLoading(false);
       return;
     }
@@ -22,7 +23,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       setLoading(false);
     });
     return () => unsubscribe();
-  }, []);
+  }, [initialized, auth]);
 
   useEffect(() => {
     if (!loading && !user && pathname !== '/login') {
@@ -30,7 +31,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     }
   }, [user, loading, router, pathname]);
 
-  if (loading) {
+  if (loading || !initialized) {
     return (
       <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
         <div className="animate-pulse" style={{ color: "var(--text-muted)" }}>Carregando...</div>

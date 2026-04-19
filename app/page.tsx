@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { getAlunos, type Aluno } from "@/lib/services";
 import { getAllAvaliacoes, type Avaliacao } from "@/lib/evaluationsService";
-import { useAuth } from "@/app/components/FirebaseProvider";
+import { useFirebase } from "@/app/components/FirebaseProvider";
 
 const UsersIcon = () => <span>👥</span>;
 const AwardIcon = () => <span>🏆</span>;
@@ -19,7 +19,7 @@ interface RecentEvaluation extends Avaliacao {
 }
 
 export default function Dashboard() {
-  const { user, loading: authLoading } = useAuth();
+  const { auth: firebaseAuth, initialized } = useFirebase();
   const router = useRouter();
   const [stats, setStats] = useState({
     totalStudents: 0,
@@ -29,15 +29,31 @@ export default function Dashboard() {
   });
   const [recentEvaluations, setRecentEvaluations] = useState<RecentEvaluation[]>([]);
   const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
-    if (!authLoading && !user) {
+    if (!initialized || !firebaseAuth) {
+      setLoading(false);
+      return;
+    }
+    
+    import("firebase/auth").then(({ onAuthStateChanged }) => {
+      const unsubscribe = onAuthStateChanged(firebaseAuth, (currentUser) => {
+        setUser(currentUser);
+        setLoading(false);
+      });
+      return () => unsubscribe();
+    });
+  }, [initialized, firebaseAuth]);
+
+  useEffect(() => {
+    if (!loading && !user && initialized) {
       router.push('/login');
     }
-  }, [user, authLoading, router]);
+  }, [user, loading, router, initialized]);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user || !initialized) return;
 
     async function fetchDashboardData() {
       try {
@@ -82,7 +98,7 @@ export default function Dashboard() {
     return 'Hoje';
   };
 
-  if (authLoading || loading) {
+  if (loading) {
     return (
       <div style={{ padding: '8rem', textAlign: 'center', color: 'var(--text-muted)' }} className="animate-pulse">
         Carregando...

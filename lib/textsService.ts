@@ -1,5 +1,10 @@
-import { collection, getDocs, doc, getDoc, addDoc, updateDoc, deleteDoc, query, orderBy, Timestamp } from 'firebase/firestore';
-import { db } from './firebase';
+import { collection, getDocs, doc, getDoc, addDoc, updateDoc, deleteDoc, query, orderBy, Timestamp, Firestore } from 'firebase/firestore';
+
+let cachedDb: Firestore | null = null;
+
+export function setFirebaseDbInstance(dbInstance: Firestore) {
+  cachedDb = dbInstance;
+}
 
 export interface Texto {
   id: string;
@@ -10,9 +15,9 @@ export interface Texto {
 }
 
 export const getTextos = async (): Promise<Texto[]> => {
-  if (!db) return [];
+  if (!cachedDb) return [];
   try {
-    const q = query(collection(db, 'textos'), orderBy('titulo', 'asc'));
+    const q = query(collection(cachedDb, 'textos'), orderBy('titulo', 'asc'));
     const querySnapshot = await getDocs(q);
     return querySnapshot.docs.map(d => ({
       id: d.id,
@@ -25,9 +30,9 @@ export const getTextos = async (): Promise<Texto[]> => {
 };
 
 export const getTextoById = async (id: string): Promise<Texto | null> => {
-  if (!db) return null;
+  if (!cachedDb) return null;
   try {
-    const docRef = doc(db, 'textos', id);
+    const docRef = doc(cachedDb, 'textos', id);
     const docSnap = await getDoc(docRef);
     if (docSnap.exists()) {
       return { id: docSnap.id, ...docSnap.data() } as Texto;
@@ -40,9 +45,9 @@ export const getTextoById = async (id: string): Promise<Texto | null> => {
 };
 
 export const addTexto = async (texto: Omit<Texto, 'id'>): Promise<string | null> => {
-  if (!db) return null;
+  if (!cachedDb) return null;
   try {
-    const docRef = await addDoc(collection(db, 'textos'), {
+    const docRef = await addDoc(collection(cachedDb, 'textos'), {
       ...texto,
       createdAt: Timestamp.now()
     });
@@ -54,9 +59,9 @@ export const addTexto = async (texto: Omit<Texto, 'id'>): Promise<string | null>
 };
 
 export const updateTexto = async (id: string, data: Partial<Texto>): Promise<boolean> => {
-  if (!db) return false;
+  if (!cachedDb) return false;
   try {
-    const docRef = doc(db, 'textos', id);
+    const docRef = doc(cachedDb, 'textos', id);
     await updateDoc(docRef, data);
     return true;
   } catch (error) {
@@ -66,9 +71,9 @@ export const updateTexto = async (id: string, data: Partial<Texto>): Promise<boo
 };
 
 export const deleteTexto = async (id: string): Promise<boolean> => {
-  if (!db) return false;
+  if (!cachedDb) return false;
   try {
-    const docRef = doc(db, 'textos', id);
+    const docRef = doc(cachedDb, 'textos', id);
     await deleteDoc(docRef);
     return true;
   } catch (error) {
