@@ -32,6 +32,7 @@ export default function SettingsPage() {
                 const turma = row.turma || row.Turma || row.TURMA || "Geral";
                 const serie = row.serie || row.Serie || row.Série || row.SERIE || "1º Ano";
                 const turno = row.turno || row.Turno || row.TURNO || "Manhã";
+                const diagnostico = row.diagnostico || row.Diagnostico || row.DIAGNOSTICO || row.Diagnóstico || "Nenhum";
 
                 if (nome) {
                     try {
@@ -39,7 +40,8 @@ export default function SettingsPage() {
                             nome: String(nome),
                             turma: String(turma),
                             serie: String(serie),
-                            turno: String(turno)
+                            turno: String(turno),
+                            diagnostico: String(diagnostico)
                         } as Omit<Aluno, 'id'>);
                         successCount++;
                     } catch (e) {
@@ -116,7 +118,7 @@ export default function SettingsPage() {
                         <span>📥</span> Importação Lote
                     </h2>
                     <p style={{ color: "var(--text-muted)", fontSize: "0.95rem", marginBottom: "1.5rem" }}>
-                        Faça upload de uma planilha do Excel (.xlsx, .xls) para importar múltiplos alunos de uma só vez. Certifique-se de que a planilha contenha colunas chamadas <strong>Nome</strong>, <strong>Turma</strong>, <strong>Série</strong> e <strong>Turno</strong>.
+                        Faça upload de uma planilha do Excel (.xlsx, .xls) para importar múltiplos alunos de uma só vez. Certifique-se de que a planilha contenha colunas chamadas <strong>Nome</strong>, <strong>Turma</strong>, <strong>Série</strong>, <strong>Turno</strong> e (Opcional) <strong>Diagnóstico</strong>.
                     </p>
 
                     <label className="btn-outline" style={{ display: "inline-flex", cursor: loading ? "wait" : "pointer", opacity: loading ? 0.6 : 1 }}>
