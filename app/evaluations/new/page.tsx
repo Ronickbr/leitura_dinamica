@@ -4,6 +4,7 @@ import { useState, useEffect, Suspense } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { getAlunos, type Aluno } from "@/lib/services";
+import { MobileCard, MobileCardList, MobileDataGrid, MobileDataPoint } from "@/app/components/MobileCards";
 
 const SearchIcon = () => <span>🔍</span>;
 const ChevronRightIcon = () => <span>➡️</span>;
@@ -70,9 +71,11 @@ export default function SelectionPage() {
 
   return (
     <div className="animate-in" style={{ paddingBottom: '4rem' }}>
-      <header style={{ marginBottom: '2.5rem' }}>
-        <h2 style={{ fontSize: '2.5rem', fontWeight: 800, marginBottom: '0.5rem' }}>Seleção de <span style={{ color: 'var(--primary)' }}>Estudante</span></h2>
-        <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem' }}>Filtre e escolha um aluno para iniciar a avaliação.</p>
+      <header className="page-header">
+        <div className="page-header-content">
+          <h2 className="page-title">Seleção de <span style={{ color: 'var(--primary)' }}>Estudante</span></h2>
+          <p className="page-subtitle">Filtre e escolha um aluno para iniciar a avaliação.</p>
+        </div>
       </header>
 
       <div className="glass-panel" style={{ padding: '1rem 1.5rem', marginBottom: '2rem', borderRadius: '16px' }}>
@@ -147,52 +150,78 @@ export default function SelectionPage() {
           Buscando registros na base de dados...
         </div>
       ) : (
-        <div className="glass-card" style={{ padding: 0, overflow: 'hidden', border: '1px solid var(--glass-border)' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <thead>
-              <tr style={{ background: 'rgba(255,255,255,0.03)', borderBottom: '1px solid var(--glass-border)' }}>
-                <th style={{ padding: '1.25rem 2rem', textAlign: 'left', fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 800 }}>ESTUDANTE</th>
-                <th style={{ padding: '1.25rem 2rem', textAlign: 'left', fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 800 }}>SÉRIE</th>
-                <th style={{ padding: '1.25rem 2rem', textAlign: 'left', fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 800 }}>TURMA</th>
-                <th style={{ padding: '1.25rem 2rem', textAlign: 'left', fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 800 }}>DIAGNÓSTICO</th>
-                <th style={{ padding: '1.25rem 2rem', textAlign: 'right' }}></th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredAlunos.map(aluno => (
-                <tr
+        <>
+          <div className="glass-card desktop-only-view" style={{ padding: 0, overflow: 'hidden', border: '1px solid var(--glass-border)' }}>
+            <div className="table-scroll">
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr style={{ background: 'rgba(255,255,255,0.03)', borderBottom: '1px solid var(--glass-border)' }}>
+                    <th style={{ padding: '1.25rem 2rem', textAlign: 'left', fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 800 }}>ESTUDANTE</th>
+                    <th style={{ padding: '1.25rem 2rem', textAlign: 'left', fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 800 }}>SÉRIE</th>
+                    <th style={{ padding: '1.25rem 2rem', textAlign: 'left', fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 800 }}>TURMA</th>
+                    <th style={{ padding: '1.25rem 2rem', textAlign: 'left', fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 800 }}>DIAGNÓSTICO</th>
+                    <th style={{ padding: '1.25rem 2rem', textAlign: 'right' }}></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredAlunos.map(aluno => (
+                    <tr
+                      key={aluno.id}
+                      className="hover-row"
+                      style={{
+                        cursor: 'pointer',
+                        borderBottom: '1px solid var(--glass-border)',
+                        background: getDiagnosisColor(aluno.diagnostico),
+                      }}
+                      onClick={() => router.push(`/evaluations/${aluno.id}`)}
+                    >
+                      <td style={{ padding: '1.25rem 2rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                          <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)' }}><UserIcon /></div>
+                          <span style={{ fontWeight: 700 }}>{aluno.nome}</span>
+                        </div>
+                      </td>
+                      <td style={{ padding: '1.25rem 2rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>{aluno.serie}</td>
+                      <td style={{ padding: '1.25rem 2rem' }}>
+                        <span style={{ padding: '0.3rem 0.6rem', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 700, background: 'rgba(99, 102, 241, 0.1)', color: 'var(--primary)' }}>{aluno.turma}</span>
+                      </td>
+                      <td style={{ padding: '1.25rem 2rem' }}>
+                        <span style={{ fontSize: '0.8rem', fontWeight: 600, color: aluno.diagnostico && aluno.diagnostico.toLowerCase() !== 'nenhum' ? 'white' : 'var(--text-muted)' }}>
+                          {getDiagnosisLabel(aluno.diagnostico)}
+                        </span>
+                      </td>
+                      <td style={{ padding: '1.25rem 2rem', textAlign: 'right' }}>
+                        <div style={{ opacity: 0.3 }}><ChevronRightIcon /></div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div className="mobile-only-view">
+            <MobileCardList testId="evaluation-selection-mobile-cards">
+              {filteredAlunos.map((aluno) => (
+                <MobileCard
                   key={aluno.id}
-                  className="hover-row"
-                  style={{
-                    cursor: 'pointer',
-                    borderBottom: '1px solid var(--glass-border)',
-                    background: getDiagnosisColor(aluno.diagnostico),
-                  }}
+                  testId="evaluation-selection-mobile-card"
+                  title={aluno.nome}
+                  subtitle={`${aluno.serie} • Turma ${aluno.turma}`}
+                  badge={<span style={{ padding: '0.35rem 0.7rem', borderRadius: '999px', fontSize: '0.75rem', fontWeight: 700, background: getDiagnosisColor(aluno.diagnostico), color: 'var(--text-main)', border: '1px solid var(--glass-border)' }}>{getDiagnosisLabel(aluno.diagnostico)}</span>}
                   onClick={() => router.push(`/evaluations/${aluno.id}`)}
+                  footer={<span style={{ color: 'var(--primary)', fontWeight: 700 }}>Toque para iniciar a avaliação</span>}
                 >
-                  <td style={{ padding: '1.25rem 2rem' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                      <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)' }}><UserIcon /></div>
-                      <span style={{ fontWeight: 700 }}>{aluno.nome}</span>
-                    </div>
-                  </td>
-                  <td style={{ padding: '1.25rem 2rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>{aluno.serie}</td>
-                  <td style={{ padding: '1.25rem 2rem' }}>
-                    <span style={{ padding: '0.3rem 0.6rem', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 700, background: 'rgba(99, 102, 241, 0.1)', color: 'var(--primary)' }}>{aluno.turma}</span>
-                  </td>
-                  <td style={{ padding: '1.25rem 2rem' }}>
-                    <span style={{ fontSize: '0.8rem', fontWeight: 600, color: aluno.diagnostico && aluno.diagnostico.toLowerCase() !== 'nenhum' ? 'white' : 'var(--text-muted)' }}>
-                      {getDiagnosisLabel(aluno.diagnostico)}
-                    </span>
-                  </td>
-                  <td style={{ padding: '1.25rem 2rem', textAlign: 'right' }}>
-                    <div style={{ opacity: 0.3 }}><ChevronRightIcon /></div>
-                  </td>
-                </tr>
+                  <MobileDataGrid>
+                    <MobileDataPoint label="Série" value={aluno.serie} />
+                    <MobileDataPoint label="Turma" value={aluno.turma} accent />
+                    <MobileDataPoint label="Diagnóstico" value={getDiagnosisLabel(aluno.diagnostico)} />
+                    <MobileDataPoint label="Ação" value="Abrir avaliação" />
+                  </MobileDataGrid>
+                </MobileCard>
               ))}
-            </tbody>
-          </table>
-        </div>
+            </MobileCardList>
+          </div>
+        </>
       )}
 
       {!loading && filteredAlunos.length === 0 && (

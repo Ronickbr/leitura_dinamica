@@ -66,9 +66,12 @@ export default function SettingsPage() {
 
     return (
         <div className="animate-in" style={{ padding: "1rem 0" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "2rem" }}>
-                <h1 style={{ fontSize: "2rem", fontWeight: 800 }}>Configurações</h1>
-            </div>
+            <header className="page-header" style={{ marginBottom: "2rem" }}>
+                <div className="page-header-content">
+                    <h1 className="page-title" style={{ fontSize: "2rem" }}>Configurações</h1>
+                    <p className="page-subtitle">Ajuste privacidade, importação em lote e preferências do ambiente.</p>
+                </div>
+            </header>
 
             <div className="grid-cards" style={{ display: "grid", gridTemplateColumns: "1fr", gap: "2rem", maxWidth: "800px" }}>
 

@@ -1,16 +1,23 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { onAuthStateChanged, signOut, User } from "firebase/auth";
 import { useFirebase } from "./FirebaseProvider";
+import { useMobileExperience } from "./MobileExperienceProvider";
 import { resetDatabase } from "@/lib/resetDatabaseService";
 import ThemeToggle from "./ThemeToggle";
-import MobileNav from "./MobileNav";
+
+const MobileNav = dynamic(() => import("./MobileNav"), {
+  ssr: false,
+  loading: () => null,
+});
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const { auth, db, initialized } = useFirebase();
+  const { isMobile, isTouchDevice } = useMobileExperience();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [resetting, setResetting] = useState(false);
@@ -19,6 +26,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const [selectedCollections, setSelectedCollections] = useState<string[]>(['alunos', 'textos', 'avaliacoes']);
   const router = useRouter();
   const pathname = usePathname();
+  const publicRoutes = ["/login", "/mobile-preview"];
 
   useEffect(() => {
     if (!initialized || !auth) {
@@ -33,7 +41,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   }, [initialized, auth]);
 
   useEffect(() => {
-    if (!loading && !user && pathname !== '/login') {
+    if (!loading && !user && !publicRoutes.includes(pathname)) {
       router.push('/login');
     }
   }, [user, loading, router, pathname]);
@@ -47,7 +55,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   }
 
   if (!user) {
-    if (pathname === '/login') {
+    if (publicRoutes.includes(pathname)) {
       return <>{children}</>;
     }
     return null;
@@ -101,8 +109,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   ];
 
   return (
-    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
-      <header className="glass-panel" style={{
+    <div className="app-shell" style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
+      <header className="glass-panel app-header" style={{
         position: "fixed",
         top: 0,
         left: 0,
@@ -115,7 +123,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         background: "var(--glass-bg)",
         backdropFilter: "blur(20px)",
       }}>
-        <div className="container" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0.5rem 1rem" }}>
+        <div className="container app-header-content" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0.5rem 1rem" }}>
           <Link href="/" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: "0.5rem" }}>
             <span style={{ fontSize: "1.5rem", fontWeight: 900 }}>📖</span>
             <span style={{ fontSize: "1.1rem", fontWeight: 800 }} className="app-title">Fluência <span style={{ color: "var(--primary)" }}>Leitora</span></span>
@@ -142,11 +150,23 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             ))}
           </nav>
 
-          <div style={{ display: "flex", alignItems: "center", gap: "1rem", position: "relative" }}>
+          <div className="app-header-actions" style={{ display: "flex", alignItems: "center", gap: "1rem", position: "relative" }}>
             <ThemeToggle />
             <button
               onClick={() => setShowUserDropdown(!showUserDropdown)}
-              style={{ background: "transparent", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: "0.5rem" }}
+              className="app-user-button"
+              aria-expanded={showUserDropdown}
+              aria-label="Abrir menu do usuário"
+              style={{
+                background: "transparent",
+                border: "none",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                gap: "0.5rem",
+                minWidth: isTouchDevice ? "44px" : undefined,
+                minHeight: isTouchDevice ? "44px" : undefined,
+              }}
             >
               {user.photoURL ? (
                 <img src={user.photoURL} alt={user.displayName || "Usuário"} style={{ width: "36px", height: "36px", borderRadius: "50%" }} />
@@ -158,17 +178,29 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             </button>
 
             {showUserDropdown && (
-              <div className="glass-card" style={{
-                position: "absolute",
-                top: "100%",
-                right: 0,
-                marginTop: "0.5rem",
-                padding: "0.5rem",
-                display: "flex",
-                flexDirection: "column",
-                gap: "0.25rem",
-                minWidth: "220px"
-              }}>
+              <>
+                {isMobile && (
+                  <button
+                    type="button"
+                    aria-label="Fechar menu do usuário"
+                    onClick={() => setShowUserDropdown(false)}
+                    className="menu-overlay"
+                  />
+                )}
+                <div
+                  className={`glass-card user-dropdown ${isMobile ? "user-dropdown-mobile" : "user-dropdown-desktop"}`}
+                  style={{
+                    position: "absolute",
+                    top: "100%",
+                    right: 0,
+                    marginTop: "0.5rem",
+                    padding: "0.5rem",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "0.25rem",
+                    minWidth: "220px",
+                  }}
+                >
                 <div style={{ padding: "0.75rem", borderBottom: "1px solid var(--glass-border)", marginBottom: "0.5rem" }}>
                   <span style={{ fontSize: "0.75rem", color: "var(--text-muted)", display: "block" }}>Logado como</span>
                   <strong style={{ fontSize: "0.9rem", wordBreak: "break-all" }}>{user.email}</strong>
@@ -195,13 +227,14 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 >
                   <span style={{ fontSize: "1.2rem" }}>🚪</span> Sair
                 </button>
-              </div>
+                </div>
+              </>
             )}
           </div>
         </div>
       </header>
 
-      <main className="container" style={{ padding: "2rem", paddingTop: "6rem", flex: 1 }}>
+      <main className="container page-content" style={{ padding: "2rem", paddingTop: "6rem", flex: 1 }}>
         {children}
       </main>
 
@@ -256,18 +289,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         </div>
       )}
 
-      {/* Navegação Mobile (Show only on small screens) */}
-      <div className="mobile-only" style={{ display: "none" }}>
-        <MobileNav />
-      </div>
-
-      <style jsx global>{`
-        @media (max-width: 768px) {
-          .mobile-only { display: block !important; }
-          .app-title { display: none; }
-          main { padding-bottom: 80px !important; } /* Espaço para o MobileNav */
-        }
-      `}</style>
+      {isMobile && <MobileNav />}
     </div>
   );
 }

@@ -14,7 +14,10 @@ export default function MobileNav() {
     const pathname = usePathname();
 
     return (
-        <nav className="glass-panel" style={{
+        <nav
+            className="glass-panel mobile-nav"
+            aria-label="Navegação principal mobile"
+            style={{
             position: "fixed",
             bottom: "1rem",
             left: "1rem",
@@ -33,6 +36,8 @@ export default function MobileNav() {
                 <Link
                     key={item.href}
                     href={item.href}
+                    aria-current={pathname === item.href ? "page" : undefined}
+                    className="mobile-nav-link"
                     style={{
                         display: "flex",
                         flexDirection: "column",
@@ -41,6 +46,9 @@ export default function MobileNav() {
                         textDecoration: "none",
                         color: pathname === item.href ? "var(--primary)" : "var(--text-muted)",
                         transition: "all 0.2s ease",
+                        minHeight: "48px",
+                        justifyContent: "center",
+                        borderRadius: "14px",
                     }}
                 >
                     <span style={{

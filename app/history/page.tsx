@@ -5,6 +5,7 @@ import { getAllAvaliacoes, type Avaliacao } from "@/lib/evaluationsService";
 import { getAlunos, type Aluno } from "@/lib/services";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { MobileCard, MobileCardList, MobileDataGrid, MobileDataPoint } from "../components/MobileCards";
 import { useSettings } from "../components/SettingsProvider";
 import * as XLSX from "xlsx";
 
@@ -194,10 +195,10 @@ export default function HistoryPage() {
 
   return (
     <div className="animate-in" style={{ paddingBottom: '4rem' }}>
-      <header style={{ marginBottom: '2.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-        <div>
-          <h2 style={{ fontSize: '2.5rem', fontWeight: 800, marginBottom: '0.5rem' }}>Histórico de <span style={{ color: 'var(--primary)' }}>Avaliações</span></h2>
-          <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem' }}>Evolução dos estudantes e histórico detalhado.</p>
+      <header className="page-header">
+        <div className="page-header-content">
+          <h2 className="page-title">Histórico de <span style={{ color: 'var(--primary)' }}>Avaliações</span></h2>
+          <p className="page-subtitle">Evolução dos estudantes e histórico detalhado.</p>
         </div>
         {!loading && studentGroups.length > 0 && (
           <button onClick={handleExportExcel} className="btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -250,7 +251,7 @@ export default function HistoryPage() {
                   </div>
 
                   {/* Gráfico em barras e resumos numéricos */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '2.5rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '2.5rem', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
 
                     {chartData.length >= 1 && (
                       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
@@ -337,38 +338,64 @@ export default function HistoryPage() {
                 {/* Lista aninhada de avaliações */}
                 {isExpanded && (
                   <div style={{ background: 'var(--bg-deep)', opacity: 0.8 }} className="animate-in fade-in slide-in-from-top-2 duration-300">
-                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                      <thead>
-                        <tr style={{ borderBottom: '1px solid var(--glass-border)' }}>
-                          <th style={{ padding: '1rem 2rem', textAlign: 'left', fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 800 }}>DATA</th>
-                          <th style={{ padding: '1rem 2rem', textAlign: 'left', fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 800 }}>PCM</th>
-                          <th style={{ padding: '1rem 2rem', textAlign: 'left', fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 800 }}>PRECISÃO</th>
-                          <th style={{ padding: '1rem 2rem', textAlign: 'left', fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 800 }}>DIAGNÓSTICO</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {group.evaluations.map((ev, idx) => (
-                          <tr
+                    <div className="desktop-only-view">
+                      <div className="table-scroll">
+                        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                          <thead>
+                            <tr style={{ borderBottom: '1px solid var(--glass-border)' }}>
+                              <th style={{ padding: '1rem 2rem', textAlign: 'left', fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 800 }}>DATA</th>
+                              <th style={{ padding: '1rem 2rem', textAlign: 'left', fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 800 }}>PCM</th>
+                              <th style={{ padding: '1rem 2rem', textAlign: 'left', fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 800 }}>PRECISÃO</th>
+                              <th style={{ padding: '1rem 2rem', textAlign: 'left', fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 800 }}>DIAGNÓSTICO</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {group.evaluations.map((ev, idx) => (
+                              <tr
+                                key={ev.id}
+                                className="hover-row"
+                                style={{
+                                  borderBottom: idx === group.evaluations.length - 1 ? 'none' : '1px solid var(--glass-border)',
+                                  cursor: 'pointer'
+                                }}
+                                onClick={() => router.push(`/history/${ev.id}`)}
+                              >
+                                <td style={{ padding: '1rem 2rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>{formatDate(ev.data)}</td>
+                                <td style={{ padding: '1rem 2rem' }}>
+                                  <span style={{ color: getLevelColor(ev.pcm), fontWeight: 800, fontSize: '0.9rem' }}>{ev.pcm}</span>
+                                </td>
+                                <td style={{ padding: '1rem 2rem', fontSize: '0.9rem' }}>{ev.precisao}%</td>
+                                <td style={{ padding: '1rem 2rem', fontSize: '0.9rem', maxWidth: '300px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                  {anonymizeText(ev.diagnosticoIA)}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                    <div className="mobile-only-view" style={{ padding: '1rem' }}>
+                      <MobileCardList testId="history-mobile-cards">
+                        {group.evaluations.map((ev) => (
+                          <MobileCard
                             key={ev.id}
-                            className="hover-row"
-                            style={{
-                              borderBottom: idx === group.evaluations.length - 1 ? 'none' : '1px solid var(--glass-border)',
-                              cursor: 'pointer'
-                            }}
+                            testId="history-mobile-card"
+                            title={`${ev.pcm} PCM`}
+                            subtitle={formatDate(ev.data)}
+                            badge={<span style={{ color: getLevelColor(ev.pcm), fontWeight: 800 }}>{ev.precisao}%</span>}
                             onClick={() => router.push(`/history/${ev.id}`)}
+                            footer={<span style={{ color: 'var(--primary)', fontWeight: 700 }}>Toque para ver detalhes</span>}
                           >
-                            <td style={{ padding: '1rem 2rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>{formatDate(ev.data)}</td>
-                            <td style={{ padding: '1rem 2rem' }}>
-                              <span style={{ color: getLevelColor(ev.pcm), fontWeight: 800, fontSize: '0.9rem' }}>{ev.pcm}</span>
-                            </td>
-                            <td style={{ padding: '1rem 2rem', fontSize: '0.9rem' }}>{ev.precisao}%</td>
-                            <td style={{ padding: '1rem 2rem', fontSize: '0.9rem', maxWidth: '300px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                              {anonymizeText(ev.diagnosticoIA)}
-                            </td>
-                          </tr>
+                            <MobileDataGrid>
+                              <MobileDataPoint label="PCM" value={ev.pcm} accent />
+                              <MobileDataPoint label="Precisão" value={`${ev.precisao}%`} />
+                              <MobileDataPoint label="Data" value={formatDate(ev.data)} />
+                              <MobileDataPoint label="Diagnóstico" value={anonymizeText(ev.diagnosticoIA || '-')} />
+                            </MobileDataGrid>
+                          </MobileCard>
                         ))}
-                      </tbody>
-                    </table>
+                      </MobileCardList>
+                    </div>
                   </div>
                 )}
               </div>

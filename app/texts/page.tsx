@@ -51,10 +51,10 @@ export default function TextsPage() {
 
   return (
     <div className="animate-in" style={{ paddingBottom: '4rem' }}>
-      <header style={{ marginBottom: '2.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-        <div>
-          <h2 style={{ fontSize: '2.5rem', fontWeight: 800, marginBottom: '0.5rem' }}>Biblioteca de <span style={{ color: 'var(--primary)' }}>Textos</span></h2>
-          <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem' }}>Gerencie os textos para avaliação.</p>
+      <header className="page-header">
+        <div className="page-header-content">
+          <h2 className="page-title">Biblioteca de <span style={{ color: 'var(--primary)' }}>Textos</span></h2>
+          <p className="page-subtitle">Gerencie os textos para avaliação.</p>
         </div>
         <button onClick={() => setShowForm(!showForm)} className="btn-primary">
           {showForm ? 'Cancelar' : '+ Novo Texto'}
@@ -64,7 +64,7 @@ export default function TextsPage() {
       {showForm && (
         <div className="glass-card" style={{ marginBottom: '2rem', padding: '2rem' }}>
           <form onSubmit={handleSubmit}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 150px', gap: '1rem', marginBottom: '1rem' }}>
+            <div className="responsive-form-grid" style={{ marginBottom: '1rem' }}>
               <input
                 type="text"
                 placeholder="Título do texto"

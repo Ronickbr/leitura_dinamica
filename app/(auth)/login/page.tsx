@@ -63,10 +63,10 @@ export default function LoginPage() {
       padding: "2rem"
     }}>
       <div className="glass-card" style={{ maxWidth: "420px", width: "100%", padding: "3rem", textAlign: "center" }}>
-        <h1 style={{ fontSize: "2.5rem", fontWeight: 900, marginBottom: "0.5rem" }}>
+        <h1 className="page-title" style={{ fontWeight: 900 }}>
           Fluência <span style={{ color: "var(--primary)" }}>Leitora</span>
         </h1>
-        <p style={{ color: "var(--text-muted)", marginBottom: "2.5rem", fontSize: "1.1rem" }}>
+        <p className="page-subtitle" style={{ marginBottom: "2.5rem" }}>
           Avaliação de fluência leitora com IA
         </p>
 

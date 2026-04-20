@@ -1,7 +1,7 @@
 {
   "name": "leitura",
   "private": true,
-  "version": "2.1.5",
+  "version": "2.2.0",
   "description": "Plataforma de avaliacao de fluencia leitora com Next.js.",
   "engines": {
     "node": ">=22.0.0"
@@ -11,6 +11,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "test:mobile": "playwright test --config=playwright.config.ts",
+    "test:mobile:headed": "playwright test --config=playwright.config.ts --headed",
     "deploy:preview": "vercel",
     "deploy:prod": "vercel --prod"
   },
@@ -32,6 +34,7 @@
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
+    "@playwright/test": "^1.56.1",
     "@types/node": "^25.6.0",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",

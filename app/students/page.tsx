@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { getAlunos, addAluno, updateAluno, deleteAluno, type Aluno } from "@/lib/services";
+import { MobileCard, MobileCardList, MobileDataGrid, MobileDataPoint } from "../components/MobileCards";
 import { useSettings } from "../components/SettingsProvider";
 
 export default function StudentsPage() {
@@ -59,10 +60,10 @@ export default function StudentsPage() {
 
   return (
     <div className="animate-in" style={{ paddingBottom: '4rem' }}>
-      <header style={{ marginBottom: '2.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-        <div>
-          <h2 style={{ fontSize: '2.5rem', fontWeight: 800, marginBottom: '0.5rem' }}>Gerenciar <span style={{ color: 'var(--primary)' }}>Alunos</span></h2>
-          <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem' }}>Cadastre e gerencie os estudantes.</p>
+      <header className="page-header">
+        <div className="page-header-content">
+          <h2 className="page-title">Gerenciar <span style={{ color: 'var(--primary)' }}>Alunos</span></h2>
+          <p className="page-subtitle">Cadastre e gerencie os estudantes.</p>
         </div>
         <button onClick={() => { if (showForm) { setEditingId(null); setFormData({ nome: '', turma: '', serie: '', turno: '', diagnostico: '', observacoes: '' }); } setShowForm(!showForm); }} className="btn-primary">
           {showForm ? 'Cancelar' : '+ Novo Aluno'}
@@ -73,7 +74,7 @@ export default function StudentsPage() {
         <div className="glass-card" style={{ marginBottom: '2rem', padding: '2rem' }}>
           <h3 style={{ marginBottom: '1rem', fontSize: '1.2rem', fontWeight: 800 }}>{editingId ? '✏️ Editar Aluno' : '✨ Novo Aluno'}</h3>
           <form onSubmit={handleSubmit}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
+            <div className="responsive-form-grid" style={{ marginBottom: '1.5rem' }}>
               <input
                 type="text"
                 placeholder="Nome do aluno"
@@ -142,56 +143,91 @@ export default function StudentsPage() {
       {loading ? (
         <div style={{ textAlign: 'center', padding: '5rem', color: 'var(--text-muted)' }} className="animate-pulse">Carregando...</div>
       ) : (
-        <div className="glass-card" style={{ padding: 0, overflow: 'hidden' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <thead>
-              <tr style={{ background: 'var(--glass-bg)', borderBottom: '1px solid var(--glass-border)' }}>
-                <th style={{ padding: '1.25rem 2rem', textAlign: 'left', fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 800 }}>NOME</th>
-                <th style={{ padding: '1.25rem 2rem', textAlign: 'left', fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 800 }}>TURMA E SÉRIE</th>
-                <th style={{ padding: '1.25rem 2rem', textAlign: 'left', fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 800 }}>TURNO</th>
-                <th style={{ padding: '1.25rem 2rem', textAlign: 'left', fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 800 }}>DIAGNÓSTICO</th>
-                <th style={{ padding: '1.25rem 2rem', textAlign: 'right', fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 800 }}>AÇÕES</th>
-              </tr>
-            </thead>
-            <tbody>
-              {alunos.map(aluno => (
-                <tr key={aluno.id} className="hover-row" style={{ borderBottom: '1px solid var(--glass-border)' }}>
-                  <td style={{ padding: '1.25rem 2rem', fontWeight: 700 }}>
-                    {anonymizeName(aluno.id, aluno.nome)}
-                  </td>
-                  <td style={{ padding: '1.25rem 2rem', color: 'var(--text-muted)' }}>
-                    {aluno.serie} - Turma {aluno.turma}
-                  </td>
-                  <td style={{ padding: '1.25rem 2rem' }}>
-                    {aluno.turno ? (
-                      <span style={{ padding: '0.4rem 0.75rem', background: 'rgba(99, 102, 241, 0.1)', borderRadius: '8px', fontSize: '0.8rem', color: 'var(--primary)', fontWeight: 600 }}>
-                        {aluno.turno}
-                      </span>
-                    ) : (
-                      <span style={{ color: 'var(--text-muted)' }}>-</span>
-                    )}
-                  </td>
-                  <td style={{ padding: '1.25rem 2rem' }}>
-                    {aluno.diagnostico && aluno.diagnostico !== "Nenhum diagnóstico" && aluno.diagnostico !== "Nenhum" ? (
-                      <span style={{ padding: '0.4rem 0.75rem', background: 'rgba(234, 179, 8, 0.2)', borderRadius: '8px', fontSize: '0.8rem', color: 'var(--warning)', fontWeight: 600 }}>
-                        {anonymizeText(aluno.diagnostico)}
-                      </span>
-                    ) : (
-                      <span style={{ color: 'var(--text-muted)' }}>-</span>
-                    )}
-                  </td>
-                  <td style={{ padding: '1.25rem 2rem', textAlign: 'right' }}>
-                    <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
-                      <button onClick={() => setViewingAluno(aluno)} className="btn-icon" title="Visualizar">👁️</button>
-                      <button onClick={() => { setFormData({ nome: aluno.nome, turma: aluno.turma, serie: aluno.serie, turno: aluno.turno || '', diagnostico: aluno.diagnostico || '', observacoes: aluno.observacoes || '' }); setEditingId(aluno.id); setShowForm(true); window.scrollTo(0, 0); }} className="btn-icon" title="Editar">✏️</button>
-                      <button onClick={() => handleDelete(aluno.id)} className="btn-icon" title="Excluir">🗑️</button>
-                    </div>
-                  </td>
-                </tr>
+        <>
+          <div className="glass-card desktop-only-view" style={{ padding: 0, overflow: 'hidden' }}>
+            <div className="table-scroll">
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr style={{ background: 'var(--glass-bg)', borderBottom: '1px solid var(--glass-border)' }}>
+                    <th style={{ padding: '1.25rem 2rem', textAlign: 'left', fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 800 }}>NOME</th>
+                    <th style={{ padding: '1.25rem 2rem', textAlign: 'left', fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 800 }}>TURMA E SÉRIE</th>
+                    <th style={{ padding: '1.25rem 2rem', textAlign: 'left', fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 800 }}>TURNO</th>
+                    <th style={{ padding: '1.25rem 2rem', textAlign: 'left', fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 800 }}>DIAGNÓSTICO</th>
+                    <th style={{ padding: '1.25rem 2rem', textAlign: 'right', fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 800 }}>AÇÕES</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {alunos.map(aluno => (
+                    <tr key={aluno.id} className="hover-row" style={{ borderBottom: '1px solid var(--glass-border)' }}>
+                      <td style={{ padding: '1.25rem 2rem', fontWeight: 700 }}>
+                        {anonymizeName(aluno.id, aluno.nome)}
+                      </td>
+                      <td style={{ padding: '1.25rem 2rem', color: 'var(--text-muted)' }}>
+                        {aluno.serie} - Turma {aluno.turma}
+                      </td>
+                      <td style={{ padding: '1.25rem 2rem' }}>
+                        {aluno.turno ? (
+                          <span style={{ padding: '0.4rem 0.75rem', background: 'rgba(99, 102, 241, 0.1)', borderRadius: '8px', fontSize: '0.8rem', color: 'var(--primary)', fontWeight: 600 }}>
+                            {aluno.turno}
+                          </span>
+                        ) : (
+                          <span style={{ color: 'var(--text-muted)' }}>-</span>
+                        )}
+                      </td>
+                      <td style={{ padding: '1.25rem 2rem' }}>
+                        {aluno.diagnostico && aluno.diagnostico !== "Nenhum diagnóstico" && aluno.diagnostico !== "Nenhum" ? (
+                          <span style={{ padding: '0.4rem 0.75rem', background: 'rgba(234, 179, 8, 0.2)', borderRadius: '8px', fontSize: '0.8rem', color: 'var(--warning)', fontWeight: 600 }}>
+                            {anonymizeText(aluno.diagnostico)}
+                          </span>
+                        ) : (
+                          <span style={{ color: 'var(--text-muted)' }}>-</span>
+                        )}
+                      </td>
+                      <td style={{ padding: '1.25rem 2rem', textAlign: 'right' }}>
+                        <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+                          <button onClick={() => setViewingAluno(aluno)} className="btn-icon" title="Visualizar">👁️</button>
+                          <button onClick={() => { setFormData({ nome: aluno.nome, turma: aluno.turma, serie: aluno.serie, turno: aluno.turno || '', diagnostico: aluno.diagnostico || '', observacoes: aluno.observacoes || '' }); setEditingId(aluno.id); setShowForm(true); window.scrollTo(0, 0); }} className="btn-icon" title="Editar">✏️</button>
+                          <button onClick={() => handleDelete(aluno.id)} className="btn-icon" title="Excluir">🗑️</button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div className="mobile-only-view">
+            <MobileCardList testId="students-mobile-cards">
+              {alunos.map((aluno) => (
+                <MobileCard
+                  key={aluno.id}
+                  testId="student-mobile-card"
+                  title={anonymizeName(aluno.id, aluno.nome)}
+                  subtitle={`${aluno.serie} • Turma ${aluno.turma}`}
+                  badge={aluno.turno ? (
+                    <span style={{ padding: '0.35rem 0.7rem', background: 'rgba(99, 102, 241, 0.1)', borderRadius: '999px', fontSize: '0.75rem', color: 'var(--primary)', fontWeight: 700 }}>
+                      {aluno.turno}
+                    </span>
+                  ) : undefined}
+                  footer={
+                    <>
+                      <button onClick={() => setViewingAluno(aluno)} className="btn-outline" style={{ flex: 1 }}>Visualizar</button>
+                      <button onClick={() => { setFormData({ nome: aluno.nome, turma: aluno.turma, serie: aluno.serie, turno: aluno.turno || '', diagnostico: aluno.diagnostico || '', observacoes: aluno.observacoes || '' }); setEditingId(aluno.id); setShowForm(true); window.scrollTo(0, 0); }} className="btn-primary" style={{ flex: 1 }}>Editar</button>
+                      <button onClick={() => handleDelete(aluno.id)} className="btn-outline" style={{ flexBasis: '100%', color: 'var(--error)' }}>Excluir</button>
+                    </>
+                  }
+                >
+                  <MobileDataGrid>
+                    <MobileDataPoint label="Série" value={aluno.serie} />
+                    <MobileDataPoint label="Turma" value={aluno.turma} accent />
+                    <MobileDataPoint label="Turno" value={aluno.turno || '-'} />
+                    <MobileDataPoint label="Diagnóstico" value={aluno.diagnostico && aluno.diagnostico !== "Nenhum diagnóstico" && aluno.diagnostico !== "Nenhum" ? anonymizeText(aluno.diagnostico) : '-'} />
+                  </MobileDataGrid>
+                </MobileCard>
               ))}
-            </tbody>
-          </table>
-        </div>
+            </MobileCardList>
+          </div>
+        </>
       )}
 
       {!loading && alunos.length === 0 && (

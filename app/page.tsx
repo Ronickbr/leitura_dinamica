@@ -108,19 +108,27 @@ export default function Dashboard() {
 
   return (
     <div className="animate-in" style={{ paddingBottom: '4rem' }}>
-      <header style={{ marginBottom: '3.5rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-          <div>
-            <h1 style={{ fontSize: '2.8rem', fontWeight: 900, letterSpacing: '-1.5px', marginBottom: '0.5rem' }}>
-              Painel de <span style={{ color: 'var(--primary)' }}>Controle</span>
-            </h1>
-            <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem', maxWidth: '600px' }}>
-              Visão panorâmica do progresso de fluência leitora da sua turma.
-            </p>
+      <header className="page-header" style={{ marginBottom: '3.5rem' }}>
+        <div className="page-header-content">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap', marginBottom: '0.5rem' }}>
+            <span className="perf-chip">Mobile Ready</span>
+            <span className="perf-chip">UX Touch</span>
           </div>
-          <Link href="/evaluations/new" className="btn-primary" style={{ textDecoration: 'none' }}>
-            <MicIcon /> Iniciar Avaliação
-          </Link>
+          <div className="page-header">
+            <div className="page-header-content">
+              <h1 className="page-title" style={{ fontWeight: 900 }}>
+              Painel de <span style={{ color: 'var(--primary)' }}>Controle</span>
+              </h1>
+              <p className="page-subtitle" style={{ maxWidth: '600px' }}>
+                Visão panorâmica do progresso de fluência leitora da sua turma.
+              </p>
+            </div>
+            <div className="page-header-actions">
+              <Link href="/evaluations/new" className="btn-primary" style={{ textDecoration: 'none' }}>
+                <MicIcon /> Iniciar Avaliação
+              </Link>
+            </div>
+          </div>
         </div>
       </header>
 

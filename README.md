@@ -12,6 +12,7 @@ Plataforma de avaliação de fluência leitora com Next.js (App Router), persist
 - [Scripts Disponíveis](#scripts-disponíveis)
 - [Desenvolvimento Local](#desenvolvimento-local)
 - [Deploy na Vercel](#deploy-na-vercel)
+- [Experiência Mobile](#experiência-mobile)
 - [Migração Realizada](#migração-realizada)
 
 ## Visão Geral
@@ -30,6 +31,8 @@ O sistema permite que professores:
 - exportem datasets anonimizados para pesquisa acadêmica e artigos científicos;
 - **[NOVO]** alternem entre Temas Claro e Escuro com persistência de preferência;
 - **[NOVO]** operem a plataforma com experiência "app-like" em dispositivos móveis (Navegação Inferior);
+- **[NOVO]** detectem automaticamente dispositivos móveis, conexão lenta e preferência por economia de dados;
+- **[NOVO]** monitorem métricas mobile contínuas no cliente para diagnóstico de performance;
 - **[NOVO]** revisem métricas qualitativas justificadas por IA (Fluência, Silabação, etc.) antes de salvar.
 
 ## Stack Atual
@@ -122,6 +125,8 @@ Copy-Item .env.example .env
 | `npm run build` | Gera o build de produção |
 | `npm run start` | Inicia o servidor de produção |
 | `npm run lint` | Executa ESLint |
+| `npm run test:mobile` | Executa a suíte mobile em navegadores emulados |
+| `npm run test:mobile:headed` | Executa a suíte mobile com interface gráfica |
 | `npm run deploy:preview` | Dispara deploy preview via Vercel CLI |
 | `npm run deploy:prod` | Dispara deploy de produção via Vercel CLI |
 
@@ -156,6 +161,12 @@ O projeto estará disponível em `http://localhost:3000`.
 
 ```bash
 npm run build
+```
+
+### 5. Validar a experiência mobile
+
+```bash
+npm run test:mobile
 ```
 
 ## Deploy na Vercel
@@ -203,6 +214,22 @@ npm run deploy:preview
 # Publica em produção
 npm run deploy:prod
 ```
+
+## Experiência Mobile
+
+O projeto agora possui uma camada dedicada de experiência mobile com:
+
+- detecção automática de viewport, touch, economia de dados e orientação;
+- navegação inferior carregada sob demanda;
+- cabeçalhos, formulários e listas adaptados para telas pequenas;
+- conversão das tabelas mais críticas para cards nativos no mobile;
+- monitoramento contínuo de `ttfb`, `fcp`, `lcp`, `cls`, `load`, `longTaskCount` e `resourceCount`;
+- testes automatizados em perfis iPhone, Android Chrome e WebKit mobile.
+
+Documentação detalhada:
+
+- [docs/mobile-experience.md](./docs/mobile-experience.md)
+- [skill mobile-experience-optimizer](./.trae/skills/mobile-experience-optimizer/SKILL.md)
 
 ## Migração Realizada
 
