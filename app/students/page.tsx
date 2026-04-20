@@ -81,7 +81,7 @@ export default function StudentsPage() {
                 onChange={e => setFormData({ ...formData, nome: e.target.value })}
                 required
                 className="glass-panel"
-                style={{ padding: '0.75rem 1rem', color: 'white', border: '1px solid var(--glass-border)' }}
+                style={{ padding: '0.75rem 1rem', color: 'var(--text-main)', border: '1px solid var(--glass-border)' }}
               />
               <input
                 type="text"
@@ -90,14 +90,14 @@ export default function StudentsPage() {
                 onChange={e => setFormData({ ...formData, turma: e.target.value })}
                 required
                 className="glass-panel"
-                style={{ padding: '0.75rem 1rem', color: 'white', border: '1px solid var(--glass-border)' }}
+                style={{ padding: '0.75rem 1rem', color: 'var(--text-main)', border: '1px solid var(--glass-border)' }}
               />
               <select
                 value={formData.serie}
                 onChange={e => setFormData({ ...formData, serie: e.target.value })}
                 required
                 className="glass-panel"
-                style={{ padding: '0.75rem 1rem', color: 'white', border: '1px solid var(--glass-border)' }}
+                style={{ padding: '0.75rem 1rem', color: 'var(--text-main)', border: '1px solid var(--glass-border)' }}
               >
                 <option value="">Selecione a série</option>
                 <option value="1º Ano">1º Ano</option>
@@ -111,7 +111,7 @@ export default function StudentsPage() {
                 onChange={e => setFormData({ ...formData, turno: e.target.value })}
                 required
                 className="glass-panel"
-                style={{ padding: '0.75rem 1rem', color: 'white', border: '1px solid var(--glass-border)' }}
+                style={{ padding: '0.75rem 1rem', color: 'var(--text-main)', border: '1px solid var(--glass-border)' }}
               >
                 <option value="">Selecione o Turno</option>
                 <option value="Manhã">Manhã</option>
@@ -123,7 +123,7 @@ export default function StudentsPage() {
                 value={formData.diagnostico}
                 onChange={e => setFormData({ ...formData, diagnostico: e.target.value })}
                 className="glass-panel"
-                style={{ padding: '0.75rem 1rem', color: 'white', border: '1px solid var(--glass-border)' }}
+                style={{ padding: '0.75rem 1rem', color: 'var(--text-main)', border: '1px solid var(--glass-border)' }}
               >
                 <option value="">Nenhum diagnóstico</option>
                 <option value="TEA">TEA</option>
@@ -145,7 +145,7 @@ export default function StudentsPage() {
         <div className="glass-card" style={{ padding: 0, overflow: 'hidden' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
-              <tr style={{ background: 'rgba(255,255,255,0.03)', borderBottom: '1px solid var(--glass-border)' }}>
+              <tr style={{ background: 'var(--glass-bg)', borderBottom: '1px solid var(--glass-border)' }}>
                 <th style={{ padding: '1.25rem 2rem', textAlign: 'left', fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 800 }}>NOME</th>
                 <th style={{ padding: '1.25rem 2rem', textAlign: 'left', fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 800 }}>TURMA E SÉRIE</th>
                 <th style={{ padding: '1.25rem 2rem', textAlign: 'left', fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 800 }}>TURNO</th>
@@ -201,8 +201,8 @@ export default function StudentsPage() {
       )}
 
       {viewingAluno && (
-        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.8)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "2rem" }}>
-          <div className="glass-card" style={{ maxWidth: "450px", width: "100%", background: "var(--bg-dark)" }}>
+        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "var(--bg-deep)", opacity: 0.98, backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "2rem" }}>
+          <div className="glass-card" style={{ maxWidth: "450px", width: "100%", background: "var(--bg-dark)", boxShadow: "var(--glass-shadow)" }}>
             <h2 style={{ marginBottom: "1.5rem", fontSize: "1.3rem", fontWeight: 800, color: "var(--primary)", display: "flex", alignItems: "center", gap: "0.5rem" }}>
               <span>👤</span> Visualizar Aluno
             </h2>

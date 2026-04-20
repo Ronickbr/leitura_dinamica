@@ -10,14 +10,23 @@
   /* Tema Claro (Padrão) */
   --bg-deep: #f1f5f9;
   --bg-dark: #ffffff;
-  --bg-card: rgba(255, 255, 255, 0.8);
+  --bg-card: rgba(255, 255, 255, 0.85);
   --text-main: #0f172a;
   --text-muted: #64748b;
 
-  --glass-bg: rgba(255, 255, 255, 0.4);
-  --glass-border: rgba(0, 0, 0, 0.08);
-  --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+  --glass-bg: rgba(255, 255, 255, 0.6);
+  --glass-border: rgba(0, 0, 0, 0.1);
+  --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.05);
   --glass-blur: blur(12px);
+
+  --btn-outline-text: #0f172a;
+  --btn-outline-hover-bg: rgba(0, 0, 0, 0.05);
+
+  --select-bg: #ffffff;
+  --select-text: #0f172a;
+  --select-stroke: #0f172a;
+
+  --scrollbar-thumb: #cbd5e1;
 
   --radius-sm: 8px;
   --radius-md: 12px;
@@ -37,6 +46,15 @@
   --glass-bg: rgba(255, 255, 255, 0.03);
   --glass-border: rgba(255, 255, 255, 0.08);
   --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+
+  --btn-outline-text: #ffffff;
+  --btn-outline-hover-bg: rgba(255, 255, 255, 0.05);
+
+  --select-bg: #0f172a;
+  --select-text: #ffffff;
+  --select-stroke: #ffffff;
+
+  --scrollbar-thumb: #334155;
 
   --body-bg: radial-gradient(circle at top right, #1e1b4b, #020617);
 }
@@ -73,13 +91,12 @@ body {
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-lg);
   padding: 2rem;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  transition: transform 0.3s ease, box-shadow 0.3s ease, background 0.3s ease;
 }
 
 .glass-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
-  background: rgba(30, 41, 59, 0.6);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.1);
 }
 
 .animate-in {
@@ -107,12 +124,12 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #334155;
+  background: var(--scrollbar-thumb);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #475569;
+  filter: brightness(0.9);
 }
 
 .btn-primary {
@@ -148,7 +165,7 @@ body {
 
 .btn-outline {
   background: transparent;
-  color: white;
+  color: var(--btn-outline-text);
   border: 1px solid var(--glass-border);
   padding: 0.75rem 1.5rem;
   border-radius: var(--radius-md);
@@ -162,8 +179,8 @@ body {
 }
 
 .btn-outline:hover {
-  background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(255, 255, 255, 0.2);
+  background: var(--btn-outline-hover-bg);
+  border-color: var(--glass-border);
 }
 
 .btn-icon {
@@ -180,8 +197,8 @@ body {
 }
 
 .btn-icon:hover {
-  background: rgba(255, 255, 255, 0.05);
-  color: white;
+  background: var(--btn-outline-hover-bg);
+  color: var(--text-main);
 }
 
 .animate-pulse {
@@ -250,20 +267,22 @@ main {
 }
 
 .hover-row:hover {
-  background: rgba(255, 255, 255, 0.01);
+  background: var(--btn-outline-hover-bg);
 }
 
 select {
   cursor: pointer;
   appearance: none;
-  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
   background-repeat: no-repeat;
   background-position: right 0.75rem center;
   background-size: 1em;
   padding-right: 2.25rem !important;
+  color: var(--select-text);
+  background-color: var(--select-bg);
 }
 
 select option {
-  background-color: #0f172a;
-  color: white;
+  background-color: var(--select-bg);
+  color: var(--select-text);
 }

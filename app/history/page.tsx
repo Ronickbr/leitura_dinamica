@@ -235,13 +235,13 @@ export default function HistoryPage() {
                     alignItems: 'center',
                     justifyContent: 'space-between',
                     cursor: 'pointer',
-                    background: isExpanded ? 'rgba(255,255,255,0.02)' : 'transparent',
+                    background: isExpanded ? 'var(--btn-outline-hover-bg)' : 'transparent',
                     borderBottom: isExpanded ? '1px solid var(--glass-border)' : 'none'
                   }}
                   onClick={() => setExpandedStudentId(isExpanded ? null : group.alunoId)}
                 >
                   <div style={{ flex: 1 }}>
-                    <h3 style={{ fontSize: '1.25rem', fontWeight: 700, margin: 0, color: 'white' }}>
+                    <h3 style={{ fontSize: '1.25rem', fontWeight: 700, margin: 0, color: 'var(--text-main)' }}>
                       {anonymizeName(group.alunoId, group.aluno?.nome || 'Aluno Desconhecido')}
                     </h3>
                     <div style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '0.25rem' }}>
@@ -273,7 +273,7 @@ export default function HistoryPage() {
                                   {points.length > 1 && (
                                     <polyline
                                       fill="none"
-                                      stroke="rgba(255, 255, 255, 0.2)"
+                                      stroke="var(--glass-border)"
                                       strokeWidth="2"
                                       strokeLinecap="round"
                                       strokeLinejoin="round"
@@ -327,7 +327,7 @@ export default function HistoryPage() {
                       width: '24px',
                       height: '24px',
                       borderRadius: '50%',
-                      background: 'rgba(255,255,255,0.05)'
+                      background: 'var(--btn-outline-hover-bg)'
                     }}>
                       ▼
                     </div>
@@ -336,7 +336,7 @@ export default function HistoryPage() {
 
                 {/* Lista aninhada de avaliações */}
                 {isExpanded && (
-                  <div style={{ background: 'rgba(0,0,0,0.15)' }} className="animate-in fade-in slide-in-from-top-2 duration-300">
+                  <div style={{ background: 'var(--bg-deep)', opacity: 0.8 }} className="animate-in fade-in slide-in-from-top-2 duration-300">
                     <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                       <thead>
                         <tr style={{ borderBottom: '1px solid var(--glass-border)' }}>

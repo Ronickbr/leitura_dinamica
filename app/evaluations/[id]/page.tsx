@@ -221,8 +221,8 @@ export default function ReadingPage() {
       </div>
 
       {isReviewing && (
-        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(2, 6, 23, 0.9)", backdropFilter: "blur(8px)", zIndex: 2000, display: "flex", alignItems: "center", justifyContent: "center", padding: "1.5rem" }}>
-          <div className="glass-card animate-in" style={{ maxWidth: "600px", width: "100%", maxHeight: "90vh", overflowY: "auto" }}>
+        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "var(--bg-deep)", opacity: 0.98, backdropFilter: "blur(8px)", zIndex: 2000, display: "flex", alignItems: "center", justifyContent: "center", padding: "1.5rem" }}>
+          <div className="glass-card animate-in" style={{ maxWidth: "600px", width: "100%", maxHeight: "90vh", overflowY: "auto", boxShadow: "var(--glass-shadow)" }}>
             <h2 style={{ marginBottom: "1.5rem", display: "flex", alignItems: "center", gap: "0.75rem" }}>
               <span style={{ fontSize: "1.5rem" }}>📝</span> Revisar Avaliação
             </h2>
@@ -230,7 +230,7 @@ export default function ReadingPage() {
             <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem", marginBottom: "2rem" }}>
               <div>
                 <p style={{ fontSize: "0.85rem", color: "var(--text-muted)", marginBottom: "0.5rem" }}>RESULTADO QUANTITATIVO</p>
-                <div style={{ display: "flex", gap: "2rem", background: "rgba(255,255,255,0.03)", padding: "1rem", borderRadius: "12px" }}>
+                <div style={{ display: "flex", gap: "2rem", background: "var(--glass-bg)", padding: "1rem", borderRadius: "12px", border: "1px solid var(--glass-border)" }}>
                   <div>
                     <div style={{ fontSize: "1.5rem", fontWeight: 900, color: "var(--primary)" }}>{tempResult.pcm}</div>
                     <div style={{ fontSize: "0.7rem", color: "var(--text-muted)" }}>PCM</div>
@@ -255,7 +255,7 @@ export default function ReadingPage() {
                     <div key={m.key} onClick={() => toggleMetric(m.key)} style={{
                       padding: "1rem",
                       borderRadius: "12px",
-                      background: tempResult.analysis.metricas_qualitativas[m.key] ? "rgba(16, 185, 129, 0.1)" : "rgba(255, 255, 255, 0.03)",
+                      background: tempResult.analysis.metricas_qualitativas[m.key] ? "rgba(16, 185, 129, 0.1)" : "var(--glass-bg)",
                       border: `1px solid ${tempResult.analysis.metricas_qualitativas[m.key] ? "var(--success)" : "var(--glass-border)"}`,
                       cursor: "pointer",
                       transition: "all 0.2s ease"

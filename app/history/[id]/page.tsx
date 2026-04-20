@@ -91,7 +91,7 @@ export default function EvaluationDetailsPage() {
                     <div className="glass-card">
                         <h3 style={{ fontSize: '1.2rem', marginBottom: '1rem', borderBottom: '1px solid var(--glass-border)', paddingBottom: '0.5rem' }}>Transcrição e Análise</h3>
                         {texto && (
-                            <div style={{ marginBottom: '1.5rem', padding: '1rem', background: 'rgba(255,255,255,0.03)', borderRadius: '8px' }}>
+                            <div style={{ marginBottom: '1.5rem', padding: '1rem', background: 'var(--glass-bg)', borderRadius: '8px', border: '1px solid var(--glass-border)' }}>
                                 <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Texto Original: {texto.titulo}</span>
                                 <p style={{ fontSize: '0.9rem', marginTop: '0.5rem', fontStyle: 'italic', color: 'var(--text-muted)' }}>"{texto.conteudo}"</p>
                             </div>
@@ -135,7 +135,7 @@ export default function EvaluationDetailsPage() {
                         <div className="glass-card" style={{ padding: '1.5rem' }}>
                             <h3 style={{ fontSize: '1rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>Métricas Qualitativas</h3>
                             <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.8rem', fontSize: '0.9rem' }}>
-                                <li style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', padding: '0.8rem', background: 'rgba(255,255,255,0.03)', borderRadius: '8px' }}>
+                                <li style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', padding: '0.8rem', background: 'var(--glass-bg)', borderRadius: '8px', border: '1px solid var(--glass-border)' }}>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                         <span style={{ fontWeight: 600 }}>Leitura Precisa</span>
                                         {avaliacao.metricasQualitativas.leitura_precisa
@@ -146,7 +146,7 @@ export default function EvaluationDetailsPage() {
                                         <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontStyle: 'italic', margin: 0 }}>{avaliacao.metricasQualitativas.leitura_precisa_justificativa}</p>
                                     )}
                                 </li>
-                                <li style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', padding: '0.8rem', background: 'rgba(255,255,255,0.03)', borderRadius: '8px' }}>
+                                <li style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', padding: '0.8rem', background: 'var(--glass-bg)', borderRadius: '8px', border: '1px solid var(--glass-border)' }}>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                         <span style={{ fontWeight: 600 }}>Leitura Silabada</span>
                                         {avaliacao.metricasQualitativas.leitura_silabada
@@ -157,7 +157,7 @@ export default function EvaluationDetailsPage() {
                                         <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontStyle: 'italic', margin: 0 }}>{avaliacao.metricasQualitativas.leitura_silabada_justificativa}</p>
                                     )}
                                 </li>
-                                <li style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', padding: '0.8rem', background: 'rgba(255,255,255,0.03)', borderRadius: '8px' }}>
+                                <li style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', padding: '0.8rem', background: 'var(--glass-bg)', borderRadius: '8px', border: '1px solid var(--glass-border)' }}>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                         <span style={{ fontWeight: 600 }}>Boa Entonação</span>
                                         {avaliacao.metricasQualitativas.boa_entonacao
@@ -168,7 +168,7 @@ export default function EvaluationDetailsPage() {
                                         <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontStyle: 'italic', margin: 0 }}>{avaliacao.metricasQualitativas.boa_entonacao_justificativa}</p>
                                     )}
                                 </li>
-                                <li style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', padding: '0.8rem', background: 'rgba(255,255,255,0.03)', borderRadius: '8px' }}>
+                                <li style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', padding: '0.8rem', background: 'var(--glass-bg)', borderRadius: '8px', border: '1px solid var(--glass-border)' }}>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                         <span style={{ fontWeight: 600 }}>Interpretação</span>
                                         {avaliacao.metricasQualitativas.interpretacao
@@ -179,7 +179,7 @@ export default function EvaluationDetailsPage() {
                                         <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontStyle: 'italic', margin: 0 }}>{avaliacao.metricasQualitativas.interpretacao_justificativa}</p>
                                     )}
                                 </li>
-                                <li style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', padding: '0.8rem', background: 'rgba(255,255,255,0.03)', borderRadius: '8px' }}>
+                                <li style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', padding: '0.8rem', background: 'var(--glass-bg)', borderRadius: '8px', border: '1px solid var(--glass-border)' }}>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                         <span style={{ fontWeight: 600 }}>Pontuação</span>
                                         {avaliacao.metricasQualitativas.pontuacao
