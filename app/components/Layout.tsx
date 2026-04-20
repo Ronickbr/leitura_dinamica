@@ -6,6 +6,8 @@ import Link from "next/link";
 import { onAuthStateChanged, signOut, User } from "firebase/auth";
 import { useFirebase } from "./FirebaseProvider";
 import { resetDatabase } from "@/lib/resetDatabaseService";
+import ThemeToggle from "./ThemeToggle";
+import MobileNav from "./MobileNav";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const { auth, db, initialized } = useFirebase();
@@ -109,13 +111,13 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         borderLeft: "none",
         borderRight: "none",
       }}>
-        <div className="container" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "1rem 2rem" }}>
+        <div className="container" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0.5rem 1rem" }}>
           <Link href="/" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: "0.5rem" }}>
             <span style={{ fontSize: "1.5rem", fontWeight: 900 }}>📖</span>
-            <span style={{ fontSize: "1.25rem", fontWeight: 800 }}>Fluência <span style={{ color: "var(--primary)" }}>Leitora</span></span>
+            <span style={{ fontSize: "1.1rem", fontWeight: 800 }} className="app-title">Fluência <span style={{ color: "var(--primary)" }}>Leitora</span></span>
           </Link>
 
-          <nav style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+          <nav className="desktop-nav" style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
             {navItems.map((item) => (
               <Link
                 key={item.href}
@@ -137,6 +139,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           </nav>
 
           <div style={{ display: "flex", alignItems: "center", gap: "1rem", position: "relative" }}>
+            <ThemeToggle />
             <button
               onClick={() => setShowUserDropdown(!showUserDropdown)}
               style={{ background: "transparent", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: "0.5rem" }}
@@ -167,7 +170,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                   <strong style={{ fontSize: "0.9rem", wordBreak: "break-all" }}>{user.email}</strong>
                 </div>
 
-                <Link href="/settings" onClick={() => setShowUserDropdown(false)} className="hover-row" style={{ padding: "0.5rem", borderRadius: "8px", textDecoration: "none", color: "white", display: "flex", gap: "0.5rem", alignItems: "center" }}>
+                <Link href="/settings" onClick={() => setShowUserDropdown(false)} className="hover-row" style={{ padding: "0.5rem", borderRadius: "8px", textDecoration: "none", color: "var(--text-main)", display: "flex", gap: "0.5rem", alignItems: "center" }}>
                   <span style={{ fontSize: "1.2rem" }}>⚙️</span> Configurações
                 </Link>
 
@@ -184,7 +187,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 <button
                   onClick={handleLogout}
                   className="hover-row"
-                  style={{ padding: "0.5rem", borderRadius: "8px", background: "transparent", border: "none", color: "white", cursor: "pointer", textAlign: "left", display: "flex", gap: "0.5rem", width: "100%", alignItems: "center", fontSize: "1rem", marginTop: "0.25rem" }}
+                  style={{ padding: "0.5rem", borderRadius: "8px", background: "transparent", border: "none", color: "var(--text-main)", cursor: "pointer", textAlign: "left", display: "flex", gap: "0.5rem", width: "100%", alignItems: "center", fontSize: "1rem", marginTop: "0.25rem" }}
                 >
                   <span style={{ fontSize: "1.2rem" }}>🚪</span> Sair
                 </button>
@@ -248,6 +251,19 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           </div>
         </div>
       )}
+
+      {/* Navegação Mobile (Show only on small screens) */}
+      <div className="mobile-only" style={{ display: "none" }}>
+        <MobileNav />
+      </div>
+
+      <style jsx global>{`
+        @media (max-width: 768px) {
+          .mobile-only { display: block !important; }
+          .app-title { display: none; }
+          main { padding-bottom: 80px !important; } /* Espaço para o MobileNav */
+        }
+      `}</style>
     </div>
   );
 }

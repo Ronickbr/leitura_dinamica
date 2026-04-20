@@ -36,7 +36,7 @@ export default function Dashboard() {
       setLoading(false);
       return;
     }
-    
+
     import("firebase/auth").then(({ onAuthStateChanged }) => {
       const unsubscribe = onAuthStateChanged(firebaseAuth, (currentUser) => {
         setUser(currentUser);
@@ -124,21 +124,22 @@ export default function Dashboard() {
         </div>
       </header>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem', marginBottom: '3rem' }}>
+      <div className="grid-cards" style={{ marginBottom: '3rem' }}>
         <MetricCard title="Total Alunos" value={stats.totalStudents} icon={<UsersIcon />} color="var(--primary)" />
         <MetricCard title="Casos Críticos" value={stats.criticalCases} icon={<LightbulbIcon />} color="var(--accent)" />
         <MetricCard title="PCM Médio" value={stats.avgPCM} icon={<AwardIcon />} color="var(--success)" suffix="pal/min" />
         <MetricCard title="Testes Feitos" value={stats.totalEvaluations} icon={<HistoryIcon />} color="var(--warning)" />
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1.8fr 1.2fr', gap: '2rem' }}>
-        <div className="glass-card" style={{ padding: '2.5rem', height: '100%' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem' }}>
+        <div className="glass-card" style={{ padding: '2rem', height: '100%' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-            <h3 style={{ fontSize: '1.3rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <h3 style={{ fontSize: '1.2rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
               <HistoryIcon /> Avaliações Recentes
             </h3>
             <Link href="/history" style={{ color: 'var(--primary)', fontSize: '0.85rem', fontWeight: 700, textDecoration: 'none', background: 'rgba(99, 102, 241, 0.1)', padding: '0.4rem 0.8rem', borderRadius: '8px' }}>Ver Tudo</Link>
           </div>
+
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             {recentEvaluations.length > 0 ? recentEvaluations.map(ev => (
@@ -147,7 +148,7 @@ export default function Dashboard() {
                 justifyContent: 'space-between',
                 alignItems: 'center',
                 padding: '1.25rem',
-                background: 'rgba(255,255,255,0.02)',
+                background: 'var(--glass-bg)',
                 borderRadius: '16px',
                 border: '1px solid var(--glass-border)',
               }}>
@@ -170,7 +171,7 @@ export default function Dashboard() {
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-          <div className="glass-card" style={{ background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(0,0,0,0))', padding: '2.5rem', borderLeft: '4px solid var(--primary)' }}>
+          <div className="glass-card" style={{ background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.15), transparent)', padding: '2.5rem', borderLeft: '4px solid var(--primary)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.25rem' }}>
               <div style={{ color: 'var(--primary)', fontSize: '1.5rem' }}><LightbulbIcon /></div>
               <h4 style={{ color: 'var(--primary)', fontWeight: 800, fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Dica Pedagógica</h4>
@@ -214,10 +215,10 @@ function QuickLink({ href, label, icon }: { href: string; label: string; icon: R
       alignItems: 'center',
       gap: '0.75rem',
       textDecoration: 'none',
-      color: 'white',
+      color: 'var(--text-main)',
       padding: '0.75rem',
       borderRadius: '12px',
-      background: 'rgba(255,255,255,0.03)',
+      background: 'var(--glass-bg)',
       border: '1px solid var(--glass-border)',
       fontSize: '0.9rem',
       fontWeight: 600

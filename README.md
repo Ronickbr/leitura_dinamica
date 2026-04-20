@@ -1,4 +1,4 @@
-# Leitura v2.0.0
+# Leitura v2.1.2
 
 Plataforma de avaliação de fluência leitora com Next.js (App Router), persistência em Firebase e processamento de áudio via IA. O projeto foi refatorado para um monorepo Next.js unificado com API routes serverless.
 
@@ -27,7 +27,9 @@ O sistema permite que professores:
 - exportem histórico agrupado e formatado em Excel (Relatório Excel de Histórico);
 - exportem relatórios completos em Excel filtrados;
 - exportem relatórios pedagógicos detalhados com diagnósticos de IA;
-- exportem datasets anonimizados para pesquisa acadêmica e artigos científicos.
+- exportem datasets anonimizados para pesquisa acadêmica e artigos científicos;
+- **[NOVO]** alternem entre Temas Claro e Escuro com persistência de preferência;
+- **[NOVO]** operem a plataforma com experiência "app-like" em dispositivos móveis (Navegação Inferior).
 
 ## Stack Atual
 
