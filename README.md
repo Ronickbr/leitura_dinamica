@@ -29,7 +29,8 @@ O sistema permite que professores:
 - exportem relatórios pedagógicos detalhados com diagnósticos de IA;
 - exportem datasets anonimizados para pesquisa acadêmica e artigos científicos;
 - **[NOVO]** alternem entre Temas Claro e Escuro com persistência de preferência;
-- **[NOVO]** operem a plataforma com experiência "app-like" em dispositivos móveis (Navegação Inferior).
+- **[NOVO]** operem a plataforma com experiência "app-like" em dispositivos móveis (Navegação Inferior);
+- **[NOVO]** revisem métricas qualitativas justificadas por IA (Fluência, Silabação, etc.) antes de salvar.
 
 ## Stack Atual
 

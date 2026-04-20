@@ -1,10 +1,10 @@
-import { 
-  collection, 
-  query, 
-  where, 
-  getDocs, 
-  addDoc, 
-  orderBy, 
+import {
+  collection,
+  query,
+  where,
+  getDocs,
+  addDoc,
+  orderBy,
   Timestamp,
   doc,
   getDoc,
@@ -22,11 +22,17 @@ export function setFirebaseInstances(dbInstance: Firestore, authInstance: Auth) 
 
 export interface MetricasQualitativas {
   leitura_precisa: boolean;
+  leitura_precisa_justificativa?: string;
   leitura_silabada: boolean;
+  leitura_silabada_justificativa?: string;
   boa_entonacao: boolean;
+  boa_entonacao_justificativa?: string;
   interpretacao: boolean;
+  interpretacao_justificativa?: string;
   pontuacao: boolean;
+  pontuacao_justificativa?: string;
 }
+
 
 export interface Avaliacao {
   id?: string;

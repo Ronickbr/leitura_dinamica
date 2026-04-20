@@ -56,6 +56,9 @@ export default function ReadingPage() {
     fetchData();
   }, [alunoId]);
 
+  const [tempResult, setTempResult] = useState<any>(null);
+  const [isReviewing, setIsReviewing] = useState(false);
+
   const stopRecording = () => {
     if (mediaRecorderRef.current && isRecording) {
       mediaRecorderRef.current.stop();
@@ -108,37 +111,56 @@ export default function ReadingPage() {
 
   const handleFinish = async () => {
     if (!audioUrl || !texto) return;
-    console.log("Iniciando processamento da leitura...");
     setProcessing(true);
     try {
       const audioBlob = await fetch(audioUrl).then(r => r.blob());
       const result = await processAudio(audioBlob, texto.conteudo);
-      console.log("API retornou sucesso:", result);
-
-      const evaluationId = await saveAvaliacao({
-        alunoId: alunoId,
-        textoId: texto.id,
-        pcm: result.pcm,
-        precisao: result.metrics.precisao,
-        transcricao: result.transcription,
-        diagnosticoIA: result.analysis.diagnostico,
-        intervencaoIA: result.analysis.intervencao,
-        metricasQualitativas: result.analysis.metricas_qualitativas
-      });
-
-      if (evaluationId) {
-        console.log("Avaliação salva com ID:", evaluationId);
-      }
-
-      router.push(`/history/${evaluationId}`);
+      setTempResult(result);
+      setIsReviewing(true);
     } catch (err: unknown) {
       console.error('Erro ao processar leitura:', err);
-      const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido';
-      alert(`Erro ao processar leitura: ${errorMessage}`);
+      alert('Erro ao processar leitura. Tente novamente.');
     } finally {
       setProcessing(false);
     }
   };
+
+  const confirmAndSave = async () => {
+    if (!tempResult || !texto) return;
+    setProcessing(true);
+    try {
+      const evaluationId = await saveAvaliacao({
+        alunoId: alunoId,
+        textoId: texto.id,
+        pcm: tempResult.pcm,
+        precisao: tempResult.metrics.precisao,
+        transcricao: tempResult.transcription,
+        diagnosticoIA: tempResult.analysis.diagnostico,
+        intervencaoIA: tempResult.analysis.intervencao,
+        metricasQualitativas: tempResult.analysis.metricas_qualitativas
+      });
+      router.push(`/history/${evaluationId}`);
+    } catch (err) {
+      console.error('Erro ao salvar:', err);
+      alert('Erro ao salvar avaliação.');
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  const toggleMetric = (key: string) => {
+    setTempResult((prev: any) => ({
+      ...prev,
+      analysis: {
+        ...prev.analysis,
+        metricas_qualitativas: {
+          ...prev.analysis.metricas_qualitativas,
+          [key]: !prev.analysis.metricas_qualitativas[key]
+        }
+      }
+    }));
+  };
+
 
   if (loading) return <div className="animate-in" style={{ textAlign: 'center', padding: '5rem', color: 'var(--text-muted)' }}>Preparando...</div>;
 
@@ -197,6 +219,76 @@ export default function ReadingPage() {
           </div>
         </div>
       </div>
+
+      {isReviewing && (
+        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(2, 6, 23, 0.9)", backdropFilter: "blur(8px)", zIndex: 2000, display: "flex", alignItems: "center", justifyContent: "center", padding: "1.5rem" }}>
+          <div className="glass-card animate-in" style={{ maxWidth: "600px", width: "100%", maxHeight: "90vh", overflowY: "auto" }}>
+            <h2 style={{ marginBottom: "1.5rem", display: "flex", alignItems: "center", gap: "0.75rem" }}>
+              <span style={{ fontSize: "1.5rem" }}>📝</span> Revisar Avaliação
+            </h2>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem", marginBottom: "2rem" }}>
+              <div>
+                <p style={{ fontSize: "0.85rem", color: "var(--text-muted)", marginBottom: "0.5rem" }}>RESULTADO QUANTITATIVO</p>
+                <div style={{ display: "flex", gap: "2rem", background: "rgba(255,255,255,0.03)", padding: "1rem", borderRadius: "12px" }}>
+                  <div>
+                    <div style={{ fontSize: "1.5rem", fontWeight: 900, color: "var(--primary)" }}>{tempResult.pcm}</div>
+                    <div style={{ fontSize: "0.7rem", color: "var(--text-muted)" }}>PCM</div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: "1.5rem", fontWeight: 900, color: "var(--success)" }}>{tempResult.metrics.precisao}%</div>
+                    <div style={{ fontSize: "0.7rem", color: "var(--text-muted)" }}>PRECISÃO</div>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <p style={{ fontSize: "0.85rem", color: "var(--text-muted)", marginBottom: "1rem" }}>MÉTRICAS QUALITATIVAS (TOQUE PARA ALTERAR)</p>
+                <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+                  {[
+                    { key: 'leitura_precisa', label: 'Leitura Precisa', icon: '🎯' },
+                    { key: 'leitura_silabada', label: 'Leitura Silabada', icon: '🐢' },
+                    { key: 'boa_entonacao', label: 'Boa Entonação', icon: '🎭' },
+                    { key: 'interpretacao', label: 'Interpretação', icon: '🧠' },
+                    { key: 'pontuacao', label: 'Pontuação', icon: '📍' }
+                  ].map((m) => (
+                    <div key={m.key} onClick={() => toggleMetric(m.key)} style={{
+                      padding: "1rem",
+                      borderRadius: "12px",
+                      background: tempResult.analysis.metricas_qualitativas[m.key] ? "rgba(16, 185, 129, 0.1)" : "rgba(255, 255, 255, 0.03)",
+                      border: `1px solid ${tempResult.analysis.metricas_qualitativas[m.key] ? "var(--success)" : "var(--glass-border)"}`,
+                      cursor: "pointer",
+                      transition: "all 0.2s ease"
+                    }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.4rem" }}>
+                        <span style={{ fontWeight: 700, fontSize: "0.95rem" }}>{m.icon} {m.label}</span>
+                        <span style={{
+                          fontSize: "0.75rem",
+                          fontWeight: 900,
+                          color: tempResult.analysis.metricas_qualitativas[m.key] ? "var(--success)" : "var(--text-muted)"
+                        }}>
+                          {tempResult.analysis.metricas_qualitativas[m.key] ? "SIM" : "NÃO"}
+                        </span>
+                      </div>
+                      <p style={{ fontSize: "0.8rem", color: "var(--text-muted)", fontStyle: "italic" }}>
+                        {tempResult.analysis.metricas_qualitativas[`${m.key}_justificativa`]}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div style={{ display: "flex", gap: "1rem" }}>
+              <button onClick={() => setIsReviewing(false)} className="btn-outline" style={{ flex: 1 }}>Voltar</button>
+              <button onClick={confirmAndSave} disabled={processing} className="btn-primary" style={{ flex: 2, background: "var(--success)" }}>
+                {processing ? "Salvando..." : "Salvar Avaliação"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
+
   );
 }

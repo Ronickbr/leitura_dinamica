@@ -135,36 +135,62 @@ export default function EvaluationDetailsPage() {
                         <div className="glass-card" style={{ padding: '1.5rem' }}>
                             <h3 style={{ fontSize: '1rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>Métricas Qualitativas</h3>
                             <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.8rem', fontSize: '0.9rem' }}>
-                                <li style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                    <span>Leitura Precisa</span>
-                                    {avaliacao.metricasQualitativas.leitura_precisa
-                                        ? <span style={{ color: 'var(--success)', fontWeight: 700 }}>Sim ✅</span>
-                                        : <span style={{ color: 'var(--accent)', fontWeight: 700 }}>Não ❌</span>}
+                                <li style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', padding: '0.8rem', background: 'rgba(255,255,255,0.03)', borderRadius: '8px' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <span style={{ fontWeight: 600 }}>Leitura Precisa</span>
+                                        {avaliacao.metricasQualitativas.leitura_precisa
+                                            ? <span style={{ color: 'var(--success)', fontWeight: 700 }}>Sim ✅</span>
+                                            : <span style={{ color: 'var(--accent)', fontWeight: 700 }}>Não ❌</span>}
+                                    </div>
+                                    {avaliacao.metricasQualitativas.leitura_precisa_justificativa && (
+                                        <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontStyle: 'italic', margin: 0 }}>{avaliacao.metricasQualitativas.leitura_precisa_justificativa}</p>
+                                    )}
                                 </li>
-                                <li style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                    <span>Leitura Silabada</span>
-                                    {avaliacao.metricasQualitativas.leitura_silabada
-                                        ? <span style={{ color: 'var(--warning)', fontWeight: 700 }}>Sim ⚠️</span>
-                                        : <span style={{ color: 'var(--success)', fontWeight: 700 }}>Não ✅</span>}
+                                <li style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', padding: '0.8rem', background: 'rgba(255,255,255,0.03)', borderRadius: '8px' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <span style={{ fontWeight: 600 }}>Leitura Silabada</span>
+                                        {avaliacao.metricasQualitativas.leitura_silabada
+                                            ? <span style={{ color: 'var(--warning)', fontWeight: 700 }}>Sim ⚠️</span>
+                                            : <span style={{ color: 'var(--success)', fontWeight: 700 }}>Não ✅</span>}
+                                    </div>
+                                    {avaliacao.metricasQualitativas.leitura_silabada_justificativa && (
+                                        <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontStyle: 'italic', margin: 0 }}>{avaliacao.metricasQualitativas.leitura_silabada_justificativa}</p>
+                                    )}
                                 </li>
-                                <li style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                    <span>Boa Entonação</span>
-                                    {avaliacao.metricasQualitativas.boa_entonacao
-                                        ? <span style={{ color: 'var(--success)', fontWeight: 700 }}>Sim ✅</span>
-                                        : <span style={{ color: 'var(--accent)', fontWeight: 700 }}>Não ❌</span>}
+                                <li style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', padding: '0.8rem', background: 'rgba(255,255,255,0.03)', borderRadius: '8px' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <span style={{ fontWeight: 600 }}>Boa Entonação</span>
+                                        {avaliacao.metricasQualitativas.boa_entonacao
+                                            ? <span style={{ color: 'var(--success)', fontWeight: 700 }}>Sim ✅</span>
+                                            : <span style={{ color: 'var(--accent)', fontWeight: 700 }}>Não ❌</span>}
+                                    </div>
+                                    {avaliacao.metricasQualitativas.boa_entonacao_justificativa && (
+                                        <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontStyle: 'italic', margin: 0 }}>{avaliacao.metricasQualitativas.boa_entonacao_justificativa}</p>
+                                    )}
                                 </li>
-                                <li style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                    <span>Interpretação</span>
-                                    {avaliacao.metricasQualitativas.interpretacao
-                                        ? <span style={{ color: 'var(--success)', fontWeight: 700 }}>Sim ✅</span>
-                                        : <span style={{ color: 'var(--accent)', fontWeight: 700 }}>Não ❌</span>}
+                                <li style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', padding: '0.8rem', background: 'rgba(255,255,255,0.03)', borderRadius: '8px' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <span style={{ fontWeight: 600 }}>Interpretação</span>
+                                        {avaliacao.metricasQualitativas.interpretacao
+                                            ? <span style={{ color: 'var(--success)', fontWeight: 700 }}>Sim ✅</span>
+                                            : <span style={{ color: 'var(--accent)', fontWeight: 700 }}>Não ❌</span>}
+                                    </div>
+                                    {avaliacao.metricasQualitativas.interpretacao_justificativa && (
+                                        <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontStyle: 'italic', margin: 0 }}>{avaliacao.metricasQualitativas.interpretacao_justificativa}</p>
+                                    )}
                                 </li>
-                                <li style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                    <span>Pontuação</span>
-                                    {avaliacao.metricasQualitativas.pontuacao
-                                        ? <span style={{ color: 'var(--success)', fontWeight: 700 }}>Sim ✅</span>
-                                        : <span style={{ color: 'var(--accent)', fontWeight: 700 }}>Não ❌</span>}
+                                <li style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', padding: '0.8rem', background: 'rgba(255,255,255,0.03)', borderRadius: '8px' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <span style={{ fontWeight: 600 }}>Pontuação</span>
+                                        {avaliacao.metricasQualitativas.pontuacao
+                                            ? <span style={{ color: 'var(--success)', fontWeight: 700 }}>Sim ✅</span>
+                                            : <span style={{ color: 'var(--accent)', fontWeight: 700 }}>Não ❌</span>}
+                                    </div>
+                                    {avaliacao.metricasQualitativas.pontuacao_justificativa && (
+                                        <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontStyle: 'italic', margin: 0 }}>{avaliacao.metricasQualitativas.pontuacao_justificativa}</p>
+                                    )}
                                 </li>
+
                             </ul>
                         </div>
                     )}

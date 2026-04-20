@@ -104,16 +104,22 @@ async function getPedagogicalDiagnosis(
     "diagnostico": "Máximo 3 linhas. Foque no comportamento leitor observado.",
     "intervencao": "Máximo 2 linhas. Uma atividade prática e específica.",
     "metricas_qualitativas": {
-      "leitura_precisa": boolean (true se a precisão for alta e poucas palavras foram trocadas),
-      "leitura_silabada": boolean (true se o aluno ler pausadamente silaba por silaba),
-      "boa_entonacao": boolean (true se houver expressividade na leitura),
-      "interpretacao": boolean (true se a leitura sugerir compreensão do texto),
-      "pontuacao": boolean (true se respeitar vírgulas e pontos)
+      "leitura_precisa": boolean,
+      "leitura_precisa_justificativa": "Curta explicação baseada nas trocas observadas.",
+      "leitura_silabada": boolean,
+      "leitura_silabada_justificativa": "Explicar se houve hesitação ou falta de fluidez.",
+      "boa_entonacao": boolean,
+      "boa_entonacao_justificativa": "Citar se a leitura foi monótona ou expressiva.",
+      "interpretacao": boolean,
+      "interpretacao_justificativa": "Inferir compreensão pela fluidez e ênfase.",
+      "pontuacao": boolean,
+      "pontuacao_justificativa": "Indicar se respeitou ou ignorou sinais gráficos."
     },
     "padrao_de_erro_detectado": "Descreva em poucas palavras o erro mais frequente."
   }
 
-  ATENÇÃO: Analise cuidadosamente a transcrição para preencher as 'métricas_qualitativas'. Por exemplo, se você observar falta de pontuação no diagnóstico, marque 'pontuacao' como false. Se citar silabação, marque 'leitura_silabada' como true.
+  ATENÇÃO: Requer-se ALTA PRECISÃO. Se a precisão original estiver abaixo de 80%, 'leitura_precisa' DEVE ser false. Se houver muitas vírgulas ignoradas na transcrição, 'pontuacao' DEVE ser false. Use as justificativas para mostrar que você analisou detalhadamente a transcrição.
+
   `;
 
   try {
@@ -164,14 +170,20 @@ interface ProcessAudioResult {
     intervencao: string;
     metricas_qualitativas: {
       leitura_precisa: boolean;
+      leitura_precisa_justificativa: string;
       leitura_silabada: boolean;
+      leitura_silabada_justificativa: string;
       boa_entonacao: boolean;
+      boa_entonacao_justificativa: string;
       interpretacao: boolean;
+      interpretacao_justificativa: string;
       pontuacao: boolean;
+      pontuacao_justificativa: string;
     };
     padrao_de_erro_detectado: string;
   };
 }
+
 
 export async function processReadingAudio({
   filePath,
