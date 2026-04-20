@@ -103,13 +103,17 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   return (
     <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
       <header className="glass-panel" style={{
-        position: "sticky",
+        position: "fixed",
         top: 0,
+        left: 0,
+        right: 0,
         zIndex: 100,
         borderRadius: 0,
         borderTop: "none",
         borderLeft: "none",
         borderRight: "none",
+        background: "var(--glass-bg)",
+        backdropFilter: "blur(20px)",
       }}>
         <div className="container" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0.5rem 1rem" }}>
           <Link href="/" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: "0.5rem" }}>
@@ -197,7 +201,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         </div>
       </header>
 
-      <main className="container" style={{ padding: "2rem", flex: 1 }}>
+      <main className="container" style={{ padding: "2rem", paddingTop: "6rem", flex: 1 }}>
         {children}
       </main>
 
