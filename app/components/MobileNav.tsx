@@ -18,20 +18,18 @@ export default function MobileNav() {
             className="glass-panel mobile-nav"
             aria-label="Navegação principal mobile"
             style={{
-            position: "fixed",
-            bottom: "1rem",
-            left: "1rem",
-            right: "1rem",
-            height: "64px",
-            display: "grid",
-            gridTemplateColumns: `repeat(${navItems.length}, 1fr)`,
-            alignItems: "center",
-            zIndex: 1000,
-            borderRadius: "20px",
-            border: "1px solid var(--glass-border)",
-            boxShadow: "0 10px 30px rgba(0,0,0,0.2)",
-            padding: "0 0.5rem",
-        }}>
+                position: "fixed",
+                bottom: "1rem",
+                left: "1rem",
+                right: "1rem",
+                height: "64px",
+                alignItems: "center",
+                zIndex: 1000,
+                borderRadius: "20px",
+                border: "1px solid var(--glass-border)",
+                boxShadow: "0 10px 30px rgba(0,0,0,0.2)",
+                padding: "0 0.5rem",
+            }}>
             {navItems.map((item) => (
                 <Link
                     key={item.href}

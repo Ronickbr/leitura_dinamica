@@ -318,7 +318,14 @@ textarea {
 }
 
 .mobile-nav {
-  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 0.35rem) !important;
+  display: none !important;
+}
+
+@media (max-width: 768px) {
+  .mobile-nav {
+    display: grid !important;
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 0.35rem) !important;
+  }
 }
 
 .mobile-nav-link {
