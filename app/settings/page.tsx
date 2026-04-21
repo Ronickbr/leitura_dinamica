@@ -1,16 +1,26 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useSettings } from "../components/SettingsProvider";
 import * as XLSX from "xlsx";
-import { addAluno, Aluno } from "@/lib/services";
+import { addAluno, Aluno, addImportRecord, getImportHistory, ImportRecord } from "@/lib/services";
 
 export default function SettingsPage() {
     const router = useRouter();
     const { isAnonymized, setAnonymized } = useSettings();
     const [loading, setLoading] = useState(false);
     const [uploadStatus, setUploadStatus] = useState<{ message: string; type: 'success' | 'error' | '' }>({ message: '', type: '' });
+    const [history, setHistory] = useState<ImportRecord[]>([]);
+
+    useEffect(() => {
+        loadHistory();
+    }, []);
+
+    async function loadHistory() {
+        const data = await getImportHistory();
+        setHistory(data);
+    }
 
     const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -106,6 +116,14 @@ export default function SettingsPage() {
                 }
             }
 
+            // Salva no histórico
+            await addImportRecord({
+                fileName: file.name,
+                successCount,
+                errorCount
+            });
+            loadHistory();
+
             setUploadStatus({
                 message: `Importação concluída! ${successCount} alunos adicionados${errorCount > 0 ? ` (${errorCount} erros)` : ''}.`,
                 type: 'success'
@@ -199,6 +217,39 @@ export default function SettingsPage() {
                             }}
                         >
                             {uploadStatus.message}
+                        </div>
+                    )}
+
+                    {/* Lista de Histórico */}
+                    {history.length > 0 && (
+                        <div style={{ marginTop: '2rem' }}>
+                            <h3 style={{ fontSize: '0.9rem', fontWeight: 800, color: 'var(--text-muted)', marginBottom: '1rem', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+                                🕒 Histórico Recente
+                            </h3>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                                {history.map(item => (
+                                    <div key={item.id} className="glass-panel" style={{ padding: '0.75rem 1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <div style={{ minWidth: 0 }}>
+                                            <div style={{ fontWeight: 700, fontSize: '0.9rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                                {item.fileName}
+                                            </div>
+                                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                                                {item.importedAt?.toDate ? item.importedAt.toDate().toLocaleString('pt-BR') : 'Data desconhecida'}
+                                            </div>
+                                        </div>
+                                        <div style={{ textAlign: 'right', display: 'flex', gap: '0.5rem' }}>
+                                            <span style={{ fontSize: '0.75rem', padding: '0.2rem 0.6rem', background: 'rgba(16, 185, 129, 0.1)', color: 'var(--success)', borderRadius: '99px', fontWeight: 800 }}>
+                                                {item.successCount} ok
+                                            </span>
+                                            {item.errorCount > 0 && (
+                                                <span style={{ fontSize: '0.75rem', padding: '0.2rem 0.6rem', background: 'rgba(239, 68, 68, 0.1)', color: 'var(--error)', borderRadius: '99px', fontWeight: 800 }}>
+                                                    {item.errorCount} erro
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
                     )}
                 </div>

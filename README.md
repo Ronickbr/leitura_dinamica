@@ -1,4 +1,4 @@
-# Leitura v2.3.9
+# Leitura v2.4.0
 
 Plataforma de avaliação de fluência leitora com Next.js (App Router), persistência em Firebase e processamento de áudio via IA. O projeto foi refatorado para um monorepo Next.js unificado com API routes serverless.
 

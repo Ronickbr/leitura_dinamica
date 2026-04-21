@@ -33,6 +33,15 @@ export interface Aluno {
   professorId?: string;
 }
 
+export interface ImportRecord {
+  id: string;
+  fileName: string;
+  successCount: number;
+  errorCount: number;
+  importedAt: Timestamp;
+  professorId: string;
+}
+
 export const getAlunos = async (turma?: string): Promise<Aluno[]> => {
   if (!cachedDb) return [];
   try {
@@ -107,5 +116,46 @@ export const deleteAluno = async (id: string): Promise<boolean> => {
   } catch (error) {
     console.error("Erro ao deletar aluno:", error);
     return false;
+  }
+};
+
+export const addImportRecord = async (record: Omit<ImportRecord, 'id' | 'importedAt' | 'professorId'>): Promise<string | null> => {
+  if (!cachedDb || !cachedAuth) return null;
+  try {
+    const currentUser = cachedAuth.currentUser;
+    if (!currentUser) throw new Error("Usuário não autenticado");
+
+    const docRef = await addDoc(collection(cachedDb, 'import_history'), {
+      ...record,
+      professorId: currentUser.uid,
+      importedAt: Timestamp.now()
+    });
+    return docRef.id;
+  } catch (error) {
+    console.error("Erro ao salvar histórico de importação:", error);
+    return null;
+  }
+};
+
+export const getImportHistory = async (): Promise<ImportRecord[]> => {
+  if (!cachedDb || !cachedAuth) return [];
+  try {
+    const currentUser = cachedAuth.currentUser;
+    if (!currentUser) return [];
+
+    const q = query(
+      collection(cachedDb, 'import_history'),
+      where('professorId', '==', currentUser.uid),
+      orderBy('importedAt', 'desc')
+    );
+
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map(d => ({
+      id: d.id,
+      ...d.data()
+    } as ImportRecord));
+  } catch (error) {
+    console.error("Erro ao buscar histórico de importação:", error);
+    return [];
   }
 };
