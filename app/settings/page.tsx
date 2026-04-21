@@ -26,43 +26,60 @@ export default function SettingsPage() {
             const worksheet = workbook.Sheets[firstSheetName];
             const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as any[][];
 
-            if (jsonData.length < 2) {
+            if (jsonData.length < 1) {
                 setUploadStatus({ message: 'O arquivo parece estar vazio ou sem dados.', type: 'error' });
                 return;
             }
 
             const normalize = (s: any) => (s || "").toString().normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
 
-            // Mapeia os índices das colunas baseando-se na primeira linha (cabeçalho)
-            const headers = jsonData[0];
+            // Busca a linha de cabeçalho (a primeira que contenha algo parecido com "Nome")
+            let headerRowIndex = -1;
+            for (let i = 0; i < jsonData.length; i++) {
+                if (jsonData[i].some(cell => {
+                    const n = normalize(cell);
+                    return n === "nome" || n === "name" || n === "aluno";
+                })) {
+                    headerRowIndex = i;
+                    break;
+                }
+            }
+
+            if (headerRowIndex === -1) {
+                setUploadStatus({ message: 'Não foi possível encontrar a coluna "Nome" na planilha.', type: 'error' });
+                return;
+            }
+
+            const headers = jsonData[headerRowIndex];
             const getIndex = (targets: string[]) => {
                 const normalizedTargets = targets.map(t => normalize(t));
                 return headers.findIndex(h => normalizedTargets.includes(normalize(h)));
             };
 
             const idxNome = getIndex(["nome", "name", "aluno"]);
-            const idxTurma = getIndex(["turma", "class", "grupo"]);
-            const idxSerie = getIndex(["serie", "grade", "ano"]);
-            const idxTurno = getIndex(["turno", "shift", "periodo"]);
-            const idxDiag = getIndex(["diagnostico", "diagnostic", "laudo"]);
+            const idxTurma = getIndex(["turma", "class", "grupo", "turma"]);
+            const idxSerie = getIndex(["serie", "grade", "ano", "ensino", "serie"]);
+            const idxTurno = getIndex(["turno", "shift", "periodo", "turno"]);
+            const idxDiag = getIndex(["diagnostico", "diagnostic", "laudo", "diagnóstico", "diagnostico"]);
 
-            console.log("Indices encontrados:", { idxNome, idxTurma, idxSerie, idxTurno, idxDiag });
+            console.log("Header encontrado na linha:", headerRowIndex);
+            console.log("Indices mapeados:", { idxNome, idxTurma, idxSerie, idxTurno, idxDiag });
 
             let successCount = 0;
             let errorCount = 0;
 
-            // Processa a partir da segunda linha
-            for (let i = 1; i < jsonData.length; i++) {
+            // Processa a partir da linha seguinte ao cabeçalho
+            for (let i = headerRowIndex + 1; i < jsonData.length; i++) {
                 const row = jsonData[i];
                 if (!row || row.length === 0) continue;
 
                 const nome = row[idxNome];
                 if (!nome) continue; // Pula linhas sem nome
 
-                const turma = idxTurma !== -1 ? row[idxTurma] || "Geral" : "Geral";
-                const serieRaw = idxSerie !== -1 ? row[idxSerie] || "1º Ano" : "1º Ano";
-                const turno = idxTurno !== -1 ? row[idxTurno] || "Manhã" : "Manhã";
-                const diagnostico = idxDiag !== -1 ? row[idxDiag] || "Nenhum" : "Nenhum";
+                const turma = idxTurma !== -1 && row[idxTurma] ? row[idxTurma] : "Geral";
+                const serieRaw = idxSerie !== -1 && row[idxSerie] ? row[idxSerie] : "1º Ano";
+                const turno = idxTurno !== -1 && row[idxTurno] ? row[idxTurno] : "Manhã";
+                const diagnostico = idxDiag !== -1 && row[idxDiag] ? row[idxDiag] : "Nenhum";
 
                 // Normalização de série (ex: "3" ou "3º" -> "3º Ano")
                 let serie = String(serieRaw).trim();
@@ -71,14 +88,19 @@ export default function SettingsPage() {
                 }
 
                 try {
-                    await addAluno({
+                    const resultId = await addAluno({
                         nome: String(nome),
                         turma: String(turma),
                         serie: serie,
                         turno: String(turno),
                         diagnostico: String(diagnostico)
                     } as Omit<Aluno, 'id'>);
-                    successCount++;
+
+                    if (resultId) {
+                        successCount++;
+                    } else {
+                        errorCount++;
+                    }
                 } catch (e) {
                     errorCount++;
                 }
