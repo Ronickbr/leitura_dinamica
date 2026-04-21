@@ -24,49 +24,63 @@ export default function SettingsPage() {
             const workbook = XLSX.read(data);
             const firstSheetName = workbook.SheetNames[0];
             const worksheet = workbook.Sheets[firstSheetName];
-            const jsonData = XLSX.utils.sheet_to_json(worksheet);
+            const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as any[][];
+
+            if (jsonData.length < 2) {
+                setUploadStatus({ message: 'O arquivo parece estar vazio ou sem dados.', type: 'error' });
+                return;
+            }
+
+            const normalize = (s: any) => (s || "").toString().normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+
+            // Mapeia os índices das colunas baseando-se na primeira linha (cabeçalho)
+            const headers = jsonData[0];
+            const getIndex = (targets: string[]) => {
+                const normalizedTargets = targets.map(t => normalize(t));
+                return headers.findIndex(h => normalizedTargets.includes(normalize(h)));
+            };
+
+            const idxNome = getIndex(["nome", "name", "aluno"]);
+            const idxTurma = getIndex(["turma", "class", "grupo"]);
+            const idxSerie = getIndex(["serie", "grade", "ano"]);
+            const idxTurno = getIndex(["turno", "shift", "periodo"]);
+            const idxDiag = getIndex(["diagnostico", "diagnostic", "laudo"]);
+
+            console.log("Indices encontrados:", { idxNome, idxTurma, idxSerie, idxTurno, idxDiag });
 
             let successCount = 0;
             let errorCount = 0;
 
-            const getValue = (row: any, ...keys: string[]) => {
-                const rowKeys = Object.keys(row);
-                const normalize = (s: string) => s.toString().normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+            // Processa a partir da segunda linha
+            for (let i = 1; i < jsonData.length; i++) {
+                const row = jsonData[i];
+                if (!row || row.length === 0) continue;
 
-                for (const key of keys) {
-                    const target = normalize(key);
-                    const foundKey = rowKeys.find(rk => normalize(rk) === target);
-                    if (foundKey !== undefined) return row[foundKey];
-                }
-                return undefined;
-            };
+                const nome = row[idxNome];
+                if (!nome) continue; // Pula linhas sem nome
 
-            for (const row of jsonData as any[]) {
-                const nome = getValue(row, "nome", "name", "NOME");
-                const turma = getValue(row, "turma", "class", "TURMA") || "Geral";
-                const serieRaw = getValue(row, "serie", "grade", "SÉRIE", "SERIE") || "1º Ano";
-                const turno = getValue(row, "turno", "shift", "TURNO") || "Manhã";
-                const diagnostico = getValue(row, "diagnostico", "diagnostic", "DIAGNÓSTICO", "DIAGNOSTICO") || "Nenhum";
+                const turma = idxTurma !== -1 ? row[idxTurma] || "Geral" : "Geral";
+                const serieRaw = idxSerie !== -1 ? row[idxSerie] || "1º Ano" : "1º Ano";
+                const turno = idxTurno !== -1 ? row[idxTurno] || "Manhã" : "Manhã";
+                const diagnostico = idxDiag !== -1 ? row[idxDiag] || "Nenhum" : "Nenhum";
 
-                // Normalização simples para série (ex: "3º" -> "3º Ano")
+                // Normalização de série (ex: "3" ou "3º" -> "3º Ano")
                 let serie = String(serieRaw).trim();
                 if (/^\d+º?$/.test(serie)) {
                     serie = serie.endsWith("º") ? `${serie} Ano` : `${serie}º Ano`;
                 }
 
-                if (nome) {
-                    try {
-                        await addAluno({
-                            nome: String(nome),
-                            turma: String(turma),
-                            serie: serie,
-                            turno: String(turno),
-                            diagnostico: String(diagnostico)
-                        } as Omit<Aluno, 'id'>);
-                        successCount++;
-                    } catch (e) {
-                        errorCount++;
-                    }
+                try {
+                    await addAluno({
+                        nome: String(nome),
+                        turma: String(turma),
+                        serie: serie,
+                        turno: String(turno),
+                        diagnostico: String(diagnostico)
+                    } as Omit<Aluno, 'id'>);
+                    successCount++;
+                } catch (e) {
+                    errorCount++;
                 }
             }
 
