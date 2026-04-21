@@ -110,19 +110,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="app-shell" style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
-      <header className="glass-panel app-header" style={{
-        position: "fixed",
-        top: 0,
-        left: 0,
-        right: 0,
-        zIndex: 100,
-        borderRadius: 0,
-        borderTop: "none",
-        borderLeft: "none",
-        borderRight: "none",
-        background: "var(--glass-bg)",
-        backdropFilter: "blur(20px)",
-      }}>
+      <header className="app-header-fixed glass-panel">
         <div className="container app-header-content" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0.5rem 1rem" }}>
           <Link href="/" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: "0.5rem" }}>
             <span style={{ fontSize: "1.5rem", fontWeight: 900 }}>📖</span>
@@ -201,32 +189,32 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                     minWidth: "220px",
                   }}
                 >
-                <div style={{ padding: "0.75rem", borderBottom: "1px solid var(--glass-border)", marginBottom: "0.5rem" }}>
-                  <span style={{ fontSize: "0.75rem", color: "var(--text-muted)", display: "block" }}>Logado como</span>
-                  <strong style={{ fontSize: "0.9rem", wordBreak: "break-all" }}>{user.email}</strong>
-                </div>
+                  <div style={{ padding: "0.75rem", borderBottom: "1px solid var(--glass-border)", marginBottom: "0.5rem" }}>
+                    <span style={{ fontSize: "0.75rem", color: "var(--text-muted)", display: "block" }}>Logado como</span>
+                    <strong style={{ fontSize: "0.9rem", wordBreak: "break-all" }}>{user.email}</strong>
+                  </div>
 
-                <Link href="/settings" onClick={() => setShowUserDropdown(false)} className="hover-row" style={{ padding: "0.5rem", borderRadius: "8px", textDecoration: "none", color: "var(--text-main)", display: "flex", gap: "0.5rem", alignItems: "center" }}>
-                  <span style={{ fontSize: "1.2rem" }}>⚙️</span> Configurações
-                </Link>
+                  <Link href="/settings" onClick={() => setShowUserDropdown(false)} className="hover-row" style={{ padding: "0.5rem", borderRadius: "8px", textDecoration: "none", color: "var(--text-main)", display: "flex", gap: "0.5rem", alignItems: "center" }}>
+                    <span style={{ fontSize: "1.2rem" }}>⚙️</span> Configurações
+                  </Link>
 
-                {isAdmin && (
+                  {isAdmin && (
+                    <button
+                      onClick={() => { setShowUserDropdown(false); setShowResetModal(true); }}
+                      className="hover-row"
+                      style={{ padding: "0.5rem", borderRadius: "8px", background: "transparent", border: "none", color: "var(--error)", cursor: "pointer", textAlign: "left", display: "flex", gap: "0.5rem", width: "100%", alignItems: "center", fontSize: "1rem" }}
+                    >
+                      <span style={{ fontSize: "1.2rem" }}>⚠️</span> Excluir DB
+                    </button>
+                  )}
+
                   <button
-                    onClick={() => { setShowUserDropdown(false); setShowResetModal(true); }}
+                    onClick={handleLogout}
                     className="hover-row"
-                    style={{ padding: "0.5rem", borderRadius: "8px", background: "transparent", border: "none", color: "var(--error)", cursor: "pointer", textAlign: "left", display: "flex", gap: "0.5rem", width: "100%", alignItems: "center", fontSize: "1rem" }}
+                    style={{ padding: "0.5rem", borderRadius: "8px", background: "transparent", border: "none", color: "var(--text-main)", cursor: "pointer", textAlign: "left", display: "flex", gap: "0.5rem", width: "100%", alignItems: "center", fontSize: "1rem", marginTop: "0.25rem" }}
                   >
-                    <span style={{ fontSize: "1.2rem" }}>⚠️</span> Excluir DB
+                    <span style={{ fontSize: "1.2rem" }}>🚪</span> Sair
                   </button>
-                )}
-
-                <button
-                  onClick={handleLogout}
-                  className="hover-row"
-                  style={{ padding: "0.5rem", borderRadius: "8px", background: "transparent", border: "none", color: "var(--text-main)", cursor: "pointer", textAlign: "left", display: "flex", gap: "0.5rem", width: "100%", alignItems: "center", fontSize: "1rem", marginTop: "0.25rem" }}
-                >
-                  <span style={{ fontSize: "1.2rem" }}>🚪</span> Sair
-                </button>
                 </div>
               </>
             )}

@@ -122,48 +122,59 @@ textarea {
   min-height: 100vh;
 }
 
-.app-header {
-  min-height: var(--header-height);
-}
-
-.app-header-content {
-  min-height: var(--header-height);
-  gap: 1rem;
-}
-
-.app-header-actions {
-  position: relative;
-}
-
-.app-user-button {
-  border-radius: 999px;
-}
-
-.user-dropdown {
-  z-index: 150;
+.app-header-fixed {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--header-height);
+  z-index: 1000;
+  border-radius: 0 !important;
+  border-top: none !important;
+  border-left: none !important;
+  border-right: none !important;
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
 }
 
 .page-content {
   padding-top: calc(var(--header-height) + 1.5rem) !important;
+  flex: 1;
 }
 
 .page-header {
+  position: relative;
+  /* Garantindo que não seja fixed */
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
   gap: 1.5rem;
   margin-bottom: 2.5rem;
+  z-index: 1;
 }
 
 .page-header-content {
   min-width: 0;
 }
 
-.page-header-actions {
+.btn-outline-round {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  flex-wrap: wrap;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 50% !important;
+  background: transparent;
+  border: 1px solid var(--glass-border);
+  color: var(--text-main);
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.btn-outline-round:hover {
+  background: var(--btn-outline-hover-bg);
+  transform: scale(1.05);
 }
 
 .page-title {
@@ -467,7 +478,7 @@ textarea {
   background: white;
   border-radius: 50%;
   transition: left 0.3s;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .settings-status {
@@ -490,6 +501,7 @@ textarea {
   color: var(--text-muted);
   line-height: 1.6;
   display: -webkit-box;
+  line-clamp: 3;
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
@@ -741,6 +753,7 @@ textarea {
   color: var(--text-muted);
   line-height: 1.7;
   display: -webkit-box;
+  line-clamp: 6;
   -webkit-line-clamp: 6;
   -webkit-box-orient: vertical;
   overflow: hidden;
@@ -1014,8 +1027,8 @@ textarea {
     width: 100%;
   }
 
-  .page-header-actions > *,
-  .hero-actions > * {
+  .page-header-actions>*,
+  .hero-actions>* {
     flex: 1 1 100%;
   }
 
@@ -1100,6 +1113,10 @@ textarea {
 
   .evaluation-header .page-header-content {
     width: 100%;
+  }
+
+  .evaluation-detail-header {
+    margin-bottom: 1.5rem;
   }
 
   .evaluation-detail-header .page-header-content {
@@ -1302,6 +1319,7 @@ textarea {
 }
 
 @media (hover: none) and (pointer: coarse) {
+
   .glass-card:hover,
   .btn-primary:hover:not(:disabled) {
     transform: none;
