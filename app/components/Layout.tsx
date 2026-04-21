@@ -239,8 +239,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       </main>
 
       {showResetModal && (
-        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.8)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "2rem" }}>
-          <div className="glass-card" style={{ maxWidth: "450px", width: "100%", background: "var(--bg-dark)" }}>
+        <div className="app-overlay">
+          <div className="glass-card app-sheet" style={{ maxWidth: "450px", width: "100%", background: "var(--bg-dark)" }}>
             <h2 style={{ marginBottom: "1rem", color: "var(--error)" }}>⚠️ Resetar Banco de Dados</h2>
             <p style={{ marginBottom: "1.5rem", fontSize: "0.95rem", color: "var(--text-muted)" }}>
               Selecione quais coleções deseja <strong>apagar permanentemente</strong>.
@@ -267,7 +267,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               ))}
             </div>
 
-            <div style={{ display: "flex", gap: "1rem" }}>
+            <div className="evaluation-review-actions">
               <button
                 onClick={() => setShowResetModal(false)}
                 className="btn-outline"

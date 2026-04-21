@@ -63,6 +63,7 @@ export default function TextsPage() {
 
       {showForm && (
         <div className="glass-card" style={{ marginBottom: '2rem', padding: '2rem' }}>
+          <h3 style={{ marginBottom: '1rem', fontSize: '1.2rem', fontWeight: 800 }}>{showForm ? '✍️ Novo Texto' : ''}</h3>
           <form onSubmit={handleSubmit}>
             <div className="responsive-form-grid" style={{ marginBottom: '1rem' }}>
               <input
@@ -72,14 +73,14 @@ export default function TextsPage() {
                 onChange={e => setFormData({ ...formData, titulo: e.target.value })}
                 required
                 className="glass-panel"
-                style={{ padding: '0.75rem 1rem', color: 'white', border: '1px solid var(--glass-border)' }}
+                style={{ padding: '0.75rem 1rem', color: 'var(--text-main)', border: '1px solid var(--glass-border)' }}
               />
               <select
                 value={formData.serie}
                 onChange={e => setFormData({ ...formData, serie: e.target.value })}
                 required
                 className="glass-panel"
-                style={{ padding: '0.75rem 1rem', color: 'white', border: '1px solid var(--glass-border)' }}
+                style={{ padding: '0.75rem 1rem', color: 'var(--text-main)', border: '1px solid var(--glass-border)' }}
               >
                 <option value="1º Ano">1º Ano</option>
                 <option value="2º Ano">2º Ano</option>
@@ -95,7 +96,7 @@ export default function TextsPage() {
               required
               rows={6}
               className="glass-panel"
-              style={{ width: '100%', padding: '0.75rem 1rem', color: 'white', border: '1px solid var(--glass-border)', marginBottom: '1.5rem', resize: 'vertical' }}
+              style={{ width: '100%', padding: '0.75rem 1rem', color: 'var(--text-main)', border: '1px solid var(--glass-border)', marginBottom: '1.5rem', resize: 'vertical' }}
             />
             <button type="submit" disabled={saving} className="btn-primary">
               {saving ? 'Salvando...' : 'Salvar Texto'}
@@ -110,14 +111,14 @@ export default function TextsPage() {
         <div className="grid-cards">
           {textos.map(texto => (
             <div key={texto.id} className="glass-card">
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
+              <div className="text-card-header">
                 <div>
                   <h3 style={{ fontWeight: 800, fontSize: '1.1rem' }}>{texto.titulo}</h3>
-                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', background: 'rgba(255,255,255,0.05)', padding: '2px 8px', borderRadius: '4px' }}>{texto.serie}</span>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', background: 'rgba(255,255,255,0.05)', padding: '0.3rem 0.7rem', borderRadius: '999px', display: 'inline-flex', marginTop: '0.4rem' }}>{texto.serie}</span>
                 </div>
                 <button onClick={() => handleDelete(texto.id)} className="btn-icon" title="Excluir">🗑️</button>
               </div>
-              <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', lineHeight: 1.6, display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+              <p className="text-card-preview">
                 {texto.conteudo}
               </p>
               <div style={{ marginTop: '1rem', fontSize: '0.8rem', color: 'var(--text-muted)' }}>

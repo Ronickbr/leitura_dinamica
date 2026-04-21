@@ -237,8 +237,8 @@ export default function StudentsPage() {
       )}
 
       {viewingAluno && (
-        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "var(--bg-deep)", opacity: 0.98, backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "2rem" }}>
-          <div className="glass-card" style={{ maxWidth: "450px", width: "100%", background: "var(--bg-dark)", boxShadow: "var(--glass-shadow)" }}>
+        <div className="app-overlay">
+          <div className="glass-card app-sheet" style={{ maxWidth: "450px", width: "100%", background: "var(--bg-dark)", boxShadow: "var(--glass-shadow)" }}>
             <h2 style={{ marginBottom: "1.5rem", fontSize: "1.3rem", fontWeight: 800, color: "var(--primary)", display: "flex", alignItems: "center", gap: "0.5rem" }}>
               <span>👤</span> Visualizar Aluno
             </h2>

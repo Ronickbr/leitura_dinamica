@@ -73,7 +73,7 @@ export default function SettingsPage() {
                 </div>
             </header>
 
-            <div className="grid-cards" style={{ display: "grid", gridTemplateColumns: "1fr", gap: "2rem", maxWidth: "800px" }}>
+            <div className="settings-grid">
 
                 {/* Card de Anonimização */}
                 <div className="glass-card">
@@ -84,26 +84,15 @@ export default function SettingsPage() {
                         Ative o modo de anonimato para esconder nomes reais e descaracterizar observações. Ideal para fazer demonstrações de tela sem vazar dados sensíveis dos alunos. Essa mudança afeta apenas a interface atual, o banco de dados continua intacto.
                     </p>
 
-                    <label style={{ display: "flex", alignItems: "center", gap: "1rem", cursor: "pointer" }}>
-                        <div style={{
-                            position: "relative",
-                            width: "50px",
-                            height: "26px",
-                            background: isAnonymized ? "var(--primary)" : "rgba(255,255,255,0.2)",
-                            borderRadius: "13px",
-                            transition: "background 0.3s"
-                        }}>
-                            <div style={{
-                                position: "absolute",
-                                top: "3px",
-                                left: isAnonymized ? "27px" : "3px",
-                                width: "20px",
-                                height: "20px",
-                                background: "white",
-                                borderRadius: "50%",
-                                transition: "left 0.3s",
-                                boxShadow: "0 2px 4px rgba(0,0,0,0.2)"
-                            }} />
+                    <label className="settings-toggle-row">
+                        <div
+                            className="settings-switch"
+                            style={{ background: isAnonymized ? "var(--primary)" : "rgba(255,255,255,0.2)" }}
+                        >
+                            <div
+                                className="settings-switch-thumb"
+                                style={{ left: isAnonymized ? "27px" : "3px" }}
+                            />
                         </div>
                         <input
                             type="checkbox"
@@ -124,7 +113,7 @@ export default function SettingsPage() {
                         Faça upload de uma planilha do Excel (.xlsx, .xls) para importar múltiplos alunos de uma só vez. Certifique-se de que a planilha contenha colunas chamadas <strong>Nome</strong>, <strong>Turma</strong>, <strong>Série</strong>, <strong>Turno</strong> e (Opcional) <strong>Diagnóstico</strong>.
                     </p>
 
-                    <label className="btn-outline" style={{ display: "inline-flex", cursor: loading ? "wait" : "pointer", opacity: loading ? 0.6 : 1 }}>
+                    <label className="btn-outline" style={{ display: "inline-flex", cursor: loading ? "wait" : "pointer", opacity: loading ? 0.6 : 1, maxWidth: "100%", width: "fit-content" }}>
                         {loading ? "⏳ Processando Planilha..." : "Selecionar Arquivo Excel"}
                         <input
                             type="file"
@@ -136,15 +125,14 @@ export default function SettingsPage() {
                     </label>
 
                     {uploadStatus.message && (
-                        <div style={{
-                            marginTop: "1rem",
-                            padding: "0.75rem 1rem",
-                            borderRadius: "8px",
-                            fontSize: "0.9rem",
-                            background: uploadStatus.type === 'success' ? "rgba(16, 185, 129, 0.1)" : "rgba(239, 68, 68, 0.1)",
-                            color: uploadStatus.type === 'success' ? "var(--success)" : "var(--error)",
-                            border: `1px solid ${uploadStatus.type === 'success' ? "rgba(16, 185, 129, 0.3)" : "rgba(239, 68, 68, 0.3)"}`
-                        }}>
+                        <div
+                            className="settings-status"
+                            style={{
+                                background: uploadStatus.type === 'success' ? "rgba(16, 185, 129, 0.1)" : "rgba(239, 68, 68, 0.1)",
+                                color: uploadStatus.type === 'success' ? "var(--success)" : "var(--error)",
+                                border: `1px solid ${uploadStatus.type === 'success' ? "rgba(16, 185, 129, 0.3)" : "rgba(239, 68, 68, 0.3)"}`
+                            }}
+                        >
                             {uploadStatus.message}
                         </div>
                     )}

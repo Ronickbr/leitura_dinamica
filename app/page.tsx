@@ -114,21 +114,17 @@ export default function Dashboard() {
             <span className="perf-chip">Mobile Ready</span>
             <span className="perf-chip">UX Touch</span>
           </div>
-          <div className="page-header">
-            <div className="page-header-content">
-              <h1 className="page-title" style={{ fontWeight: 900 }}>
+          <h1 className="page-title" style={{ fontWeight: 900 }}>
               Painel de <span style={{ color: 'var(--primary)' }}>Controle</span>
-              </h1>
-              <p className="page-subtitle" style={{ maxWidth: '600px' }}>
-                Visão panorâmica do progresso de fluência leitora da sua turma.
-              </p>
-            </div>
-            <div className="page-header-actions">
-              <Link href="/evaluations/new" className="btn-primary" style={{ textDecoration: 'none' }}>
-                <MicIcon /> Iniciar Avaliação
-              </Link>
-            </div>
-          </div>
+          </h1>
+          <p className="page-subtitle" style={{ maxWidth: '600px' }}>
+            Visão panorâmica do progresso de fluência leitora da sua turma.
+          </p>
+        </div>
+        <div className="page-header-actions">
+          <Link href="/evaluations/new" className="btn-primary" style={{ textDecoration: 'none' }}>
+            <MicIcon /> Iniciar Avaliação
+          </Link>
         </div>
       </header>
 
@@ -139,7 +135,7 @@ export default function Dashboard() {
         <MetricCard title="Testes Feitos" value={stats.totalEvaluations} icon={<HistoryIcon />} color="var(--warning)" />
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem' }}>
+      <div className="dashboard-grid">
         <div className="glass-card" style={{ padding: '2rem', height: '100%' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
             <h3 style={{ fontSize: '1.2rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
@@ -149,25 +145,17 @@ export default function Dashboard() {
           </div>
 
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          <div className="recent-evaluations-list">
             {recentEvaluations.length > 0 ? recentEvaluations.map(ev => (
-              <div key={ev.id} className="hover-row" style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                padding: '1.25rem',
-                background: 'var(--glass-bg)',
-                borderRadius: '16px',
-                border: '1px solid var(--glass-border)',
-              }}>
-                <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                  <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900 }}>{ev.alunoNome[0]}</div>
-                  <div>
-                    <div style={{ fontWeight: 800 }}>{ev.alunoNome}</div>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{formatDate(ev.data)}</div>
+              <div key={ev.id} className="hover-row recent-evaluation-card">
+                <div className="recent-evaluation-main">
+                  <div className="recent-evaluation-avatar">{ev.alunoNome[0]}</div>
+                  <div className="recent-evaluation-copy">
+                    <div className="recent-evaluation-name">{ev.alunoNome}</div>
+                    <div className="recent-evaluation-date">{formatDate(ev.data)}</div>
                   </div>
                 </div>
-                <div style={{ textAlign: 'right' }}>
+                <div className="recent-evaluation-stats">
                   <div style={{ color: 'var(--primary)', fontWeight: 900, fontSize: '1.2rem' }}>{ev.pcm} PCM</div>
                   <div style={{ fontSize: '0.7rem', color: 'var(--success)', fontWeight: 700 }}>{ev.precisao}% Precisão</div>
                 </div>
@@ -178,7 +166,7 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+        <div className="dashboard-side-column">
           <div className="glass-card" style={{ background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.15), transparent)', padding: '2.5rem', borderLeft: '4px solid var(--primary)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.25rem' }}>
               <div style={{ color: 'var(--primary)', fontSize: '1.5rem' }}><LightbulbIcon /></div>
@@ -205,10 +193,10 @@ export default function Dashboard() {
 
 function MetricCard({ title, value, icon, color, suffix = "" }: { title: string; value: number; icon: React.ReactNode; color: string; suffix?: string }) {
   return (
-    <div className="glass-card" style={{ borderLeft: `4px solid ${color}`, position: 'relative', overflow: 'hidden' }}>
+    <div className="glass-card metric-card" style={{ borderLeftColor: color }}>
       <div style={{ position: 'absolute', right: '-10px', top: '-10px', fontSize: '4rem', opacity: 0.05, transform: 'rotate(15deg)' }}>{icon}</div>
       <div style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>{title}</div>
-      <div style={{ marginTop: '1rem', display: 'flex', alignItems: 'baseline', gap: '0.5rem' }}>
+      <div className="metric-card-value">
         <span style={{ fontSize: '2.5rem', fontWeight: 900 }}>{value}</span>
         {suffix && <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 700 }}>{suffix}</span>}
       </div>

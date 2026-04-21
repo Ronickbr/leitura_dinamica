@@ -229,19 +229,14 @@ export default function HistoryPage() {
               <div key={group.alunoId} className="glass-card" style={{ padding: '0', overflow: 'hidden' }}>
                 {/* Resumo do Aluno e Gráfico - Clique para expandir */}
                 <div
-                  className="hover-row"
+                  className="hover-row history-group-summary"
                   style={{
-                    padding: '1.5rem 2rem',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    cursor: 'pointer',
                     background: isExpanded ? 'var(--btn-outline-hover-bg)' : 'transparent',
                     borderBottom: isExpanded ? '1px solid var(--glass-border)' : 'none'
                   }}
                   onClick={() => setExpandedStudentId(isExpanded ? null : group.alunoId)}
                 >
-                  <div style={{ flex: 1 }}>
+                  <div className="history-group-meta">
                     <h3 style={{ fontSize: '1.25rem', fontWeight: 700, margin: 0, color: 'var(--text-main)' }}>
                       {anonymizeName(group.alunoId, group.aluno?.nome || 'Aluno Desconhecido')}
                     </h3>
@@ -251,14 +246,14 @@ export default function HistoryPage() {
                   </div>
 
                   {/* Gráfico em barras e resumos numéricos */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '2.5rem', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                  <div className="history-group-insights">
 
                     {chartData.length >= 1 && (
-                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                      <div className="history-chart-block">
                         <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: '0.4rem', fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
                           Evolução PCM
                         </div>
-                        <div style={{ width: '100px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <div className="history-chart-canvas">
                           <svg width="100" height="36" viewBox="0 0 100 36" style={{ overflow: 'visible' }}>
                             {(() => {
                               const maxPcm = Math.max(1, ...chartData.map(c => c.pcm || 0));
@@ -311,23 +306,17 @@ export default function HistoryPage() {
                       </div>
                     )}
 
-                    <div style={{ textAlign: 'right', minWidth: '80px' }}>
+                    <div className="history-summary-stat">
                       <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 600, marginBottom: '0.2rem', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Último PCM</div>
                       <div style={{ color: getLevelColor(latestEv.pcm), fontSize: '1.6rem', fontWeight: 900, lineHeight: 1 }}>
                         {latestEv.pcm}
                       </div>
                     </div>
 
-                    <div style={{
+                    <div className="history-expand-indicator" style={{
                       color: 'var(--text-muted)',
                       transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                       transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      width: '24px',
-                      height: '24px',
-                      borderRadius: '50%',
                       background: 'var(--btn-outline-hover-bg)'
                     }}>
                       ▼
