@@ -1,6 +1,6 @@
 # Modelo de Importação de Alunos (Excel)
 
-Para importar alunos em massa, utilize uma planilha Excel (.xlsx ou .xls) com as seguintes colunas. Os nomes das colunas não diferenciam maiúsculas de minúsculas.
+Para importar alunos em massa, utilize uma planilha Excel (.xlsx ou .xls) com as seguintes colunas. O sistema é flexível e ignora diferenças entre maiúsculas/minúsculas, acentuação e espaços nos nomes das colunas.
 
 ## Colunas Esperadas
 

@@ -1,7 +1,7 @@
 {
   "name": "leitura",
   "private": true,
-  "version": "2.3.5",
+  "version": "2.3.6",
   "description": "Plataforma de avaliacao de fluencia leitora com Next.js.",
   "engines": {
     "node": ">=22.0.0"

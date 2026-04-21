@@ -29,19 +29,37 @@ export default function SettingsPage() {
             let successCount = 0;
             let errorCount = 0;
 
+            const getValue = (row: any, ...keys: string[]) => {
+                const rowKeys = Object.keys(row);
+                const normalize = (s: string) => s.toString().normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+
+                for (const key of keys) {
+                    const target = normalize(key);
+                    const foundKey = rowKeys.find(rk => normalize(rk) === target);
+                    if (foundKey !== undefined) return row[foundKey];
+                }
+                return undefined;
+            };
+
             for (const row of jsonData as any[]) {
-                const nome = row.nome || row.Nome || row.NOME;
-                const turma = row.turma || row.Turma || row.TURMA || "Geral";
-                const serie = row.serie || row.Serie || row.Série || row.SERIE || "1º Ano";
-                const turno = row.turno || row.Turno || row.TURNO || "Manhã";
-                const diagnostico = row.diagnostico || row.Diagnostico || row.DIAGNOSTICO || row.Diagnóstico || "Nenhum";
+                const nome = getValue(row, "nome", "name", "NOME");
+                const turma = getValue(row, "turma", "class", "TURMA") || "Geral";
+                const serieRaw = getValue(row, "serie", "grade", "SÉRIE", "SERIE") || "1º Ano";
+                const turno = getValue(row, "turno", "shift", "TURNO") || "Manhã";
+                const diagnostico = getValue(row, "diagnostico", "diagnostic", "DIAGNÓSTICO", "DIAGNOSTICO") || "Nenhum";
+
+                // Normalização simples para série (ex: "3º" -> "3º Ano")
+                let serie = String(serieRaw).trim();
+                if (/^\d+º?$/.test(serie)) {
+                    serie = serie.endsWith("º") ? `${serie} Ano` : `${serie}º Ano`;
+                }
 
                 if (nome) {
                     try {
                         await addAluno({
                             nome: String(nome),
                             turma: String(turma),
-                            serie: String(serie),
+                            serie: serie,
                             turno: String(turno),
                             diagnostico: String(diagnostico)
                         } as Omit<Aluno, 'id'>);
