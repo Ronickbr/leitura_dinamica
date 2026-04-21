@@ -1,11 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { getAlunos, addAluno, updateAluno, deleteAluno, type Aluno } from "@/lib/services";
 import { MobileCard, MobileCardList, MobileDataGrid, MobileDataPoint } from "../components/MobileCards";
 import { useSettings } from "../components/SettingsProvider";
 
 export default function StudentsPage() {
+  const router = useRouter();
   const { anonymizeName, anonymizeText } = useSettings();
   const [alunos, setAlunos] = useState<Aluno[]>([]);
   const [loading, setLoading] = useState(true);
@@ -61,12 +63,21 @@ export default function StudentsPage() {
   return (
     <div className="animate-in" style={{ paddingBottom: '4rem' }}>
       <header className="page-header">
-        <div className="page-header-content">
-          <h2 className="page-title">Gerenciar <span style={{ color: 'var(--primary)' }}>Alunos</span></h2>
-          <p className="page-subtitle">Cadastre e gerencie os estudantes.</p>
+        <div className="page-header-content" style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem' }}>
+          <button
+            onClick={() => router.push('/')}
+            className="btn-outline-round"
+            aria-label="Voltar ao dashboard"
+          >
+            ⬅️
+          </button>
+          <div style={{ minWidth: 0 }}>
+            <h2 className="page-title">Gerenciar <span style={{ color: 'var(--primary)' }}>Alunos</span></h2>
+            <p className="page-subtitle">Cadastre e gerencie os estudantes cadastrados no sistema.</p>
+          </div>
         </div>
-        <button onClick={() => { if (showForm) { setEditingId(null); setFormData({ nome: '', turma: '', serie: '', turno: '', diagnostico: '', observacoes: '' }); } setShowForm(!showForm); }} className="btn-primary">
-          {showForm ? 'Cancelar' : '+ Novo Aluno'}
+        <button onClick={() => { if (showForm) { setEditingId(null); setFormData({ nome: '', turma: '', serie: '', turno: '', diagnostico: '', observacoes: '' }); } setShowForm(!showForm); }} className="btn-primary" style={{ flexShrink: 0 }}>
+          {showForm ? 'Cancelar' : '+ Novo'}
         </button>
       </header>
 

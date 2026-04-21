@@ -179,9 +179,8 @@ export default function ReadingPage() {
         <div className="page-header-content" style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem' }}>
           <button
             onClick={() => router.push('/evaluations/new')}
-            className="btn-outline"
+            className="btn-outline-round"
             aria-label="Voltar para seleção"
-            style={{ padding: '0.75rem', borderRadius: '999px', minWidth: '48px', flexShrink: 0 }}
           >
             ⬅️
           </button>

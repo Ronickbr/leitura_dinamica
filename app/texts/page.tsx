@@ -1,9 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { getTextos, addTexto, deleteTexto, type Texto } from "@/lib/textsService";
 
 export default function TextsPage() {
+  const router = useRouter();
   const [textos, setTextos] = useState<Texto[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -52,12 +54,21 @@ export default function TextsPage() {
   return (
     <div className="animate-in" style={{ paddingBottom: '4rem' }}>
       <header className="page-header">
-        <div className="page-header-content">
-          <h2 className="page-title">Biblioteca de <span style={{ color: 'var(--primary)' }}>Textos</span></h2>
-          <p className="page-subtitle">Gerencie os textos para avaliação.</p>
+        <div className="page-header-content" style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem' }}>
+          <button
+            onClick={() => router.push('/')}
+            className="btn-outline-round"
+            aria-label="Voltar para dashboard"
+          >
+            ⬅️
+          </button>
+          <div style={{ minWidth: 0 }}>
+            <h2 className="page-title">Biblioteca de <span style={{ color: 'var(--primary)' }}>Textos</span></h2>
+            <p className="page-subtitle">Gerencie os textos para avaliação.</p>
+          </div>
         </div>
-        <button onClick={() => setShowForm(!showForm)} className="btn-primary">
-          {showForm ? 'Cancelar' : '+ Novo Texto'}
+        <button onClick={() => setShowForm(!showForm)} className="btn-primary" style={{ flexShrink: 0 }}>
+          {showForm ? 'Cancelar' : '+ Novo'}
         </button>
       </header>
 

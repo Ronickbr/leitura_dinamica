@@ -72,9 +72,18 @@ export default function SelectionPage() {
   return (
     <div className="animate-in" style={{ paddingBottom: '4rem' }}>
       <header className="page-header">
-        <div className="page-header-content">
-          <h2 className="page-title">Seleção de <span style={{ color: 'var(--primary)' }}>Estudante</span></h2>
-          <p className="page-subtitle">Filtre e escolha um aluno para iniciar a avaliação.</p>
+        <div className="page-header-content" style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem' }}>
+          <button
+            onClick={() => router.push('/')}
+            className="btn-outline-round"
+            aria-label="Voltar para dashboard"
+          >
+            ⬅️
+          </button>
+          <div style={{ minWidth: 0 }}>
+            <h2 className="page-title">Seleção de <span style={{ color: 'var(--primary)' }}>Estudante</span></h2>
+            <p className="page-subtitle">Escolha um aluno para iniciar a avaliação.</p>
+          </div>
         </div>
       </header>
 

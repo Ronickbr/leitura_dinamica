@@ -196,9 +196,18 @@ export default function HistoryPage() {
   return (
     <div className="animate-in" style={{ paddingBottom: '4rem' }}>
       <header className="page-header">
-        <div className="page-header-content">
-          <h2 className="page-title">Histórico de <span style={{ color: 'var(--primary)' }}>Avaliações</span></h2>
-          <p className="page-subtitle">Evolução dos estudantes e histórico detalhado.</p>
+        <div className="page-header-content" style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem' }}>
+          <button
+            onClick={() => router.push('/')}
+            className="btn-outline-round"
+            aria-label="Voltar para dashboard"
+          >
+            ⬅️
+          </button>
+          <div style={{ minWidth: 0 }}>
+            <h2 className="page-title">Histórico de <span style={{ color: 'var(--primary)' }}>Avaliações</span></h2>
+            <p className="page-subtitle">Acompanhe a evolução e o desempenho dos alunos.</p>
+          </div>
         </div>
         {!loading && studentGroups.length > 0 && (
           <button onClick={handleExportExcel} className="btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>

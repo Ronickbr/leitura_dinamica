@@ -1,11 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useSettings } from "../components/SettingsProvider";
 import * as XLSX from "xlsx";
 import { addAluno, Aluno } from "@/lib/services";
 
 export default function SettingsPage() {
+    const router = useRouter();
     const { isAnonymized, setAnonymized } = useSettings();
     const [loading, setLoading] = useState(false);
     const [uploadStatus, setUploadStatus] = useState<{ message: string; type: 'success' | 'error' | '' }>({ message: '', type: '' });
@@ -65,11 +67,20 @@ export default function SettingsPage() {
     };
 
     return (
-        <div className="animate-in" style={{ padding: "1rem 0" }}>
-            <header className="page-header" style={{ marginBottom: "2rem" }}>
-                <div className="page-header-content">
-                    <h1 className="page-title" style={{ fontSize: "2rem" }}>Configurações</h1>
-                    <p className="page-subtitle">Ajuste privacidade, importação em lote e preferências do ambiente.</p>
+        <div className="animate-in" style={{ paddingBottom: "4rem" }}>
+            <header className="page-header">
+                <div className="page-header-content" style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem' }}>
+                    <button
+                        onClick={() => router.push('/')}
+                        className="btn-outline-round"
+                        aria-label="Voltar ao dashboard"
+                    >
+                        ⬅️
+                    </button>
+                    <div style={{ minWidth: 0 }}>
+                        <h1 className="page-title" style={{ fontSize: "2rem" }}>Configurações</h1>
+                        <p className="page-subtitle">Ajuste privacidade, importação em lote e preferências.</p>
+                    </div>
                 </div>
             </header>
 
