@@ -17,6 +17,12 @@ export default function StudentsPage() {
   const [formData, setFormData] = useState({ nome: '', turma: '', serie: '', turno: '', diagnostico: '', observacoes: '' });
   const [saving, setSaving] = useState(false);
 
+  // Estados dos filtros
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterTurma, setFilterTurma] = useState('');
+  const [filterSerie, setFilterSerie] = useState('');
+  const [filterDiagnostico, setFilterDiagnostico] = useState('');
+
   useEffect(() => {
     loadAlunos();
   }, []);
@@ -59,6 +65,20 @@ export default function StudentsPage() {
       loadAlunos();
     }
   }
+
+  const filteredAlunos = alunos.filter(aluno => {
+    const normalize = (s: any) => (s || "").toString().normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+    const searchNorm = normalize(searchTerm);
+    const turmaNorm = normalize(filterTurma);
+    const diagNorm = normalize(filterDiagnostico);
+
+    const matchesName = normalize(aluno.nome).includes(searchNorm);
+    const matchesTurma = filterTurma === '' || normalize(aluno.turma).includes(turmaNorm);
+    const matchesSerie = filterSerie === '' || aluno.serie === filterSerie;
+    const matchesDiagnostico = filterDiagnostico === '' || (aluno.diagnostico && normalize(aluno.diagnostico).includes(diagNorm));
+
+    return matchesName && matchesTurma && matchesSerie && matchesDiagnostico;
+  });
 
   return (
     <div className="animate-in" style={{ paddingBottom: '4rem' }}>
@@ -155,6 +175,80 @@ export default function StudentsPage() {
         <div style={{ textAlign: 'center', padding: '5rem', color: 'var(--text-muted)' }} className="animate-pulse">Carregando...</div>
       ) : (
         <>
+          {/* Barra de Filtros */}
+          <div className="glass-card" style={{ marginBottom: '2rem', padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+              <span style={{ fontSize: '1.2rem' }}>🔍</span>
+              <h3 style={{ fontSize: '1rem', fontWeight: 700, margin: 0 }}>Filtros de Busca</h3>
+            </div>
+            <div className="responsive-form-grid">
+              <input
+                type="text"
+                placeholder="Buscar por nome..."
+                value={searchTerm}
+                onChange={e => setSearchTerm(e.target.value)}
+                className="glass-panel"
+                style={{ padding: '0.6rem 1rem', fontSize: '0.9rem', color: 'var(--text-main)', border: '1px solid var(--glass-border)' }}
+              />
+              <input
+                type="text"
+                placeholder="Filtrar por turma..."
+                value={filterTurma}
+                onChange={e => setFilterTurma(e.target.value)}
+                className="glass-panel"
+                style={{ padding: '0.6rem 1rem', fontSize: '0.9rem', color: 'var(--text-main)', border: '1px solid var(--glass-border)' }}
+              />
+              <select
+                value={filterSerie}
+                onChange={e => setFilterSerie(e.target.value)}
+                className="glass-panel"
+                style={{ padding: '0.6rem 1rem', fontSize: '0.9rem', color: 'var(--text-main)', border: '1px solid var(--glass-border)' }}
+              >
+                <option value="">Todas as séries</option>
+                <option value="1º Ano">1º Ano</option>
+                <option value="2º Ano">2º Ano</option>
+                <option value="3º Ano">3º Ano</option>
+                <option value="4º Ano">4º Ano</option>
+                <option value="5º Ano">5º Ano</option>
+              </select>
+              <input
+                type="text"
+                placeholder="Filtrar diagnóstico..."
+                value={filterDiagnostico}
+                onChange={e => setFilterDiagnostico(e.target.value)}
+                className="glass-panel"
+                style={{ padding: '0.6rem 1rem', fontSize: '0.9rem', color: 'var(--text-main)', border: '1px solid var(--glass-border)' }}
+              />
+            </div>
+            {(searchTerm || filterTurma || filterSerie || filterDiagnostico) && (
+              <button
+                onClick={() => { setSearchTerm(''); setFilterTurma(''); setFilterSerie(''); setFilterDiagnostico(''); }}
+                style={{
+                  alignSelf: 'flex-start',
+                  background: 'rgba(239, 68, 68, 0.1)',
+                  border: '1px solid rgba(239, 68, 68, 0.2)',
+                  color: 'var(--error)',
+                  cursor: 'pointer',
+                  fontSize: '0.75rem',
+                  fontWeight: 700,
+                  padding: '0.3rem 0.8rem',
+                  borderRadius: '6px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.4rem'
+                }}
+              >
+                <span>✕</span> Limpar Filtros
+              </button>
+            )}
+          </div>
+
+          {filteredAlunos.length === 0 && (
+            <div className="glass-card" style={{ textAlign: 'center', padding: '3rem', marginBottom: '2rem' }}>
+              <p style={{ color: 'var(--text-muted)' }}>Nenhum aluno corresponde aos filtros aplicados.</p>
+            </div>
+          )}
+
           <div className="glass-card desktop-only-view" style={{ padding: 0, overflow: 'hidden' }}>
             <div className="table-scroll">
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
@@ -168,7 +262,7 @@ export default function StudentsPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {alunos.map(aluno => (
+                  {filteredAlunos.map(aluno => (
                     <tr key={aluno.id} className="hover-row" style={{ borderBottom: '1px solid var(--glass-border)' }}>
                       <td style={{ padding: '1.25rem 2rem', fontWeight: 700 }}>
                         {anonymizeName(aluno.id, aluno.nome)}
@@ -209,7 +303,7 @@ export default function StudentsPage() {
           </div>
           <div className="mobile-only-view">
             <MobileCardList testId="students-mobile-cards">
-              {alunos.map((aluno) => (
+              {filteredAlunos.map(aluno => (
                 <MobileCard
                   key={aluno.id}
                   testId="student-mobile-card"
