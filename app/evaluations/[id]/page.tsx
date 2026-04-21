@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { useMobileExperience } from "@/app/components/MobileExperienceProvider";
 import { getAlunoById, type Aluno } from "@/lib/services";
 import { getTextos, type Texto } from "@/lib/textsService";
 import { processAudio, saveAvaliacao } from "@/lib/evaluationsService";
@@ -13,6 +14,7 @@ const CheckCircleIcon = () => <span>✅</span>;
 export default function ReadingPage() {
   const params = useParams();
   const router = useRouter();
+  const { isMobile } = useMobileExperience();
   const alunoId = params.id as string;
 
   const [isRecording, setIsRecording] = useState(false);
@@ -58,6 +60,13 @@ export default function ReadingPage() {
 
   const [tempResult, setTempResult] = useState<any>(null);
   const [isReviewing, setIsReviewing] = useState(false);
+  const qualitativeMetrics = [
+    { key: 'leitura_precisa', label: 'Leitura Precisa', icon: '🎯' },
+    { key: 'leitura_silabada', label: 'Leitura Silabada', icon: '🐢' },
+    { key: 'boa_entonacao', label: 'Boa Entonação', icon: '🎭' },
+    { key: 'interpretacao', label: 'Interpretação', icon: '🧠' },
+    { key: 'pontuacao', label: 'Pontuação', icon: '📍' }
+  ] as const;
 
   const stopRecording = () => {
     if (mediaRecorderRef.current && isRecording) {
@@ -166,63 +175,109 @@ export default function ReadingPage() {
 
   return (
     <div className="animate-in" style={{ paddingBottom: '4rem' }}>
-      <header style={{ marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
-        <button onClick={() => router.push('/evaluations/new')} className="btn-outline" style={{ padding: '0.5rem', borderRadius: '50%' }}>⬅️</button>
-        <div>
-          <h2 style={{ fontSize: '1.5rem', fontWeight: 800 }}>Avaliação de <span style={{ color: 'var(--primary)' }}>Fluência</span></h2>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Aluno: <strong>{aluno?.nome}</strong> ({aluno?.turma})</p>
+      <header className="page-header evaluation-header" style={{ marginBottom: '2rem' }}>
+        <div className="page-header-content" style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem' }}>
+          <button
+            onClick={() => router.push('/evaluations/new')}
+            className="btn-outline"
+            aria-label="Voltar para seleção"
+            style={{ padding: '0.75rem', borderRadius: '999px', minWidth: '48px', flexShrink: 0 }}
+          >
+            ⬅️
+          </button>
+          <div style={{ minWidth: 0 }}>
+            <h2 className="page-title" style={{ fontSize: 'clamp(1.5rem, 4vw, 2.1rem)', marginBottom: '0.3rem' }}>
+              Avaliação de <span style={{ color: 'var(--primary)' }}>Fluência</span>
+            </h2>
+            <p className="page-subtitle" style={{ marginBottom: '0.9rem' }}>
+              Aluno: <strong>{aluno?.nome}</strong> ({aluno?.turma})
+            </p>
+            <div className="evaluation-meta-chips">
+              {aluno?.serie ? <span className="perf-chip">{aluno.serie}</span> : null}
+              {aluno?.turma ? <span className="perf-chip">Turma {aluno.turma}</span> : null}
+              <span className="perf-chip">Leitura guiada</span>
+            </div>
+          </div>
         </div>
       </header>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: '2rem' }}>
-        <div className="glass-card" style={{ minHeight: '400px', display: 'flex', flexDirection: 'column' }}>
-          <div style={{ borderBottom: '1px solid var(--glass-border)', paddingBottom: '1rem', marginBottom: '2rem', display: 'flex', justifyContent: 'space-between' }}>
+      <div className="evaluation-layout">
+        <div className="glass-card evaluation-text-card">
+          <div className="evaluation-text-header">
             <div>
-              <h3 style={{ fontSize: '1.2rem' }}>{texto?.titulo}</h3>
-              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', background: 'rgba(255,255,255,0.05)', padding: '2px 8px', borderRadius: '4px' }}>{texto?.serie}</span>
+              <h3 style={{ fontSize: '1.2rem', marginBottom: '0.4rem' }}>{texto?.titulo}</h3>
+              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', background: 'rgba(255,255,255,0.05)', padding: '0.3rem 0.65rem', borderRadius: '999px', display: 'inline-flex' }}>
+                {texto?.serie}
+              </span>
             </div>
             {textosDisponiveis.length > 1 && !isRecording && !isFinished && (
-              <select value={texto?.id} onChange={e => setTexto(textosDisponiveis.find(t => t.id === e.target.value) || null)} className="glass-panel" style={{ padding: '0.2rem 0.5rem', fontSize: '0.8rem', color: 'white' }}>
+              <select
+                value={texto?.id}
+                onChange={e => setTexto(textosDisponiveis.find(t => t.id === e.target.value) || null)}
+                className="glass-panel evaluation-text-select"
+                aria-label="Selecionar texto"
+                style={{ padding: '0.6rem 0.85rem', fontSize: '0.9rem', color: 'var(--text-main)' }}
+              >
                 {textosDisponiveis.map(t => <option key={t.id} value={t.id}>{t.titulo}</option>)}
               </select>
             )}
           </div>
-          <p style={{ fontSize: '1.4rem', lineHeight: '1.7', color: 'var(--text-main)', fontStyle: isRecording ? 'italic' : 'normal' }}>{texto?.conteudo}</p>
+          <p className="evaluation-reading-text" style={{ fontStyle: isRecording ? 'italic' : 'normal' }}>
+            {texto?.conteudo}
+          </p>
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-          <div className="glass-card" style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '3.5rem', fontWeight: 800, color: timeLeft <= 10 ? 'var(--accent)' : 'var(--text-main)', marginBottom: '0.5rem' }}>
+        <div className="evaluation-sidebar">
+          <div className="glass-card evaluation-recorder-card">
+            <div className="evaluation-status-row">
+              <span className="perf-chip">{isRecording ? 'Gravando' : isFinished ? 'Pronto para revisar' : 'Aguardando'}</span>
+              <span className="perf-chip">{isMobile ? 'Modo mobile' : 'Modo desktop'}</span>
+            </div>
+            <div className="evaluation-timer" style={{ color: timeLeft <= 10 ? 'var(--accent)' : 'var(--text-main)' }}>
               00:{timeLeft < 10 ? `0${timeLeft}` : timeLeft}
             </div>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', marginBottom: '2rem' }}>SEGUNDOS RESTANTES</p>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '1.5rem', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700 }}>
+              Segundos restantes
+            </p>
 
             {!isRecording && !isFinished && (
-              <button onClick={startRecording} className="btn-primary" style={{ width: '100%', padding: '1.2rem', borderRadius: '16px' }}><MicIcon /> Iniciar</button>
+              <button onClick={startRecording} className="btn-primary evaluation-primary-action" style={{ width: '100%', padding: '1.1rem 1.25rem', borderRadius: '18px' }}>
+                <MicIcon /> Iniciar gravação
+              </button>
             )}
             {isRecording && (
-              <button onClick={stopRecording} className="btn-primary" style={{ width: '100%', background: 'var(--accent)', padding: '1.2rem', borderRadius: '16px' }}><SquareIcon /> Parar</button>
+              <button onClick={stopRecording} className="btn-primary evaluation-primary-action" style={{ width: '100%', background: 'var(--accent)', padding: '1.1rem 1.25rem', borderRadius: '18px' }}>
+                <SquareIcon /> Parar gravação
+              </button>
             )}
             {isFinished && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                <audio src={audioUrl || ''} controls style={{ width: '100%', height: '32px' }} />
+              <div className="evaluation-finished-actions">
+                <audio src={audioUrl || ''} controls className="evaluation-audio-player" style={{ width: '100%' }} />
                 <button onClick={handleFinish} className="btn-primary" disabled={processing} style={{ width: '100%', background: 'var(--success)' }}>
-                  {processing ? 'Analisando...' : <><CheckCircleIcon /> Confirmar</>}
+                  {processing ? 'Analisando...' : <><CheckCircleIcon /> Revisar resultado</>}
                 </button>
-                <button onClick={() => { setAudioUrl(null); setIsFinished(false); }} className="btn-outline" style={{ width: '100%' }}>🔄 Refazer</button>
+                <button onClick={() => { setAudioUrl(null); setIsFinished(false); }} className="btn-outline" style={{ width: '100%' }}>
+                  🔄 Gravar novamente
+                </button>
+              </div>
+            )}
+            {!isFinished && (
+              <div className="evaluation-helper-copy">
+                Leia o texto com calma. Quando terminar, revise o áudio antes de salvar a avaliação.
               </div>
             )}
           </div>
-          <div className="glass-card" style={{ padding: '1.5rem', fontSize: '0.85rem' }}>
-            <h4 style={{ marginBottom: '0.5rem' }}>Dica Pedagógica:</h4>
+
+          <div className="glass-card evaluation-tip-card" style={{ padding: '1.5rem', fontSize: '0.85rem' }}>
+            <h4 style={{ marginBottom: '0.5rem' }}>Dica Pedagógica</h4>
             <p style={{ color: 'var(--text-muted)' }}>Garanta que o aluno esteja em postura confortável e o microfone posicionado corretamente.</p>
           </div>
         </div>
       </div>
 
       {isReviewing && (
-        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "var(--bg-deep)", opacity: 0.98, backdropFilter: "blur(8px)", zIndex: 2000, display: "flex", alignItems: "center", justifyContent: "center", padding: "1.5rem" }}>
-          <div className="glass-card animate-in" style={{ maxWidth: "600px", width: "100%", maxHeight: "90vh", overflowY: "auto", boxShadow: "var(--glass-shadow)" }}>
+        <div className="evaluation-review-overlay">
+          <div className="glass-card animate-in evaluation-review-sheet" style={{ maxWidth: "600px", width: "100%", boxShadow: "var(--glass-shadow)" }}>
             <h2 style={{ marginBottom: "1.5rem", display: "flex", alignItems: "center", gap: "0.75rem" }}>
               <span style={{ fontSize: "1.5rem" }}>📝</span> Revisar Avaliação
             </h2>
@@ -230,7 +285,7 @@ export default function ReadingPage() {
             <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem", marginBottom: "2rem" }}>
               <div>
                 <p style={{ fontSize: "0.85rem", color: "var(--text-muted)", marginBottom: "0.5rem" }}>RESULTADO QUANTITATIVO</p>
-                <div style={{ display: "flex", gap: "2rem", background: "var(--glass-bg)", padding: "1rem", borderRadius: "12px", border: "1px solid var(--glass-border)" }}>
+                <div className="evaluation-results-grid" style={{ background: "var(--glass-bg)", padding: "1rem", borderRadius: "12px", border: "1px solid var(--glass-border)" }}>
                   <div>
                     <div style={{ fontSize: "1.5rem", fontWeight: 900, color: "var(--primary)" }}>{tempResult.pcm}</div>
                     <div style={{ fontSize: "0.7rem", color: "var(--text-muted)" }}>PCM</div>
@@ -244,22 +299,17 @@ export default function ReadingPage() {
 
               <div>
                 <p style={{ fontSize: "0.85rem", color: "var(--text-muted)", marginBottom: "1rem" }}>MÉTRICAS QUALITATIVAS (TOQUE PARA ALTERAR)</p>
-                <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-                  {[
-                    { key: 'leitura_precisa', label: 'Leitura Precisa', icon: '🎯' },
-                    { key: 'leitura_silabada', label: 'Leitura Silabada', icon: '🐢' },
-                    { key: 'boa_entonacao', label: 'Boa Entonação', icon: '🎭' },
-                    { key: 'interpretacao', label: 'Interpretação', icon: '🧠' },
-                    { key: 'pontuacao', label: 'Pontuação', icon: '📍' }
-                  ].map((m) => (
-                    <div key={m.key} onClick={() => toggleMetric(m.key)} style={{
-                      padding: "1rem",
-                      borderRadius: "12px",
-                      background: tempResult.analysis.metricas_qualitativas[m.key] ? "rgba(16, 185, 129, 0.1)" : "var(--glass-bg)",
-                      border: `1px solid ${tempResult.analysis.metricas_qualitativas[m.key] ? "var(--success)" : "var(--glass-border)"}`,
-                      cursor: "pointer",
-                      transition: "all 0.2s ease"
-                    }}>
+                <div className="evaluation-metrics-list">
+                  {qualitativeMetrics.map((m) => (
+                    <div
+                      key={m.key}
+                      onClick={() => toggleMetric(m.key)}
+                      className="evaluation-metric-card"
+                      style={{
+                        background: tempResult.analysis.metricas_qualitativas[m.key] ? "rgba(16, 185, 129, 0.1)" : "var(--glass-bg)",
+                        border: `1px solid ${tempResult.analysis.metricas_qualitativas[m.key] ? "var(--success)" : "var(--glass-border)"}`,
+                      }}
+                    >
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.4rem" }}>
                         <span style={{ fontWeight: 700, fontSize: "0.95rem" }}>{m.icon} {m.label}</span>
                         <span style={{
@@ -279,7 +329,7 @@ export default function ReadingPage() {
               </div>
             </div>
 
-            <div style={{ display: "flex", gap: "1rem" }}>
+            <div className="evaluation-review-actions">
               <button onClick={() => setIsReviewing(false)} className="btn-outline" style={{ flex: 1 }}>Voltar</button>
               <button onClick={confirmAndSave} disabled={processing} className="btn-primary" style={{ flex: 2, background: "var(--success)" }}>
                 {processing ? "Salvando..." : "Salvar Avaliação"}
