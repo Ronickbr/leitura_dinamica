@@ -77,6 +77,17 @@ export default function HistoryPage() {
     return 'var(--success)';
   };
 
+  const getDiagnosisStyle = (dx?: string) => {
+    if (!dx) return { color: 'var(--text-muted)', bg: 'transparent' };
+    const d = dx.toUpperCase();
+    if (d.includes('TDA') && d.includes('TDH')) return { color: '#FFD700', bg: 'rgba(255, 215, 0, 0.1)' };
+    if (d.includes('TDH')) return { color: '#ff4757', bg: 'rgba(255, 71, 87, 0.1)' };
+    if (d.includes('TDA')) return { color: '#2ed573', bg: 'rgba(46, 213, 115, 0.1)' };
+    if (d.includes('AUTISMO') || d.includes('TEA')) return { color: '#1e90ff', bg: 'rgba(30, 144, 255, 0.1)' };
+    if (d.includes('DISLEXIA')) return { color: '#ffa502', bg: 'rgba(255, 165, 2, 0.1)' };
+    return { color: 'var(--primary)', bg: 'rgba(var(--primary-rgb), 0.1)' };
+  };
+
   const handleExportExcel = () => {
     if (studentGroups.length === 0) return;
 
@@ -344,7 +355,8 @@ export default function HistoryPage() {
                               <th style={{ padding: '1rem 2rem', textAlign: 'left', fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 800 }}>DATA</th>
                               <th style={{ padding: '1rem 2rem', textAlign: 'left', fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 800 }}>PCM</th>
                               <th style={{ padding: '1rem 2rem', textAlign: 'left', fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 800 }}>PRECISÃO</th>
-                              <th style={{ padding: '1rem 2rem', textAlign: 'left', fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 800 }}>DIAGNÓSTICO</th>
+                              <th style={{ padding: '1rem 2rem', textAlign: 'left', fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 800 }}>DIAG ALUNO</th>
+                              <th style={{ padding: '1rem 2rem', textAlign: 'left', fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 800 }}>ANÁLISE IA</th>
                             </tr>
                           </thead>
                           <tbody>
@@ -363,7 +375,26 @@ export default function HistoryPage() {
                                   <span style={{ color: getLevelColor(ev.pcm), fontWeight: 800, fontSize: '0.9rem' }}>{ev.pcm}</span>
                                 </td>
                                 <td style={{ padding: '1rem 2rem', fontSize: '0.9rem' }}>{ev.precisao}%</td>
-                                <td style={{ padding: '1rem 2rem', fontSize: '0.9rem', maxWidth: '300px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                <td style={{ padding: '1rem 2rem' }}>
+                                  {group.aluno?.diagnostico ? (() => {
+                                    const style = getDiagnosisStyle(group.aluno.diagnostico);
+                                    return (
+                                      <span style={{
+                                        color: style.color,
+                                        background: style.bg,
+                                        padding: '0.2rem 0.6rem',
+                                        borderRadius: '12px',
+                                        fontSize: '0.75rem',
+                                        fontWeight: 800,
+                                        letterSpacing: '0.02em',
+                                        border: `1px solid ${style.color}33`
+                                      }}>
+                                        {group.aluno.diagnostico.toUpperCase()}
+                                      </span>
+                                    );
+                                  })() : <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>Sem diagnóstico</span>}
+                                </td>
+                                <td style={{ padding: '1rem 2rem', fontSize: '0.8rem', maxWidth: '300px', color: 'var(--text-muted)', fontStyle: 'italic', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                                   {anonymizeText(ev.diagnosticoIA)}
                                 </td>
                               </tr>
@@ -387,8 +418,12 @@ export default function HistoryPage() {
                             <MobileDataGrid>
                               <MobileDataPoint label="PCM" value={ev.pcm} accent />
                               <MobileDataPoint label="Precisão" value={`${ev.precisao}%`} />
-                              <MobileDataPoint label="Data" value={formatDate(ev.data)} />
-                              <MobileDataPoint label="Diagnóstico" value={anonymizeText(ev.diagnosticoIA || '-')} />
+                              <MobileDataPoint
+                                label="Diag Aluno"
+                                value={group.aluno?.diagnostico || 'Nenhum'}
+                                color={getDiagnosisStyle(group.aluno?.diagnostico).color}
+                              />
+                              <MobileDataPoint label="Análise IA" value={anonymizeText(ev.diagnosticoIA || '-')} />
                             </MobileDataGrid>
                           </MobileCard>
                         ))}

@@ -19,6 +19,7 @@ type MobileDataPointProps = {
   label: string;
   value: React.ReactNode;
   accent?: boolean;
+  color?: string;
 };
 
 export function MobileCardList({ children, testId }: MobileCardListProps) {
@@ -80,11 +81,15 @@ export function MobileDataPoint({
   label,
   value,
   accent = false,
+  color,
 }: MobileDataPointProps) {
   return (
     <div className="mobile-data-point">
       <span className="mobile-data-label">{label}</span>
-      <span className={accent ? "mobile-data-value mobile-data-value-accent" : "mobile-data-value"}>
+      <span
+        className={accent ? "mobile-data-value mobile-data-value-accent" : "mobile-data-value"}
+        style={color ? { color } : undefined}
+      >
         {value}
       </span>
     </div>
