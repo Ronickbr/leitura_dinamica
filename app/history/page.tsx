@@ -365,6 +365,7 @@ export default function HistoryPage() {
                                 key={ev.id}
                                 className="hover-row"
                                 style={{
+                                  background: group.aluno?.diagnostico ? getDiagnosisStyle(group.aluno.diagnostico).bg : 'transparent',
                                   borderBottom: idx === group.evaluations.length - 1 ? 'none' : '1px solid var(--glass-border)',
                                   cursor: 'pointer'
                                 }}
