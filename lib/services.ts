@@ -50,19 +50,23 @@ export const getAlunos = async (turma?: string): Promise<Aluno[]> => {
     return [];
   }
   try {
-    let q = query(collection(cachedDb, 'alunos'), orderBy('nome', 'asc'));
+    // Removemos o orderBy temporariamente para garantir que a consulta funcione mesmo sem índices manuais
+    let q = query(collection(cachedDb, 'alunos'));
 
     if (turma && turma !== 'Todas') {
       q = query(q, where('turma', '==', turma));
     }
 
     const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map(d => ({
+    const results = querySnapshot.docs.map(d => ({
       id: d.id,
       ...d.data()
     } as Aluno));
+
+    // Ordenação manual no cliente para garantir que a interface fique organizada e resiliente a falta de índices
+    return results.sort((a, b) => (a.nome || "").localeCompare(b.nome || ""));
   } catch (error) {
-    console.error("Erro ao buscar alunos:", error);
+    console.error("Erro crítico ao buscar alunos no Firestore:", error);
     return [];
   }
 };

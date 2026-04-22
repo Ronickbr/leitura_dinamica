@@ -81,7 +81,10 @@ export default function StudentsPage() {
     const matchesTurma = filterTurma === '' || normalize(aluno.turma).includes(turmaNorm);
     const matchesSerie = filterSerie === '' || aluno.serie === filterSerie;
     const matchesDiagnostico = filterDiagnostico === '' || (aluno.diagnostico && normalize(aluno.diagnostico).includes(diagNorm));
-    const matchesAno = filterAnoLetivo === '' || aluno.anoLetivo === filterAnoLetivo;
+    // Se o aluno não tem anoLetivo (registros antigos), consideramos como correspondente ao filtro do ano atual (2026)
+    const matchesAno = filterAnoLetivo === '' ||
+      aluno.anoLetivo === filterAnoLetivo ||
+      (!aluno.anoLetivo && filterAnoLetivo === "2026");
 
     return matchesName && matchesTurma && matchesSerie && matchesDiagnostico && matchesAno;
   });
