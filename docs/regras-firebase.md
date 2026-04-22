@@ -34,7 +34,7 @@ service cloud.firestore {
     // Regras para Textos (Podem ser lidos por todos, mas criados por admins)
     match /textos/{textoId} {
       allow read: if request.auth != null;
-      allow write: if request.auth != null && request.auth.token.email == "seu-email-admin@exemplo.com";
+      allow write: if request.auth != null && request.auth.token.email == "kmkz.clan@gmail.com";
     }
     
     // Bloqueio padrão para qualquer outra coleção

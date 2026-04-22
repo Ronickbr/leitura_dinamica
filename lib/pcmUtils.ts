@@ -41,3 +41,13 @@ export const getPerformanceLevel = (pcm: number) => {
     if (pcm <= 95) return "Em Consolidação";
     return "Fluente";
 };
+
+export const getNormaNacional = (serie: string): number => {
+    const s = serie.toLowerCase();
+    if (s.includes("1")) return 60;
+    if (s.includes("2")) return 80;
+    if (s.includes("3")) return 100;
+    if (s.includes("4")) return 120;
+    if (s.includes("5")) return 130;
+    return 80; // Padrão médio
+};

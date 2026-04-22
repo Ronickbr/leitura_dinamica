@@ -1,4 +1,4 @@
-# 📖 Plataforma Leitura (v2.6.0)
+# 📖 Plataforma Leitura (v2.7.0)
 
 Plataforma de avaliação de fluência leitora com Next.js (App Router), persistência em Firebase e processamento de áudio via IA. O projeto foi refatorado para um monorepo Next.js unificado com API routes serverless.
 
@@ -37,7 +37,8 @@ O sistema permite que professores:
 - **[NOVO]** revisem métricas qualitativas justificadas por IA (Fluência, Silabação, etc.) antes de salvar;
 - **[NOVO-SEGURANÇA]** Validação robusta de uploads (Zod) e sanitização de inputs contra Prompt Injection;
 - **[NOVO-ACADÊMICO]** Cálculo automático de estatísticas acadêmicas (Desvio Padrão, IC 95%) e exportação de datasets JSON para pesquisa.
-- **[NOVO-FUNCIONALIDADES]** Geração de relatórios em PDF, organização por Ano Letivo e Audit Logging.
+- **v2.7.0**: Dashboard Individual do Aluno, Metas Personalizadas e Normas SAEB/ANA integrada.
+- **v2.6.0**: Relatório PDF nativo, Organização por Ano Letivo, Segurança de Headers (CORS/CSP) e Audit Logging.
 
 ## Stack Atual
 
@@ -240,13 +241,13 @@ Documentação detalhada:
 
 Esta versão (v2.0.0) trouxe uma refatoração significativa:
 
-- **Remoção**: pastas `frontend/` (Vite) e `backend/` (Express) separadas
-- **Unificação**: tudo теперь está no Next.js App Router
-- **API Routes**: `/api/health` e `/api/process-audio` agora são Next.js API routes
-- **Serviços**: todos os serviços movidos para `lib/`
-- **Layout**: navegação integrada no layout do Next.js
-- **Firebase**: configuração modernizada para Next.js
-- **Autenticação**: atualizada para fluxo de E-mail e Senha ao invés do login com o Google.
+- **Remoção**: pastas `frontend/` (Vite)### 🎯 Funcionalidades Finais (Fase 1, 2 e Robustez Acadêmica)
+- **Painel do Aluno**: Dashboard individual com gráfico de progresso e histórico de intervenções pedágógicas da IA.
+- **Contexto SAEB/ANA**: Comparação automática com normas nacionais brasileiras de fluência leitora por série.
+- **Metas Personalizadas**: Definição de alvos específicos de PCM por estudante.
+- **Segurança de Infra**: Headers HTTP restritivos, Prevenção de XSS e Auditoria de chamadas de IA.
+- **Relatório PDF**: Exportação visual profissional dos diagnósticos diretamente do navegador.
+alizada para fluxo de E-mail e Senha ao invés do login com o Google.
 
 ## Troubleshooting
 

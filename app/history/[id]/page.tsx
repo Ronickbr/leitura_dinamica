@@ -6,6 +6,7 @@ import { useMobileExperience } from "@/app/components/MobileExperienceProvider";
 import { getAvaliacaoById, type Avaliacao } from "@/lib/evaluationsService";
 import { getAlunoById, type Aluno } from "@/lib/services";
 import { getTextos, type Texto } from "@/lib/textsService";
+import { getNormaNacional } from "@/lib/pcmUtils";
 
 export default function EvaluationDetailsPage() {
     const params = useParams();
@@ -243,14 +244,27 @@ export default function EvaluationDetailsPage() {
                         <h3 style={{ fontSize: "1rem", color: "var(--text-muted)", marginBottom: "1.25rem" }}>Métricas de Desempenho</h3>
 
                         <div className="evaluation-detail-metrics-grid">
+                            <div className="evaluation-detail-metric-tile" style={{ gridColumn: "span 2", background: "var(--bg-deep)", border: "1px solid var(--glass-border)" }}>
+                                <span className="evaluation-detail-metric-label" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                                    PCM Alcançado
+                                    <span style={{ fontSize: "0.7rem", opacity: 0.7 }}>SAEB/ANA: {getNormaNacional(aluno?.serie || "")}</span>
+                                </span>
+                                <div style={{ display: "flex", alignItems: "baseline", gap: "0.75rem" }}>
+                                    <span className="evaluation-detail-metric-value" style={{ color: "var(--accent)", fontSize: "2.5rem" }}>{avaliacao.pcm}</span>
+                                    <span style={{ fontSize: "0.85rem", fontWeight: 700, color: avaliacao.pcm >= getNormaNacional(aluno?.serie || "") ? "var(--success)" : "var(--error)" }}>
+                                        {avaliacao.pcm >= getNormaNacional(aluno?.serie || "") ? "🟢 Acima da Norma" : "🔴 Abaixo da Norma"}
+                                    </span>
+                                </div>
+                                {aluno?.metaPCM ? (
+                                    <div style={{ marginTop: "0.5rem", fontSize: "0.8rem", color: "var(--text-muted)", borderTop: "1px solid var(--glass-border)", paddingTop: "0.5rem" }}>
+                                        Meta Personalizada: <strong>{aluno.metaPCM} PCM</strong>
+                                        {avaliacao.pcm >= aluno.metaPCM ? " 🎉 Meta Atingida!" : ` (Faltam ${aluno.metaPCM - avaliacao.pcm} para a meta)`}
+                                    </div>
+                                ) : null}
+                            </div>
                             <div className="evaluation-detail-metric-tile">
                                 <span className="evaluation-detail-metric-label">Precisão</span>
                                 <span className="evaluation-detail-metric-value" style={{ color: "var(--primary)" }}>{avaliacao.precisao}%</span>
-                            </div>
-                            <div className="evaluation-detail-metric-tile">
-                                <span className="evaluation-detail-metric-label">PCM</span>
-                                <span className="evaluation-detail-metric-value">{avaliacao.pcm}</span>
-                                <span style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>Palavras corretas/min</span>
                             </div>
                         </div>
                     </div>

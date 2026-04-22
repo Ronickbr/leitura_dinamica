@@ -32,6 +32,7 @@ export interface Aluno {
   observacoes?: string;
   professorId?: string;
   anoLetivo: string;
+  metaPCM?: number;
 }
 
 export interface ImportRecord {
@@ -88,6 +89,7 @@ export const addAluno = async (aluno: Omit<Aluno, 'id'>): Promise<string | null>
       ...aluno,
       professorId: currentUser.uid,
       anoLetivo: aluno.anoLetivo || new Date().getFullYear().toString(),
+      metaPCM: aluno.metaPCM || 0,
       createdAt: Timestamp.now()
     });
     return docRef.id;

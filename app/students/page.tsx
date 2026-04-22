@@ -14,7 +14,7 @@ export default function StudentsPage() {
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [viewingAluno, setViewingAluno] = useState<Aluno | null>(null);
-  const [formData, setFormData] = useState({ nome: '', turma: '', serie: '', turno: '', diagnostico: '', observacoes: '', anoLetivo: new Date().getFullYear().toString() });
+  const [formData, setFormData] = useState({ nome: '', turma: '', serie: '', turno: '', diagnostico: '', observacoes: '', anoLetivo: new Date().getFullYear().toString(), metaPCM: 0 });
   const [saving, setSaving] = useState(false);
 
   // Estados dos filtros
@@ -51,7 +51,7 @@ export default function StudentsPage() {
       }
       setShowForm(false);
       setEditingId(null);
-      setFormData({ nome: '', turma: '', serie: '', turno: '', diagnostico: '', observacoes: '', anoLetivo: new Date().getFullYear().toString() });
+      setFormData({ nome: '', turma: '', serie: '', turno: '', diagnostico: '', observacoes: '', anoLetivo: new Date().getFullYear().toString(), metaPCM: 0 });
       loadAlunos();
     } catch (err) {
       console.error("Erro ao salvar:", err);
@@ -98,88 +98,70 @@ export default function StudentsPage() {
             <p className="page-subtitle">Cadastre e gerencie os estudantes cadastrados no sistema.</p>
           </div>
         </div>
-        <button onClick={() => { if (showForm) { setEditingId(null); setFormData({ nome: '', turma: '', serie: '', turno: '', diagnostico: '', observacoes: '', anoLetivo: new Date().getFullYear().toString() }); } setShowForm(!showForm); }} className="btn-primary" style={{ flexShrink: 0 }}>
+        <button onClick={() => { if (showForm) { setEditingId(null); setFormData({ nome: '', turma: '', serie: '', turno: '', diagnostico: '', observacoes: '', anoLetivo: new Date().getFullYear().toString(), metaPCM: 0 }); } setShowForm(!showForm); }} className="btn-primary" style={{ flexShrink: 0 }}>
           {showForm ? 'Cancelar' : '+ Novo'}
         </button>
       </header>
 
       {showForm && (
-        <div className="glass-card" style={{ marginBottom: '2rem', padding: '2rem' }}>
-          <h3 style={{ marginBottom: '1rem', fontSize: '1.2rem', fontWeight: 800 }}>{editingId ? '✏️ Editar Aluno' : '✨ Novo Aluno'}</h3>
-          <form onSubmit={handleSubmit}>
-            <div className="responsive-form-grid" style={{ marginBottom: '1.5rem' }}>
-              <input
-                type="text"
-                placeholder="Nome do aluno"
-                value={formData.nome}
-                onChange={e => setFormData({ ...formData, nome: e.target.value })}
-                required
-                className="glass-panel"
-                style={{ padding: '0.75rem 1rem', color: 'var(--text-main)', border: '1px solid var(--glass-border)' }}
-              />
-              <input
-                type="text"
-                placeholder="Turma (ex: A, B, C)"
-                value={formData.turma}
-                onChange={e => setFormData({ ...formData, turma: e.target.value })}
-                required
-                className="glass-panel"
-                style={{ padding: '0.75rem 1rem', color: 'var(--text-main)', border: '1px solid var(--glass-border)' }}
-              />
+        <form onSubmit={handleSubmit} className="glass-card animate-in fade-in slide-in-from-top-4 duration-500" style={{ marginBottom: '2rem', padding: '2rem' }}>
+          <h3 style={{ marginBottom: '1.5rem', fontWeight: 800, fontSize: '1.25rem' }}>{editingId ? '✏️ Editar Aluno' : '✨ Novo Aluno'}</h3>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem', marginBottom: '1.5rem' }}>
+            <div className="form-group">
+              <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.85rem', fontWeight: 600 }}>Nome Completo</label>
+              <input required value={formData.nome} onChange={e => setFormData({ ...formData, nome: e.target.value })} placeholder="Ex: João Silva" className="glass-panel" style={{ width: '100%', padding: '0.75rem', color: 'var(--text-main)', border: '1px solid var(--glass-border)' }} />
+            </div>
+            <div className="form-group">
+              <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.85rem', fontWeight: 600 }}>Série/Ano</label>
               <select
+                required
                 value={formData.serie}
-                onChange={e => setFormData({ ...formData, serie: e.target.value })}
-                required
+                onChange={e => {
+                  const val = e.target.value;
+                  let suggestedMeta = formData.metaPCM;
+                  if (!editingId || formData.metaPCM === 0) {
+                    if (val.includes("1")) suggestedMeta = 60;
+                    else if (val.includes("2")) suggestedMeta = 80;
+                    else if (val.includes("3")) suggestedMeta = 100;
+                    else if (val.includes("4")) suggestedMeta = 120;
+                    else if (val.includes("5")) suggestedMeta = 130;
+                  }
+                  setFormData({ ...formData, serie: val, metaPCM: suggestedMeta });
+                }}
                 className="glass-panel"
-                style={{ padding: '0.75rem 1rem', color: 'var(--text-main)', border: '1px solid var(--glass-border)' }}
+                style={{ width: '100%', padding: '0.75rem', color: 'var(--text-main)', border: '1px solid var(--glass-border)' }}
               >
-                <option value="">Selecione a série</option>
-                <option value="1º Ano">1º Ano</option>
-                <option value="2º Ano">2º Ano</option>
-                <option value="3º Ano">3º Ano</option>
-                <option value="4º Ano">4º Ano</option>
-                <option value="5º Ano">5º Ano</option>
+                <option value="">Selecione...</option>
+                <option value="1º Ano">1º Ano (Fund. I)</option>
+                <option value="2º Ano">2º Ano (Fund. I)</option>
+                <option value="3º Ano">3º Ano (Fund. I)</option>
+                <option value="4º Ano">4º Ano (Fund. I)</option>
+                <option value="5º Ano">5º Ano (Fund. I)</option>
+                <option value="EJA">EJA</option>
+                <option value="Outro">Outro</option>
               </select>
-              <select
-                value={formData.turno}
-                onChange={e => setFormData({ ...formData, turno: e.target.value })}
-                required
-                className="glass-panel"
-                style={{ padding: '0.75rem 1rem', color: 'var(--text-main)', border: '1px solid var(--glass-border)' }}
-              >
-                <option value="">Selecione o Turno</option>
-                <option value="Manhã">Manhã</option>
-                <option value="Tarde">Tarde</option>
-                <option value="Integral">Integral</option>
-                <option value="Noite">Noite</option>
-              </select>
-              <select
-                value={formData.diagnostico}
-                onChange={e => setFormData({ ...formData, diagnostico: e.target.value })}
-                className="glass-panel"
-                style={{ padding: '0.75rem 1rem', color: 'var(--text-main)', border: '1px solid var(--glass-border)' }}
-              >
-                <option value="">Nenhum diagnóstico</option>
-                <option value="TEA">TEA</option>
-                <option value="TDAH">TDAH</option>
-                <option value="Dislexia">Dislexia</option>
-                <option value="Outros">Outros</option>
-              </select>
+            </div>
+            <div className="form-group">
+              <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.85rem', fontWeight: 600 }}>Turma</label>
+              <input required value={formData.turma} onChange={e => setFormData({ ...formData, turma: e.target.value })} placeholder="Ex: A" className="glass-panel" style={{ width: '100%', padding: '0.75rem', color: 'var(--text-main)', border: '1px solid var(--glass-border)' }} />
+            </div>
+            <div className="form-group">
+              <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.85rem', fontWeight: 600 }}>Meta de PCM</label>
               <input
                 type="number"
-                placeholder="Ano Letivo"
-                value={formData.anoLetivo}
-                onChange={e => setFormData({ ...formData, anoLetivo: e.target.value })}
-                required
+                value={formData.metaPCM}
+                onChange={e => setFormData({ ...formData, metaPCM: parseInt(e.target.value) || 0 })}
+                placeholder="Ex: 80"
                 className="glass-panel"
-                style={{ padding: '0.75rem 1rem', color: 'var(--text-main)', border: '1px solid var(--glass-border)' }}
+                style={{ width: '100%', padding: '0.75rem', color: 'var(--text-main)', border: '1px solid var(--glass-border)' }}
               />
+              <small style={{ color: 'var(--text-muted)', fontSize: '0.7rem' }}>Sugerido para esta série se vazio.</small>
             </div>
-            <button type="submit" disabled={saving} className="btn-primary">
-              {saving ? 'Salvando...' : 'Salvar Aluno'}
-            </button>
-          </form>
-        </div>
+          </div>
+          <button type="submit" disabled={saving} className="btn-primary">
+            {saving ? 'Salvando...' : 'Salvar Aluno'}
+          </button>
+        </form>
       )}
 
       {loading ? (
@@ -310,7 +292,7 @@ export default function StudentsPage() {
                       <td style={{ padding: '1.25rem 2rem', textAlign: 'right' }}>
                         <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
                           <button onClick={() => setViewingAluno(aluno)} className="btn-icon" title="Visualizar">👁️</button>
-                          <button onClick={() => { setFormData({ nome: aluno.nome, turma: aluno.turma, serie: aluno.serie, turno: aluno.turno || '', diagnostico: aluno.diagnostico || '', observacoes: aluno.observacoes || '', anoLetivo: aluno.anoLetivo }); setEditingId(aluno.id); setShowForm(true); window.scrollTo(0, 0); }} className="btn-icon" title="Editar">✏️</button>
+                          <button onClick={() => { setFormData({ nome: aluno.nome, turma: aluno.turma, serie: aluno.serie, turno: aluno.turno || '', diagnostico: aluno.diagnostico || '', observacoes: aluno.observacoes || '', anoLetivo: aluno.anoLetivo, metaPCM: aluno.metaPCM || 0 }); setEditingId(aluno.id); setShowForm(true); window.scrollTo(0, 0); }} className="btn-icon" title="Editar">✏️</button>
                           <button onClick={() => handleDelete(aluno.id)} className="btn-icon" title="Excluir">🗑️</button>
                         </div>
                       </td>
@@ -336,7 +318,7 @@ export default function StudentsPage() {
                   footer={
                     <>
                       <button onClick={() => setViewingAluno(aluno)} className="btn-outline" style={{ flex: 1 }}>Visualizar</button>
-                      <button onClick={() => { setFormData({ nome: aluno.nome, turma: aluno.turma, serie: aluno.serie, turno: aluno.turno || '', diagnostico: aluno.diagnostico || '', observacoes: aluno.observacoes || '', anoLetivo: aluno.anoLetivo }); setEditingId(aluno.id); setShowForm(true); window.scrollTo(0, 0); }} className="btn-primary" style={{ flex: 1 }}>Editar</button>
+                      <button onClick={() => { setEditingId(aluno.id!); setFormData({ nome: aluno.nome, turma: aluno.turma, serie: aluno.serie, turno: aluno.turno || '', diagnostico: aluno.diagnostico || '', observacoes: aluno.observacoes || '', anoLetivo: aluno.anoLetivo, metaPCM: aluno.metaPCM || 0 }); setShowForm(true); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="btn-outline-round" style={{ padding: '0.4rem 0.8rem' }}>✏️</button>
                       <button onClick={() => handleDelete(aluno.id)} className="btn-outline" style={{ flexBasis: '100%', color: 'var(--error)' }}>Excluir</button>
                     </>
                   }
@@ -373,8 +355,19 @@ export default function StudentsPage() {
               <p style={{ fontSize: "1.05rem" }}><strong style={{ color: "var(--text-muted)", marginRight: "0.5rem", display: "inline-block", width: "100px" }}>Turno:</strong> {viewingAluno.turno || '-'}</p>
               <p style={{ fontSize: "1.05rem" }}><strong style={{ color: "var(--text-muted)", marginRight: "0.5rem", display: "inline-block", width: "100px" }}>Diagnóstico:</strong> {viewingAluno.diagnostico ? anonymizeText(viewingAluno.diagnostico) : '-'}</p>
               <p style={{ fontSize: "1.05rem" }}><strong style={{ color: "var(--text-muted)", marginRight: "0.5rem", display: "inline-block", width: "100px" }}>Observações:</strong> {viewingAluno.observacoes ? anonymizeText(viewingAluno.observacoes) : '-'}</p>
+              <p style={{ fontSize: "1.05rem" }}><strong style={{ color: "var(--text-muted)", marginRight: "0.5rem", display: "inline-block", width: "100px" }}>Meta PCM:</strong> {viewingAluno.metaPCM || 'Não definida'}</p>
             </div>
-            <button onClick={() => setViewingAluno(null)} className="btn-outline" style={{ width: "100%", padding: "0.75rem" }}>Fechar</button>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+              <button
+                onClick={() => router.push(`/students/${viewingAluno.id}/performance`)}
+                className="btn-primary"
+                style={{ width: "100%", padding: "0.75rem", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem" }}
+              >
+                📈 Ver Painel de Evolução
+              </button>
+              <button onClick={() => setViewingAluno(null)} className="btn-outline" style={{ width: "100%", padding: "0.75rem" }}>Fechar</button>
+            </div>
           </div>
         </div>
       )}
