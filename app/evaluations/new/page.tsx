@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { getAlunos, type Aluno } from "@/lib/services";
 import { MobileCard, MobileCardList, MobileDataGrid, MobileDataPoint } from "@/app/components/MobileCards";
+import { getDiagnosisStyle } from "@/lib/styleUtils";
 
 const SearchIcon = () => <span>🔍</span>;
 const ChevronRightIcon = () => <span>➡️</span>;
@@ -23,16 +24,6 @@ export default function SelectionPage() {
   const turmas = ['Todas', ...Array.from(new Set(alunos.map(a => a.turma).filter(Boolean)))].sort();
   const series = ['Todas', ...Array.from(new Set(alunos.map(a => a.serie).filter(Boolean)))].sort();
   const diagnos = ['Todos', 'Nenhum', 'TEA', 'TDAH', 'Dislexia', 'Outros'];
-
-  const getDiagnosisColor = (diagnosis: string | undefined) => {
-    if (!diagnosis) return 'transparent';
-    const d = diagnosis.toLowerCase();
-    if (d.includes('tea') || d.includes('autismo')) return 'rgba(168, 85, 247, 0.15)';
-    if (d.includes('tdah')) return 'rgba(249, 115, 22, 0.15)';
-    if (d.includes('dislexia')) return 'rgba(59, 130, 246, 0.15)';
-    if (d.includes('nenhum') || d === '') return 'transparent';
-    return 'rgba(234, 179, 8, 0.12)';
-  };
 
   const getDiagnosisLabel = (diagnosis: string | undefined) => {
     if (!diagnosis || diagnosis.toLowerCase() === 'nenhum' || diagnosis === '') return 'Nenhum';
@@ -180,7 +171,7 @@ export default function SelectionPage() {
                       style={{
                         cursor: 'pointer',
                         borderBottom: '1px solid var(--glass-border)',
-                        background: getDiagnosisColor(aluno.diagnostico),
+                        background: getDiagnosisStyle(aluno.diagnostico).bg,
                       }}
                       onClick={() => router.push(`/evaluations/${aluno.id}`)}
                     >
@@ -195,7 +186,15 @@ export default function SelectionPage() {
                         <span style={{ padding: '0.3rem 0.6rem', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 700, background: 'rgba(99, 102, 241, 0.1)', color: 'var(--primary)' }}>{aluno.turma}</span>
                       </td>
                       <td style={{ padding: '1.25rem 2rem' }}>
-                        <span style={{ fontSize: '0.8rem', fontWeight: 600, color: aluno.diagnostico && aluno.diagnostico.toLowerCase() !== 'nenhum' ? 'white' : 'var(--text-muted)' }}>
+                        <span style={{
+                          fontSize: '0.8rem',
+                          fontWeight: 800,
+                          color: getDiagnosisStyle(aluno.diagnostico).text,
+                          padding: '0.3rem 0.6rem',
+                          background: 'rgba(255,255,255,0.03)',
+                          borderRadius: '6px',
+                          border: `1px solid ${getDiagnosisStyle(aluno.diagnostico).text}44`
+                        }}>
                           {getDiagnosisLabel(aluno.diagnostico)}
                         </span>
                       </td>
@@ -216,7 +215,7 @@ export default function SelectionPage() {
                   testId="evaluation-selection-mobile-card"
                   title={aluno.nome}
                   subtitle={`${aluno.serie} • Turma ${aluno.turma}`}
-                  badge={<span style={{ padding: '0.35rem 0.7rem', borderRadius: '999px', fontSize: '0.75rem', fontWeight: 700, background: getDiagnosisColor(aluno.diagnostico), color: 'var(--text-main)', border: '1px solid var(--glass-border)' }}>{getDiagnosisLabel(aluno.diagnostico)}</span>}
+                  badge={<span style={{ padding: '0.35rem 0.7rem', borderRadius: '999px', fontSize: '0.75rem', fontWeight: 700, background: getDiagnosisStyle(aluno.diagnostico).bg, color: getDiagnosisStyle(aluno.diagnostico).text, border: `1px solid ${getDiagnosisStyle(aluno.diagnostico).text}44` }}>{getDiagnosisLabel(aluno.diagnostico)}</span>}
                   onClick={() => router.push(`/evaluations/${aluno.id}`)}
                   footer={<span style={{ color: 'var(--primary)', fontWeight: 700 }}>Toque para iniciar a avaliação</span>}
                 >

@@ -6,6 +6,7 @@ import { getAlunos, addAluno, updateAluno, deleteAluno, type Aluno } from "@/lib
 import { MobileCard, MobileCardList, MobileDataGrid, MobileDataPoint } from "../components/MobileCards";
 import { useSettings } from "../components/SettingsProvider";
 import { useFirebase } from "../components/FirebaseProvider";
+import { getDiagnosisStyle } from "@/lib/styleUtils";
 
 export default function StudentsPage() {
   const router = useRouter();
@@ -301,7 +302,15 @@ export default function StudentsPage() {
                       </td>
                       <td style={{ padding: '1.25rem 2rem' }}>
                         {aluno.diagnostico && aluno.diagnostico !== "Nenhum diagnóstico" && aluno.diagnostico !== "Nenhum" ? (
-                          <span style={{ padding: '0.4rem 0.75rem', background: 'rgba(234, 179, 8, 0.2)', borderRadius: '8px', fontSize: '0.8rem', color: 'var(--warning)', fontWeight: 600 }}>
+                          <span style={{
+                            padding: '0.4rem 0.75rem',
+                            background: getDiagnosisStyle(aluno.diagnostico).bg,
+                            borderRadius: '8px',
+                            fontSize: '0.8rem',
+                            color: getDiagnosisStyle(aluno.diagnostico).text,
+                            fontWeight: 800,
+                            border: `1px solid ${getDiagnosisStyle(aluno.diagnostico).text}33`
+                          }}>
                             {anonymizeText(aluno.diagnostico)}
                           </span>
                         ) : (
@@ -346,7 +355,11 @@ export default function StudentsPage() {
                     <MobileDataPoint label="Série" value={aluno.serie} />
                     <MobileDataPoint label="Turma" value={aluno.turma} accent />
                     <MobileDataPoint label="Turno" value={aluno.turno || '-'} />
-                    <MobileDataPoint label="Diagnóstico" value={aluno.diagnostico && aluno.diagnostico !== "Nenhum diagnóstico" && aluno.diagnostico !== "Nenhum" ? anonymizeText(aluno.diagnostico) : '-'} />
+                    <MobileDataPoint
+                      label="Diagnóstico"
+                      value={aluno.diagnostico && aluno.diagnostico !== "Nenhum diagnóstico" && aluno.diagnostico !== "Nenhum" ? anonymizeText(aluno.diagnostico) : '-'}
+                      color={getDiagnosisStyle(aluno.diagnostico).text}
+                    />
                   </MobileDataGrid>
                 </MobileCard>
               ))}

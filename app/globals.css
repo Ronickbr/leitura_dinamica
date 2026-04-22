@@ -1,11 +1,16 @@
 :root {
   --primary: #6366f1;
+  --primary-rgb: 99, 102, 241;
   --primary-hover: #4f46e5;
   --accent: #f43f5e;
+  --accent-rgb: 244, 63, 94;
   --accent-hover: #e11d48;
   --success: #10b981;
+  --success-rgb: 16, 185, 129;
   --warning: #f59e0b;
+  --warning-rgb: 245, 158, 11;
   --error: #ef4444;
+  --error-rgb: 239, 68, 68;
 
   /* Tema Claro (Padrão) */
   --bg-deep: #f1f5f9;
