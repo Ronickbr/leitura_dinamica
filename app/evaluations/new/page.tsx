@@ -94,7 +94,7 @@ export default function SelectionPage() {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="glass-panel"
-                style={{ width: '100%', padding: '0.6rem 1rem 0.6rem 2.5rem', fontSize: '0.9rem', color: 'white', border: '1px solid var(--glass-border)' }}
+                style={{ width: '100%', padding: '0.6rem 1rem 0.6rem 2.5rem', fontSize: '0.9rem', color: 'var(--text-main)', border: '1px solid var(--glass-border)' }}
               />
             </div>
           </div>
@@ -104,7 +104,7 @@ export default function SelectionPage() {
               value={selectedSerie}
               onChange={e => setSelectedSerie(e.target.value)}
               className="glass-panel"
-              style={{ padding: '0.6rem 1rem', color: 'white', borderRadius: '10px', fontSize: '0.85rem' }}
+              style={{ padding: '0.6rem 1rem', color: 'var(--text-main)', borderRadius: '10px', fontSize: '0.85rem' }}
             >
               <option value="Todas">Todas as Séries</option>
               {series.filter(s => s !== 'Todas').map(s => <option key={s} value={s}>{s}</option>)}
@@ -114,7 +114,7 @@ export default function SelectionPage() {
               value={selectedTurma}
               onChange={e => setSelectedTurma(e.target.value)}
               className="glass-panel"
-              style={{ padding: '0.6rem 1rem', color: 'white', borderRadius: '10px', fontSize: '0.85rem' }}
+              style={{ padding: '0.6rem 1rem', color: 'var(--text-main)', borderRadius: '10px', fontSize: '0.85rem' }}
             >
               <option value="Todas">Todas as Turmas</option>
               {turmas.filter(t => t !== 'Todas').map(t => <option key={t} value={t}>{t}</option>)}
@@ -124,7 +124,7 @@ export default function SelectionPage() {
               value={selectedDiag}
               onChange={e => setSelectedDiag(e.target.value)}
               className="glass-panel"
-              style={{ padding: '0.6rem 1rem', color: 'white', borderRadius: '10px', fontSize: '0.85rem' }}
+              style={{ padding: '0.6rem 1rem', color: 'var(--text-main)', borderRadius: '10px', fontSize: '0.85rem' }}
             >
               <option value="Todos">Todos Diagnósticos</option>
               {diagnos.filter(d => d !== 'Todos').map(d => <option key={d} value={d}>{d}</option>)}
