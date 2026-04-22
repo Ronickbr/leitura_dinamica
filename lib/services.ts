@@ -45,7 +45,10 @@ export interface ImportRecord {
 }
 
 export const getAlunos = async (turma?: string): Promise<Aluno[]> => {
-  if (!cachedDb) return [];
+  if (!cachedDb) {
+    console.warn("getAlunos chamado antes da inicialização do Firebase");
+    return [];
+  }
   try {
     let q = query(collection(cachedDb, 'alunos'), orderBy('nome', 'asc'));
 
@@ -80,7 +83,10 @@ export const getAlunoById = async (id: string): Promise<Aluno | null> => {
 };
 
 export const addAluno = async (aluno: Omit<Aluno, 'id'>): Promise<string | null> => {
-  if (!cachedDb || !cachedAuth) return null;
+  if (!cachedDb || !cachedAuth) {
+    console.warn("addAluno chamado antes da inicialização do Firebase");
+    return null;
+  }
   try {
     const currentUser = cachedAuth.currentUser;
     if (!currentUser) throw new Error("Usuário não autenticado");
@@ -124,7 +130,10 @@ export const deleteAluno = async (id: string): Promise<boolean> => {
 };
 
 export const addImportRecord = async (record: Omit<ImportRecord, 'id' | 'importedAt' | 'professorId'>): Promise<string | null> => {
-  if (!cachedDb || !cachedAuth) return null;
+  if (!cachedDb || !cachedAuth) {
+    console.warn("addImportRecord chamado antes da inicialização do Firebase");
+    return null;
+  }
   try {
     const currentUser = cachedAuth.currentUser;
     if (!currentUser) throw new Error("Usuário não autenticado");

@@ -3,19 +3,23 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useSettings } from "../components/SettingsProvider";
+import { useFirebase } from "../components/FirebaseProvider";
 import * as XLSX from "xlsx";
 import { addAluno, Aluno, addImportRecord, getImportHistory, ImportRecord } from "@/lib/services";
 
 export default function SettingsPage() {
     const router = useRouter();
     const { isAnonymized, setAnonymized } = useSettings();
+    const { initialized: firebaseInitialized } = useFirebase();
     const [loading, setLoading] = useState(false);
     const [uploadStatus, setUploadStatus] = useState<{ message: string; type: 'success' | 'error' | '' }>({ message: '', type: '' });
     const [history, setHistory] = useState<ImportRecord[]>([]);
 
     useEffect(() => {
-        loadHistory();
-    }, []);
+        if (firebaseInitialized) {
+            loadHistory();
+        }
+    }, [firebaseInitialized]);
 
     async function loadHistory() {
         const data = await getImportHistory();
@@ -31,7 +35,7 @@ export default function SettingsPage() {
 
         try {
             const data = await file.arrayBuffer();
-            const workbook = XLSX.read(data);
+            const workbook = XLSX.read(data, { type: 'array' });
             const firstSheetName = workbook.SheetNames[0];
             const worksheet = workbook.Sheets[firstSheetName];
             const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as any[][];
@@ -48,7 +52,7 @@ export default function SettingsPage() {
             for (let i = 0; i < jsonData.length; i++) {
                 if (jsonData[i].some(cell => {
                     const n = normalize(cell);
-                    return n === "nome" || n === "name" || n === "aluno";
+                    return n === "nome" || n === "name" || n === "aluno" || n === "estudante" || n === "discente" || n.includes("nome");
                 })) {
                     headerRowIndex = i;
                     break;
@@ -63,14 +67,24 @@ export default function SettingsPage() {
             const headers = jsonData[headerRowIndex];
             const getIndex = (targets: string[]) => {
                 const normalizedTargets = targets.map(t => normalize(t));
-                return headers.findIndex(h => normalizedTargets.includes(normalize(h)));
+                // Tenta correspondência exata primeiro
+                let foundIndex = headers.findIndex(h => normalizedTargets.includes(normalize(h)));
+
+                // Se não encontrar, tenta correspondência parcial (ex: "Nome do Aluno" contém "nome")
+                if (foundIndex === -1) {
+                    foundIndex = headers.findIndex(h => {
+                        const nh = normalize(h);
+                        return nh !== "" && normalizedTargets.some(t => nh.includes(t) || t.includes(nh));
+                    });
+                }
+                return foundIndex;
             };
 
-            const idxNome = getIndex(["nome", "name", "aluno"]);
-            const idxTurma = getIndex(["turma", "class", "grupo", "turma"]);
-            const idxSerie = getIndex(["serie", "grade", "ano", "ensino", "serie"]);
-            const idxTurno = getIndex(["turno", "shift", "periodo", "turno"]);
-            const idxDiag = getIndex(["diagnostico", "diagnostic", "laudo", "diagnóstico", "diagnostico"]);
+            const idxNome = getIndex(["nome", "name", "aluno", "estudante", "discente"]);
+            const idxTurma = getIndex(["turma", "class", "grupo", "equipe", "sala"]);
+            const idxSerie = getIndex(["serie", "grade", "ano", "ensino", "escolaridade", "escolar"]);
+            const idxTurno = getIndex(["turno", "shift", "periodo", "horario"]);
+            const idxDiag = getIndex(["diagnostico", "diagnostic", "laudo", "diagnóstico", "diagnostico", "observacao", "necessidade"]);
 
             console.log("Header encontrado na linha:", headerRowIndex);
             console.log("Indices mapeados:", { idxNome, idxTurma, idxSerie, idxTurno, idxDiag });
@@ -112,6 +126,7 @@ export default function SettingsPage() {
                         errorCount++;
                     }
                 } catch (e) {
+                    console.error(`Erro ao importar aluno "${nome}":`, e);
                     errorCount++;
                 }
             }

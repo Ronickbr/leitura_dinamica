@@ -5,10 +5,12 @@ import { useRouter } from "next/navigation";
 import { getAlunos, addAluno, updateAluno, deleteAluno, type Aluno } from "@/lib/services";
 import { MobileCard, MobileCardList, MobileDataGrid, MobileDataPoint } from "../components/MobileCards";
 import { useSettings } from "../components/SettingsProvider";
+import { useFirebase } from "../components/FirebaseProvider";
 
 export default function StudentsPage() {
   const router = useRouter();
   const { anonymizeName, anonymizeText } = useSettings();
+  const { initialized: firebaseInitialized } = useFirebase();
   const [alunos, setAlunos] = useState<Aluno[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -25,8 +27,10 @@ export default function StudentsPage() {
   const [filterAnoLetivo, setFilterAnoLetivo] = useState(new Date().getFullYear().toString());
 
   useEffect(() => {
-    loadAlunos();
-  }, []);
+    if (firebaseInitialized) {
+      loadAlunos();
+    }
+  }, [firebaseInitialized]);
 
   async function loadAlunos() {
     setLoading(true);
