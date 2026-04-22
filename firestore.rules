@@ -1,0 +1,35 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    match /alunos/{alunoId} {
+      allow read, write: if request.auth != null;
+      // Permite que APENAS o administrador apague dados
+      allow delete: if request.auth != null && 
+                    request.auth.token.email == "kmkz.clan@gmail.com";
+    }
+    
+    // Filtro específico para o histórico de importação
+    match /import_history/{id} {
+      allow read, write: if request.auth != null;
+      allow delete: if request.auth.token.email == "kmkz.clan@gmail.com";
+    }
+    
+    match /avaliacoes/{evalId} {
+      allow read, write: if request.auth != null;
+    }
+
+    // Regras para a coleção de textos
+    match /textos/{textoId} {
+      allow read, write: if request.auth != null;
+      // Opcional: restringir delete também para o admin
+      allow delete: if request.auth != null && 
+                    request.auth.token.email == "kmkz.clan@gmail.com";
+    }
+
+    // Bloqueio padrão para qualquer outra coleção
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
