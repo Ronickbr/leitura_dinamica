@@ -1,7 +1,7 @@
 {
   "name": "leitura",
   "private": true,
-  "version": "2.4.0",
+  "version": "2.5.0",
   "description": "Plataforma de avaliacao de fluencia leitora com Next.js.",
   "engines": {
     "node": ">=22.0.0"
@@ -31,7 +31,8 @@
     "openai": "^6.4.0",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
-    "xlsx": "^0.18.5"
+    "xlsx": "^0.18.5",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@playwright/test": "^1.56.1",

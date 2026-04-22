@@ -2,43 +2,52 @@ import { NextRequest, NextResponse } from "next/server";
 import { writeFile, unlink } from "fs/promises";
 import { processReadingAudio } from "@/lib/analysisService";
 
+import { z } from "zod";
+
 export const dynamic = "force-dynamic";
+
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+const ALLOWED_MIME = ["audio/webm", "audio/mpeg", "audio/wav", "audio/mp4", "audio/ogg", "audio/x-m4a", "audio/m4a", "application/octet-stream"];
+
+const uploadSchema = z.object({
+  file: z.any()
+    .refine((file) => file instanceof File, "O campo 'file' deve ser um arquivo.")
+    .refine((file) => file?.size <= MAX_FILE_SIZE, "Arquivo muito grande (máximo 10MB).")
+    .refine((file) => ALLOWED_MIME.includes(file?.type) || file?.name.endsWith('.webm') || file?.name.endsWith('.mp3') || file?.name.endsWith('.m4a'), "Tipo de arquivo inválido. Use webm, mp3, wav ou m4a."),
+  originalText: z.string().min(1, "O texto original é obrigatório.").max(10000, "O texto original excede o limite de 10000 caracteres."),
+});
 
 export async function POST(req: NextRequest) {
   let tempPath: string | null = null;
 
   try {
     const formData = await req.formData();
-    const file = formData.get("file") as File | null;
-    const originalText = formData.get("original_text") as string | null;
+    const file = formData.get("file");
+    const originalText = formData.get("original_text");
 
-    if (!file) {
-      return NextResponse.json(
-        { detail: "Envie um arquivo de áudio no campo 'file'." },
-        { status: 400 }
-      );
+    // Validação com Zod
+    const validation = uploadSchema.safeParse({ file, originalText });
+
+    if (!validation.success) {
+      const errorMsg = validation.error.issues[0].message;
+      return NextResponse.json({ detail: errorMsg }, { status: 400 });
     }
 
-    if (!originalText) {
-      return NextResponse.json(
-        { detail: "O texto original é obrigatório." },
-        { status: 400 }
-      );
-    }
+    const { file: validatedFile, originalText: validatedText } = validation.data as { file: File, originalText: string };
 
-    const bytes = await file.arrayBuffer();
+    const bytes = await validatedFile.arrayBuffer();
     const buffer = Buffer.from(bytes);
-    tempPath = `/tmp/leitura-${Date.now()}-${file.name}`;
+    tempPath = `/tmp/leitura-${Date.now()}-${validatedFile.name.replace(/\s+/g, "_")}`;
     await writeFile(tempPath, buffer);
 
     console.log(
-      `Processando áudio para texto: "${originalText.substring(0, 30)}..."`
+      `Processando áudio para texto: "${validatedText.substring(0, 30)}..."`
     );
 
     const result = await processReadingAudio({
       filePath: tempPath,
-      originalText,
-      filename: file.name,
+      originalText: validatedText,
+      filename: validatedFile.name,
     });
 
     console.log("Processamento concluído com sucesso");
@@ -49,14 +58,10 @@ export async function POST(req: NextRequest) {
     const message =
       error instanceof Error ? error.message : "Erro interno no processamento do áudio.";
 
-    const statusCode =
-      message.includes("obrigatório") ||
-      message.includes("inválido") ||
-      message.includes("file must be one of")
-        ? 400
-        : 500;
-
-    return NextResponse.json({ detail: message }, { status: statusCode });
+    return NextResponse.json(
+      { detail: message },
+      { status: message.includes("obrigatório") || message.includes("inválido") || message.includes("grande") ? 400 : 500 }
+    );
   } finally {
     if (tempPath) {
       try {

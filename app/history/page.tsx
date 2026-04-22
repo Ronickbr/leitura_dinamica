@@ -200,6 +200,32 @@ export default function HistoryPage() {
     XLSX.writeFile(workbook, "Relatorio_Historico.xlsx");
   };
 
+  const handleExportJSON = () => {
+    if (studentGroups.length === 0) return;
+
+    const exportData = studentGroups.map(group => ({
+      estudante_id: group.alunoId.substring(0, 8),
+      serie: group.aluno?.serie || "",
+      turma: group.aluno?.turma || "",
+      avaliacoes: group.evaluations.map(ev => ({
+        data: ev.data && (ev.data as any).toDate ? (ev.data as any).toDate().toISOString() : null,
+        pcm: ev.pcm,
+        precisao: ev.precisao,
+        nivel: ev.pcm <= 60 ? "Fase Inicial" : ev.pcm <= 75 ? "Em Desenvolvimento" : ev.pcm <= 95 ? "Em Consolidação" : "Fluente",
+        metricasQualitativas: ev.metricasQualitativas
+      }))
+    }));
+
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `Dados_Pesquisa_Anonimizados_${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   if (loading) {
     return <div style={{ textAlign: 'center', padding: '5rem', color: 'var(--text-muted)' }} className="animate-pulse">Carregando histórico...</div>;
   }
@@ -221,9 +247,14 @@ export default function HistoryPage() {
           </div>
         </div>
         {!loading && studentGroups.length > 0 && (
-          <button onClick={handleExportExcel} className="btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <span>📥</span> Baixar Relatório (Excel)
-          </button>
+          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+            <button onClick={handleExportExcel} className="btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <span>📊</span> Excel
+            </button>
+            <button onClick={handleExportJSON} className="btn-outline-round" style={{ fontSize: '0.85rem', padding: '0.5rem 1rem' }}>
+              <span>🧬</span> Exportar JSON (Pesquisa)
+            </button>
+          </div>
         )}
       </header>
 

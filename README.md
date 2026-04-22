@@ -1,4 +1,4 @@
-# Leitura v2.4.0
+# Leitura v2.5.0
 
 Plataforma de avaliação de fluência leitora com Next.js (App Router), persistência em Firebase e processamento de áudio via IA. O projeto foi refatorado para um monorepo Next.js unificado com API routes serverless.
 
@@ -34,7 +34,9 @@ O sistema permite que professores:
 - **[NOVO]** detectem automaticamente dispositivos móveis, conexão lenta e preferência por economia de dados;
 - **[NOVO]** monitorem métricas mobile contínuas no cliente para diagnóstico de performance;
 - **[NOVO]** acompanhe o diagnóstico clínico do aluno (TDA, TDH, TEA, etc.) com estilização visual no histórico;
-- **[NOVO]** revisem métricas qualitativas justificadas por IA (Fluência, Silabação, etc.) antes de salvar.
+- **[NOVO]** revisem métricas qualitativas justificadas por IA (Fluência, Silabação, etc.) antes de salvar;
+- **[NOVO-SEGURANÇA]** Validação robusta de uploads (Zod) e sanitização de inputs contra Prompt Injection;
+- **[NOVO-ACADÊMICO]** Cálculo automático de estatísticas acadêmicas (Desvio Padrão, IC 95%) e exportação de datasets JSON para pesquisa.
 
 ## Stack Atual
 
@@ -77,8 +79,9 @@ leitura/
 │   ├── services.ts           # CRUD alunos
 │   ├── textsService.ts       # CRUD textos
 │   ├── evaluationsService.ts # Avaliações + processAudio
-│   ├── analysisService.ts    # IA (Groq + OpenRouter)
-│   └── pcmUtils.ts           # Utilitários PCM
+│   ├── analysisService.ts    # IA (Groq + OpenRouter) + Sanitização
+│   ├── pcmUtils.ts           # Utilitários PCM
+│   └── statsUtils.ts         # Estatísticas Acadêmicas (Média, Desvio Padrão, IC 95%)
 ├── docs/                     # Documentação
 ├── .env                      # Variáveis de ambiente
 ├── .env.example              # Template de variáveis

@@ -4,6 +4,14 @@ import { calculatePCM, getPerformanceLevel } from "./pcmUtils";
 
 const MAX_ORIGINAL_TEXT_LENGTH = 10000;
 
+function sanitizeInput(text: string): string {
+  if (!text) return "";
+  return text
+    .replace(/[\u0000-\u001F\u007F-\u009F]/g, "") // Remove control chars
+    .replace(/<script|javascript:|on\w+=/gi, "") // Remove XSS
+    .slice(0, MAX_ORIGINAL_TEXT_LENGTH);
+}
+
 function getPublicAppUrl() {
   if (process.env.OPENROUTER_SITE_URL) {
     return process.env.OPENROUTER_SITE_URL;
@@ -190,18 +198,10 @@ export async function processReadingAudio({
   originalText,
   filename,
 }: ProcessAudioParams): Promise<ProcessAudioResult> {
-  if (!filePath || !fs.existsSync(filePath)) {
-    throw new Error("Arquivo de áudio inválido.");
-  }
-
-  const sanitizedOriginalText = String(originalText || "").trim();
+  const sanitizedOriginalText = sanitizeInput(originalText);
 
   if (!sanitizedOriginalText) {
-    throw new Error("O texto original é obrigatório.");
-  }
-
-  if (sanitizedOriginalText.length > MAX_ORIGINAL_TEXT_LENGTH) {
-    throw new Error("O texto original excede o limite permitido.");
+    throw new Error("O texto original é obrigatório ou inválido.");
   }
 
   const { groq, openRouter } = createAIClients();
