@@ -2,10 +2,12 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useFirebase } from "../components/FirebaseProvider";
 import { getTextos, addTexto, deleteTexto, type Texto } from "@/lib/textsService";
 
 export default function TextsPage() {
   const router = useRouter();
+  const { initialized: firebaseInitialized } = useFirebase();
   const [textos, setTextos] = useState<Texto[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -13,8 +15,10 @@ export default function TextsPage() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    loadTextos();
-  }, []);
+    if (firebaseInitialized) {
+      loadTextos();
+    }
+  }, [firebaseInitialized]);
 
   async function loadTextos() {
     setLoading(true);

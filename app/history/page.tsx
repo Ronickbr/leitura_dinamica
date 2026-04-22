@@ -7,11 +7,13 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { MobileCard, MobileCardList, MobileDataGrid, MobileDataPoint } from "../components/MobileCards";
 import { useSettings } from "../components/SettingsProvider";
+import { useFirebase } from "../components/FirebaseProvider";
 import * as XLSX from "xlsx";
 import { getDiagnosisStyle } from "@/lib/styleUtils";
 
 export default function HistoryPage() {
   const router = useRouter();
+  const { initialized: firebaseInitialized } = useFirebase();
   const { anonymizeName, anonymizeText } = useSettings();
   const [studentGroups, setStudentGroups] = useState<{ alunoId: string; aluno?: Aluno; evaluations: Avaliacao[] }[]>([]);
   const [loading, setLoading] = useState(true);
@@ -19,6 +21,8 @@ export default function HistoryPage() {
   const [filterAnoLetivo, setFilterAnoLetivo] = useState(new Date().getFullYear().toString());
 
   useEffect(() => {
+    if (!firebaseInitialized) return;
+
     async function fetchData() {
       try {
         const [evs, als] = await Promise.all([getAllAvaliacoes(), getAlunos()]);

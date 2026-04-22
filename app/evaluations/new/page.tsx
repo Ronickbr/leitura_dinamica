@@ -3,6 +3,7 @@
 import { useState, useEffect, Suspense } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useFirebase } from "@/app/components/FirebaseProvider";
 import { getAlunos, type Aluno } from "@/lib/services";
 import { MobileCard, MobileCardList, MobileDataGrid, MobileDataPoint } from "@/app/components/MobileCards";
 import { getDiagnosisStyle } from "@/lib/styleUtils";
@@ -13,6 +14,7 @@ const UserIcon = () => <span>👤</span>;
 
 export default function SelectionPage() {
   const router = useRouter();
+  const { initialized: firebaseInitialized } = useFirebase();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedTurma, setSelectedTurma] = useState('Todas');
   const [selectedSerie, setSelectedSerie] = useState('Todas');
@@ -32,6 +34,7 @@ export default function SelectionPage() {
 
   useEffect(() => {
     async function fetchAlunos() {
+      if (!firebaseInitialized) return;
       setLoading(true);
       try {
         const data = await getAlunos();
@@ -43,7 +46,7 @@ export default function SelectionPage() {
       }
     }
     fetchAlunos();
-  }, []);
+  }, [firebaseInitialized]);
 
   const filteredAlunos = alunos.filter(aluno => {
     const matchesName = aluno.nome.toLowerCase().includes(searchTerm.toLowerCase());

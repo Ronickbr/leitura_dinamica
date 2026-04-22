@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useMobileExperience } from "@/app/components/MobileExperienceProvider";
+import { useFirebase } from "@/app/components/FirebaseProvider";
 import { getAlunoById, type Aluno } from "@/lib/services";
 import { getTextos, type Texto } from "@/lib/textsService";
 import { processAudio, saveAvaliacao } from "@/lib/evaluationsService";
@@ -15,6 +16,7 @@ export default function ReadingPage() {
   const params = useParams();
   const router = useRouter();
   const { isMobile } = useMobileExperience();
+  const { initialized: firebaseInitialized } = useFirebase();
   const alunoId = params.id as string;
 
   const [isRecording, setIsRecording] = useState(false);
@@ -33,7 +35,7 @@ export default function ReadingPage() {
 
   useEffect(() => {
     async function fetchData() {
-      if (!alunoId) return;
+      if (!alunoId || !firebaseInitialized) return;
       setLoading(true);
       try {
         const [studentData, allTexts] = await Promise.all([
@@ -56,7 +58,7 @@ export default function ReadingPage() {
       }
     }
     fetchData();
-  }, [alunoId]);
+  }, [alunoId, firebaseInitialized]);
 
   const [tempResult, setTempResult] = useState<any>(null);
   const [isReviewing, setIsReviewing] = useState(false);

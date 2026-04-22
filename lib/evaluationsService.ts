@@ -95,14 +95,20 @@ export const getAvaliacoesPorAluno = async (alunoId: string): Promise<Avaliacao[
   try {
     const q = query(
       collection(cachedDb, 'avaliacoes'),
-      where('alunoId', '==', alunoId),
-      orderBy('data', 'desc')
+      where('alunoId', '==', alunoId)
     );
     const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map(d => ({
+    const results = querySnapshot.docs.map(d => ({
       id: d.id,
       ...d.data()
     } as Avaliacao));
+
+    // Ordenação manual por data decrescente
+    return results.sort((a, b) => {
+      const dateA = (a.data as any)?.seconds || 0;
+      const dateB = (b.data as any)?.seconds || 0;
+      return dateB - dateA;
+    });
   } catch (error) {
     console.error("Erro ao buscar avaliações do aluno:", error);
     return [];
@@ -113,14 +119,20 @@ export const getAllAvaliacoes = async (): Promise<Avaliacao[]> => {
   if (!cachedDb) return [];
   try {
     const q = query(
-      collection(cachedDb, 'avaliacoes'),
-      orderBy('data', 'desc')
+      collection(cachedDb, 'avaliacoes')
     );
     const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map(d => ({
+    const results = querySnapshot.docs.map(d => ({
       id: d.id,
       ...d.data()
     } as Avaliacao));
+
+    // Ordenação manual por data decrescente
+    return results.sort((a, b) => {
+      const dateA = (a.data as any)?.seconds || 0;
+      const dateB = (b.data as any)?.seconds || 0;
+      return dateB - dateA;
+    });
   } catch (error) {
     console.error("Erro ao buscar todas as avaliações:", error);
     return [];

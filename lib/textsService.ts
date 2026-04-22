@@ -17,12 +17,13 @@ export interface Texto {
 export const getTextos = async (): Promise<Texto[]> => {
   if (!cachedDb) return [];
   try {
-    const q = query(collection(cachedDb, 'textos'), orderBy('titulo', 'asc'));
+    const q = query(collection(cachedDb, 'textos'));
     const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map(d => ({
+    const results = querySnapshot.docs.map(d => ({
       id: d.id,
       ...d.data()
     } as Texto));
+    return results.sort((a, b) => (a.titulo || "").localeCompare(b.titulo || ""));
   } catch (error) {
     console.error("Erro ao buscar textos:", error);
     return [];
