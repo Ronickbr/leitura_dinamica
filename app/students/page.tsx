@@ -96,6 +96,11 @@ export default function StudentsPage() {
     return matchesName && matchesTurma && matchesSerie && matchesDiagnostico && matchesAno;
   });
 
+  const totalAlunos = filteredAlunos.length;
+  const totalComDiagnostico = filteredAlunos.filter(aluno =>
+    aluno.diagnostico && aluno.diagnostico !== "Nenhum diagnóstico" && aluno.diagnostico !== "Nenhum"
+  ).length;
+
   return (
     <div className="animate-in" style={{ paddingBottom: '4rem' }}>
       <header className="page-header">
@@ -327,6 +332,27 @@ export default function StudentsPage() {
                     </tr>
                   ))}
                 </tbody>
+                {filteredAlunos.length > 0 && (
+                  <tfoot>
+                    <tr style={{ background: 'var(--glass-bg)', borderTop: '2px solid var(--primary)' }}>
+                      <td colSpan={3} style={{ padding: '1.5rem 2rem', borderBottomLeftRadius: '16px' }}>
+                        <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 800, letterSpacing: '0.05em' }}>RESUMO DA LISTA</span>
+                      </td>
+                      <td style={{ padding: '1.5rem 2rem' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 700, marginBottom: '0.2rem' }}>COM DIAGNÓSTICO</span>
+                          <span style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--primary)' }}>{totalComDiagnostico}</span>
+                        </div>
+                      </td>
+                      <td style={{ padding: '1.5rem 2rem', textAlign: 'right', borderBottomRightRadius: '16px' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+                          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 700, marginBottom: '0.2rem' }}>TOTAL DE ALUNOS</span>
+                          <span style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--text-main)' }}>{totalAlunos}</span>
+                        </div>
+                      </td>
+                    </tr>
+                  </tfoot>
+                )}
               </table>
             </div>
           </div>
@@ -364,6 +390,21 @@ export default function StudentsPage() {
                 </MobileCard>
               ))}
             </MobileCardList>
+
+            {filteredAlunos.length > 0 && (
+              <div className="glass-card animate-in fade-in slide-in-from-bottom-4 duration-700" style={{ marginTop: '1.5rem', padding: '1.5rem', background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', boxShadow: 'var(--glass-shadow)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div>
+                    <p style={{ color: 'var(--text-muted)', fontSize: '0.7rem', fontWeight: 800, marginBottom: '0.2rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Diagnósticos</p>
+                    <p style={{ fontSize: '1.4rem', fontWeight: 900, color: 'var(--primary)' }}>{totalComDiagnostico}</p>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <p style={{ color: 'var(--text-muted)', fontSize: '0.7rem', fontWeight: 800, marginBottom: '0.2rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Total Alunos</p>
+                    <p style={{ fontSize: '1.4rem', fontWeight: 900, color: 'var(--text-main)' }}>{totalAlunos}</p>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </>
       )}
