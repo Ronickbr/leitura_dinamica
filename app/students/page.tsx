@@ -14,7 +14,7 @@ export default function StudentsPage() {
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [viewingAluno, setViewingAluno] = useState<Aluno | null>(null);
-  const [formData, setFormData] = useState({ nome: '', turma: '', serie: '', turno: '', diagnostico: '', observacoes: '' });
+  const [formData, setFormData] = useState({ nome: '', turma: '', serie: '', turno: '', diagnostico: '', observacoes: '', anoLetivo: new Date().getFullYear().toString() });
   const [saving, setSaving] = useState(false);
 
   // Estados dos filtros
@@ -22,6 +22,7 @@ export default function StudentsPage() {
   const [filterTurma, setFilterTurma] = useState('');
   const [filterSerie, setFilterSerie] = useState('');
   const [filterDiagnostico, setFilterDiagnostico] = useState('');
+  const [filterAnoLetivo, setFilterAnoLetivo] = useState(new Date().getFullYear().toString());
 
   useEffect(() => {
     loadAlunos();
@@ -50,7 +51,7 @@ export default function StudentsPage() {
       }
       setShowForm(false);
       setEditingId(null);
-      setFormData({ nome: '', turma: '', serie: '', turno: '', diagnostico: '', observacoes: '' });
+      setFormData({ nome: '', turma: '', serie: '', turno: '', diagnostico: '', observacoes: '', anoLetivo: new Date().getFullYear().toString() });
       loadAlunos();
     } catch (err) {
       console.error("Erro ao salvar:", err);
@@ -76,8 +77,9 @@ export default function StudentsPage() {
     const matchesTurma = filterTurma === '' || normalize(aluno.turma).includes(turmaNorm);
     const matchesSerie = filterSerie === '' || aluno.serie === filterSerie;
     const matchesDiagnostico = filterDiagnostico === '' || (aluno.diagnostico && normalize(aluno.diagnostico).includes(diagNorm));
+    const matchesAno = filterAnoLetivo === '' || aluno.anoLetivo === filterAnoLetivo;
 
-    return matchesName && matchesTurma && matchesSerie && matchesDiagnostico;
+    return matchesName && matchesTurma && matchesSerie && matchesDiagnostico && matchesAno;
   });
 
   return (
@@ -96,7 +98,7 @@ export default function StudentsPage() {
             <p className="page-subtitle">Cadastre e gerencie os estudantes cadastrados no sistema.</p>
           </div>
         </div>
-        <button onClick={() => { if (showForm) { setEditingId(null); setFormData({ nome: '', turma: '', serie: '', turno: '', diagnostico: '', observacoes: '' }); } setShowForm(!showForm); }} className="btn-primary" style={{ flexShrink: 0 }}>
+        <button onClick={() => { if (showForm) { setEditingId(null); setFormData({ nome: '', turma: '', serie: '', turno: '', diagnostico: '', observacoes: '', anoLetivo: new Date().getFullYear().toString() }); } setShowForm(!showForm); }} className="btn-primary" style={{ flexShrink: 0 }}>
           {showForm ? 'Cancelar' : '+ Novo'}
         </button>
       </header>
@@ -163,6 +165,15 @@ export default function StudentsPage() {
                 <option value="Dislexia">Dislexia</option>
                 <option value="Outros">Outros</option>
               </select>
+              <input
+                type="number"
+                placeholder="Ano Letivo"
+                value={formData.anoLetivo}
+                onChange={e => setFormData({ ...formData, anoLetivo: e.target.value })}
+                required
+                className="glass-panel"
+                style={{ padding: '0.75rem 1rem', color: 'var(--text-main)', border: '1px solid var(--glass-border)' }}
+              />
             </div>
             <button type="submit" disabled={saving} className="btn-primary">
               {saving ? 'Salvando...' : 'Salvar Aluno'}
@@ -219,10 +230,18 @@ export default function StudentsPage() {
                 className="glass-panel"
                 style={{ padding: '0.6rem 1rem', fontSize: '0.9rem', color: 'var(--text-main)', border: '1px solid var(--glass-border)' }}
               />
+              <input
+                type="number"
+                placeholder="Ano Letivo..."
+                value={filterAnoLetivo}
+                onChange={e => setFilterAnoLetivo(e.target.value)}
+                className="glass-panel"
+                style={{ padding: '0.6rem 1rem', fontSize: '0.9rem', color: 'var(--text-main)', border: '1px solid var(--glass-border)' }}
+              />
             </div>
             {(searchTerm || filterTurma || filterSerie || filterDiagnostico) && (
               <button
-                onClick={() => { setSearchTerm(''); setFilterTurma(''); setFilterSerie(''); setFilterDiagnostico(''); }}
+                onClick={() => { setSearchTerm(''); setFilterTurma(''); setFilterSerie(''); setFilterDiagnostico(''); setFilterAnoLetivo(''); }}
                 style={{
                   alignSelf: 'flex-start',
                   background: 'rgba(239, 68, 68, 0.1)',
@@ -291,7 +310,7 @@ export default function StudentsPage() {
                       <td style={{ padding: '1.25rem 2rem', textAlign: 'right' }}>
                         <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
                           <button onClick={() => setViewingAluno(aluno)} className="btn-icon" title="Visualizar">👁️</button>
-                          <button onClick={() => { setFormData({ nome: aluno.nome, turma: aluno.turma, serie: aluno.serie, turno: aluno.turno || '', diagnostico: aluno.diagnostico || '', observacoes: aluno.observacoes || '' }); setEditingId(aluno.id); setShowForm(true); window.scrollTo(0, 0); }} className="btn-icon" title="Editar">✏️</button>
+                          <button onClick={() => { setFormData({ nome: aluno.nome, turma: aluno.turma, serie: aluno.serie, turno: aluno.turno || '', diagnostico: aluno.diagnostico || '', observacoes: aluno.observacoes || '', anoLetivo: aluno.anoLetivo }); setEditingId(aluno.id); setShowForm(true); window.scrollTo(0, 0); }} className="btn-icon" title="Editar">✏️</button>
                           <button onClick={() => handleDelete(aluno.id)} className="btn-icon" title="Excluir">🗑️</button>
                         </div>
                       </td>
@@ -317,7 +336,7 @@ export default function StudentsPage() {
                   footer={
                     <>
                       <button onClick={() => setViewingAluno(aluno)} className="btn-outline" style={{ flex: 1 }}>Visualizar</button>
-                      <button onClick={() => { setFormData({ nome: aluno.nome, turma: aluno.turma, serie: aluno.serie, turno: aluno.turno || '', diagnostico: aluno.diagnostico || '', observacoes: aluno.observacoes || '' }); setEditingId(aluno.id); setShowForm(true); window.scrollTo(0, 0); }} className="btn-primary" style={{ flex: 1 }}>Editar</button>
+                      <button onClick={() => { setFormData({ nome: aluno.nome, turma: aluno.turma, serie: aluno.serie, turno: aluno.turno || '', diagnostico: aluno.diagnostico || '', observacoes: aluno.observacoes || '', anoLetivo: aluno.anoLetivo }); setEditingId(aluno.id); setShowForm(true); window.scrollTo(0, 0); }} className="btn-primary" style={{ flex: 1 }}>Editar</button>
                       <button onClick={() => handleDelete(aluno.id)} className="btn-outline" style={{ flexBasis: '100%', color: 'var(--error)' }}>Excluir</button>
                     </>
                   }

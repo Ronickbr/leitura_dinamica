@@ -19,6 +19,13 @@ const uploadSchema = z.object({
 
 export async function POST(req: NextRequest) {
   let tempPath: string | null = null;
+  const startTime = Date.now();
+  let auditInfo = {
+    type: "AUDIT_LOG_AUDIO_PROCESS",
+    filename: "unknown",
+    fileSize: 0,
+    textLength: 0,
+  };
 
   try {
     const formData = await req.formData();
@@ -35,6 +42,10 @@ export async function POST(req: NextRequest) {
 
     const { file: validatedFile, originalText: validatedText } = validation.data as { file: File, originalText: string };
 
+    auditInfo.filename = validatedFile.name;
+    auditInfo.fileSize = validatedFile.size;
+    auditInfo.textLength = validatedText.length;
+
     const bytes = await validatedFile.arrayBuffer();
     const buffer = Buffer.from(bytes);
     tempPath = `/tmp/leitura-${Date.now()}-${validatedFile.name.replace(/\s+/g, "_")}`;
@@ -50,13 +61,22 @@ export async function POST(req: NextRequest) {
       filename: validatedFile.name,
     });
 
-    console.log("Processamento concluído com sucesso");
+    console.log(JSON.stringify({
+      ...auditInfo,
+      status: "SUCCESS",
+      durationMs: Date.now() - startTime,
+    }));
+
     return NextResponse.json(result);
   } catch (error) {
-    console.error("Erro no processamento:", error);
+    const message = error instanceof Error ? error.message : "Erro interno";
 
-    const message =
-      error instanceof Error ? error.message : "Erro interno no processamento do áudio.";
+    console.error(JSON.stringify({
+      ...auditInfo,
+      status: "FAILED",
+      error: message,
+      durationMs: Date.now() - startTime,
+    }));
 
     return NextResponse.json(
       { detail: message },

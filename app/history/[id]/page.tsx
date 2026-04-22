@@ -123,27 +123,93 @@ export default function EvaluationDetailsPage() {
     return (
         <div className="animate-in" style={{ paddingBottom: "4rem" }}>
             <header className="page-header evaluation-detail-header">
-                <div className="page-header-content" style={{ display: "flex", alignItems: "flex-start", gap: "1rem" }}>
-                    <button
-                        onClick={() => router.push("/history")}
-                        className="btn-outline-round"
-                        aria-label="Voltar para o histórico"
-                    >
-                        ⬅️
-                    </button>
-                    <div style={{ minWidth: 0 }}>
-                        <h2 className="page-title" style={{ fontSize: "clamp(1.6rem, 4vw, 2.2rem)" }}>
-                            Detalhes da <span style={{ color: "var(--primary)" }}>Avaliação</span>
-                        </h2>
-                        <p className="page-subtitle">Realizada em {formatDate(avaliacao.data)}</p>
-                        <div className="evaluation-meta-chips" style={{ marginTop: "0.85rem" }}>
-                            <span className="perf-chip">{isMobile ? "Resumo mobile" : "Visualização completa"}</span>
-                            {aluno?.serie ? <span className="perf-chip">{aluno.serie}</span> : null}
-                            {aluno?.turma ? <span className="perf-chip">Turma {aluno.turma}</span> : null}
-                        </div>
+                <button
+                    onClick={() => router.push("/history")}
+                    className="btn-outline-round no-print"
+                    aria-label="Voltar para o histórico"
+                    style={{ marginRight: "1rem" }}
+                >
+                    ⬅️
+                </button>
+                <div style={{ minWidth: 0, flex: 1 }}>
+                    <h2 className="page-title" style={{ fontSize: "clamp(1.6rem, 4vw, 2.2rem)" }}>
+                        Detalhes da <span style={{ color: "var(--primary)" }}>Avaliação</span>
+                    </h2>
+                    <p className="page-subtitle">Realizada em {formatDate(avaliacao.data)}</p>
+                    <div className="evaluation-meta-chips" style={{ marginTop: "0.85rem" }}>
+                        <span className="perf-chip no-print">{isMobile ? "Resumo mobile" : "Visualização completa"}</span>
+                        {aluno?.serie ? <span className="perf-chip">{aluno.serie}</span> : null}
+                        {aluno?.turma ? <span className="perf-chip">Turma {aluno.turma}</span> : null}
+                        {aluno?.anoLetivo ? <span className="perf-chip">Ano {aluno.anoLetivo}</span> : null}
                     </div>
                 </div>
+                <button
+                    onClick={() => window.print()}
+                    className="btn-primary no-print"
+                    style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexShrink: 0 }}
+                >
+                    <span>🖨️</span> Imprimir Relatório
+                </button>
             </header>
+
+            <style jsx global>{`
+                @media print {
+                    .no-print, 
+                    .app-header-fixed, 
+                    .btn-outline-round, 
+                    .mobile-nav,
+                    .app-user-button,
+                    .perf-chip:first-child { 
+                        display: none !important; 
+                    }
+                    
+                    body {
+                        background: white !important;
+                        color: black !important;
+                        padding: 0 !important;
+                    }
+
+                    .page-content {
+                        padding-top: 0 !important;
+                    }
+
+                    .glass-card {
+                        border: 1px solid #eee !important;
+                        box-shadow: none !important;
+                        background: white !important;
+                        backdrop-filter: none !important;
+                        margin-bottom: 20px !important;
+                        break-inside: avoid;
+                    }
+
+                    .evaluation-detail-layout {
+                        display: block !important;
+                    }
+
+                    .evaluation-detail-sidebar {
+                        position: static !important;
+                        width: 100% !important;
+                    }
+
+                    .page-title {
+                        font-size: 24pt !important;
+                        color: black !important;
+                    }
+                    
+                    .page-title span {
+                        color: black !important;
+                    }
+
+                    .evaluation-detail-section-title {
+                        color: #333 !important;
+                        border-bottom: 2px solid #333 !important;
+                    }
+
+                    .evaluation-detail-metric-value {
+                        color: black !important;
+                    }
+                }
+            `}</style>
 
             <div className="evaluation-detail-layout">
                 <div className="evaluation-detail-main">
@@ -248,6 +314,6 @@ export default function EvaluationDetailsPage() {
                     )}
                 </div>
             </div>
-        </div>
+        </div >
     );
 }

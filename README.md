@@ -1,4 +1,4 @@
-# Leitura v2.5.0
+# 📖 Plataforma Leitura (v2.6.0)
 
 Plataforma de avaliação de fluência leitora com Next.js (App Router), persistência em Firebase e processamento de áudio via IA. O projeto foi refatorado para um monorepo Next.js unificado com API routes serverless.
 
@@ -37,6 +37,7 @@ O sistema permite que professores:
 - **[NOVO]** revisem métricas qualitativas justificadas por IA (Fluência, Silabação, etc.) antes de salvar;
 - **[NOVO-SEGURANÇA]** Validação robusta de uploads (Zod) e sanitização de inputs contra Prompt Injection;
 - **[NOVO-ACADÊMICO]** Cálculo automático de estatísticas acadêmicas (Desvio Padrão, IC 95%) e exportação de datasets JSON para pesquisa.
+- **[NOVO-FUNCIONALIDADES]** Geração de relatórios em PDF, organização por Ano Letivo e Audit Logging.
 
 ## Stack Atual
 

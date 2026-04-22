@@ -31,6 +31,7 @@ export interface Aluno {
   diagnostico?: string;
   observacoes?: string;
   professorId?: string;
+  anoLetivo: string;
 }
 
 export interface ImportRecord {
@@ -86,6 +87,7 @@ export const addAluno = async (aluno: Omit<Aluno, 'id'>): Promise<string | null>
     const docRef = await addDoc(collection(cachedDb, 'alunos'), {
       ...aluno,
       professorId: currentUser.uid,
+      anoLetivo: aluno.anoLetivo || new Date().getFullYear().toString(),
       createdAt: Timestamp.now()
     });
     return docRef.id;
