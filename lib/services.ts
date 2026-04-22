@@ -95,8 +95,30 @@ export const addAluno = async (aluno: Omit<Aluno, 'id'>): Promise<string | null>
     const currentUser = cachedAuth.currentUser;
     if (!currentUser) throw new Error("Usuário não autenticado");
 
+    // Prepara os dados para evitar duplicatas (verificação básica)
+    const nomeNorm = aluno.nome.trim();
+    const turmaNorm = aluno.turma.trim();
+    const serieNorm = aluno.serie.trim();
+
+    // Busca duplicatas
+    const q = query(
+      collection(cachedDb, 'alunos'),
+      where('nome', '==', nomeNorm),
+      where('turma', '==', turmaNorm),
+      where('serie', '==', serieNorm)
+    );
+
+    const querySnapshot = await getDocs(q);
+    if (!querySnapshot.empty) {
+      console.log(`Aluno já existe: ${nomeNorm} (${turmaNorm} - ${serieNorm}). Retornando ID existente.`);
+      return querySnapshot.docs[0].id;
+    }
+
     const docRef = await addDoc(collection(cachedDb, 'alunos'), {
       ...aluno,
+      nome: nomeNorm,
+      turma: turmaNorm,
+      serie: serieNorm,
       professorId: currentUser.uid,
       anoLetivo: aluno.anoLetivo || new Date().getFullYear().toString(),
       metaPCM: aluno.metaPCM || 0,

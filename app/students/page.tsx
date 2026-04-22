@@ -10,9 +10,10 @@ import { useFirebase } from "../components/FirebaseProvider";
 export default function StudentsPage() {
   const router = useRouter();
   const { anonymizeName, anonymizeText } = useSettings();
-  const { initialized: firebaseInitialized } = useFirebase();
+  const { initialized: firebaseInitialized, auth } = useFirebase();
   const [alunos, setAlunos] = useState<Aluno[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [viewingAluno, setViewingAluno] = useState<Aluno | null>(null);
@@ -28,17 +29,21 @@ export default function StudentsPage() {
 
   useEffect(() => {
     if (firebaseInitialized) {
+      console.log("Firebase inicializado. Usuário atual:", auth?.currentUser?.uid);
       loadAlunos();
     }
-  }, [firebaseInitialized]);
+  }, [firebaseInitialized, auth]);
 
   async function loadAlunos() {
     setLoading(true);
+    setError(null);
     try {
       const data = await getAlunos();
+      console.log(`Busca finalizada. Total de alunos no banco: ${data.length}`);
       setAlunos(data);
-    } catch (err) {
-      console.error("Erro:", err);
+    } catch (err: any) {
+      console.error("Erro ao carregar alunos:", err);
+      setError("Erro ao carregar dados do Firebase. Verifique sua conexão e permissões.");
     } finally {
       setLoading(false);
     }
@@ -81,7 +86,8 @@ export default function StudentsPage() {
     const matchesTurma = filterTurma === '' || normalize(aluno.turma).includes(turmaNorm);
     const matchesSerie = filterSerie === '' || aluno.serie === filterSerie;
     const matchesDiagnostico = filterDiagnostico === '' || (aluno.diagnostico && normalize(aluno.diagnostico).includes(diagNorm));
-    // Se o aluno não tem anoLetivo (registros antigos), consideramos como correspondente ao filtro do ano atual (2026)
+
+    // Tratativa para registros antigos sem anoLetivo: assume-se 2026 se estiver vazio
     const matchesAno = filterAnoLetivo === '' ||
       aluno.anoLetivo === filterAnoLetivo ||
       (!aluno.anoLetivo && filterAnoLetivo === "2026");
@@ -169,6 +175,12 @@ export default function StudentsPage() {
             {saving ? 'Salvando...' : 'Salvar Aluno'}
           </button>
         </form>
+      )}
+
+      {error && (
+        <div className="glass-card" style={{ marginBottom: '2rem', padding: '1rem', background: 'rgba(239, 68, 68, 0.1)', color: 'var(--error)', border: '1px solid rgba(239, 68, 68, 0.2)', textAlign: 'center' }}>
+          {error}
+        </div>
       )}
 
       {loading ? (

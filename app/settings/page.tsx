@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useSettings } from "../components/SettingsProvider";
 import { useFirebase } from "../components/FirebaseProvider";
 import * as XLSX from "xlsx";
-import { addAluno, Aluno, addImportRecord, getImportHistory, ImportRecord } from "@/lib/services";
+import { addAluno, getAlunos, Aluno, addImportRecord, getImportHistory, ImportRecord } from "@/lib/services";
 
 export default function SettingsPage() {
     const router = useRouter();
@@ -91,6 +91,13 @@ export default function SettingsPage() {
 
             let successCount = 0;
             let errorCount = 0;
+            let duplicateCount = 0;
+
+            // Busca alunos existentes para evitar duplicatas de forma eficiente no loop
+            const existingAlunos = await getAlunos();
+            const existingKeys = new Set(existingAlunos.map((a: Aluno) =>
+                `${normalize(a.nome)}|${normalize(a.turma)}|${normalize(a.serie)}`
+            ));
 
             // Processa a partir da linha seguinte ao cabeçalho
             for (let i = headerRowIndex + 1; i < jsonData.length; i++) {
@@ -100,7 +107,7 @@ export default function SettingsPage() {
                 const nome = row[idxNome];
                 if (!nome) continue; // Pula linhas sem nome
 
-                const turma = idxTurma !== -1 && row[idxTurma] ? row[idxTurma] : "Geral";
+                const turma = idxTurma !== -1 && row[idxTurma] ? String(row[idxTurma]).trim() : "Geral";
                 const serieRaw = idxSerie !== -1 && row[idxSerie] ? row[idxSerie] : "1º Ano";
                 const turno = idxTurno !== -1 && row[idxTurno] ? row[idxTurno] : "Manhã";
                 const diagnostico = idxDiag !== -1 && row[idxDiag] ? row[idxDiag] : "Nenhum";
@@ -111,10 +118,18 @@ export default function SettingsPage() {
                     serie = serie.endsWith("º") ? `${serie} Ano` : `${serie}º Ano`;
                 }
 
+                // Verifica duplicata localmente antes de tentar salvar
+                const key = `${normalize(nome)}|${normalize(turma)}|${normalize(serie)}`;
+                if (existingKeys.has(key)) {
+                    console.log(`Pulando duplicado: ${nome}`);
+                    duplicateCount++;
+                    continue;
+                }
+
                 try {
                     const resultId = await addAluno({
-                        nome: String(nome),
-                        turma: String(turma),
+                        nome: String(nome).trim(),
+                        turma: turma,
                         serie: serie,
                         turno: String(turno),
                         diagnostico: String(diagnostico)
@@ -122,6 +137,7 @@ export default function SettingsPage() {
 
                     if (resultId) {
                         successCount++;
+                        existingKeys.add(key); // Adiciona ao set para evitar duplicatas no mesmo arquivo
                     } else {
                         errorCount++;
                     }
@@ -140,7 +156,7 @@ export default function SettingsPage() {
             loadHistory();
 
             setUploadStatus({
-                message: `Importação concluída! ${successCount} alunos adicionados${errorCount > 0 ? ` (${errorCount} erros)` : ''}.`,
+                message: `Importação concluída! ${successCount} novos alunos adicionados${duplicateCount > 0 ? `, ${duplicateCount} duplicados ignorados` : ''}${errorCount > 0 ? ` (${errorCount} erros)` : ''}.`,
                 type: 'success'
             });
 
