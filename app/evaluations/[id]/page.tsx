@@ -172,6 +172,7 @@ export default function ReadingPage() {
         pcm: tempResult.pcm,
         precisao: tempResult.metrics.precisao,
         transcricao: tempResult.transcription,
+        transcricaoMarcada: tempResult.analysis.transcricao_marcada,
         diagnosticoIA: tempResult.analysis.diagnostico,
         intervencaoIA: tempResult.analysis.intervencao,
         metricasQualitativas: tempResult.analysis.metricas_qualitativas
@@ -338,6 +339,23 @@ export default function ReadingPage() {
                 <div className="glass-panel" style={{ background: "rgba(99, 102, 241, 0.1)", padding: "1.25rem", borderColor: "var(--primary)" }}>
                   <p className="mobile-data-label" style={{ color: "var(--primary)", marginBottom: "0.5rem" }}>📈 ANÁLISE DE EVOLUÇÃO</p>
                   <p style={{ fontSize: "0.95rem", lineHeight: 1.6 }}>{tempResult.analysis.analise_evolucao}</p>
+                </div>
+              )}
+
+              {tempResult.analysis.transcricao_marcada && (
+                <div>
+                  <p className="mobile-data-label" style={{ marginBottom: "0.5rem" }}>TEXTO MARCADO (PREVISÃO)</p>
+                  <div className="evaluation-transcription-box" style={{ background: "rgba(0,0,0,0.02)" }}>
+                    <p
+                      style={{ fontSize: "0.95rem", lineHeight: 1.6 }}
+                      dangerouslySetInnerHTML={{
+                        __html: tempResult.analysis.transcricao_marcada
+                          .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                          .replace(/\[(.*?)\]/g, '<span style="color: var(--error); text-decoration: line-through;">[$1]</span>')
+                          .replace(/\((.*?)\)/g, '<span style="color: var(--primary); font-style: italic;">($1)</span>')
+                      }}
+                    />
+                  </div>
                 </div>
               )}
 

@@ -234,7 +234,19 @@ export default function EvaluationDetailsPage() {
                         )}
                         <div className="evaluation-transcription-box">
                             <span className="mobile-data-label" style={{ color: "var(--text-main)" }}>O que o aluno leu</span>
-                            <p className="evaluation-transcription-text">{avaliacao.transcricao}</p>
+                            {avaliacao.transcricaoMarcada ? (
+                                <p
+                                    className="evaluation-transcription-text"
+                                    dangerouslySetInnerHTML={{
+                                        __html: avaliacao.transcricaoMarcada
+                                            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                                            .replace(/\[(.*?)\]/g, '<span style="color: var(--error); text-decoration: line-through;">[$1]</span>')
+                                            .replace(/\((.*?)\)/g, '<span style="color: var(--primary); font-style: italic;">($1)</span>')
+                                    }}
+                                />
+                            ) : (
+                                <p className="evaluation-transcription-text">{avaliacao.transcricao}</p>
+                            )}
                         </div>
                     </div>
                 </div>

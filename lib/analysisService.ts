@@ -153,7 +153,8 @@ ${history.map((h, i) => `  ${i + 1}. Data: ${new Date(h.data?.seconds * 1000).to
     },
     "padrao_de_erro_detectado": "Categoria principal: fonológico, visual, lexical, omissão ou adivinhação.",
     "nivel_de_confianca": number (1 a 100, baseado na clareza da transcrição vs texto base),
-    "analise_evolucao": "Breve comentário (1 linha) sobre o progresso do aluno comparado ao histórico."
+    "analise_evolucao": "Breve comentário (1 linha) sobre o progresso do aluno comparado ao histórico.",
+    "transcricao_marcada": "O texto da transcrição formatado da seguinte forma: palavras substituídas/erradas em **negrito**, palavras do texto original que foram omitidas entre [colchetes] e palavras adicionadas que não estavam no original entre (parênteses)."
   }
 
   ATENÇÃO: Requer-se ALTA PRECISÃO. Se a precisão original estiver abaixo de 80%, 'leitura_precisa' DEVE ser false. Se houver muitas vírgulas ignoradas na transcrição, 'pontuacao' DEVE ser false. Use as justificativas para mostrar que você analisou detalhadamente a transcrição.
@@ -223,6 +224,7 @@ interface ProcessAudioResult {
     padrao_de_erro_detectado: string;
     nivel_de_confianca: number;
     analise_evolucao?: string;
+    transcricao_marcada?: string;
   };
 }
 

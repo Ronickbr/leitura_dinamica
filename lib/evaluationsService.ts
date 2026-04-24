@@ -43,6 +43,7 @@ export interface Avaliacao {
   transcricao: string;
   diagnosticoIA: string;
   intervencaoIA: string;
+  transcricaoMarcada?: string;
   metricasQualitativas?: MetricasQualitativas;
   data?: Timestamp | { seconds?: number; toDate?: () => Date } | null;
   professorId: string;
