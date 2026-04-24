@@ -41,8 +41,12 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   }, [initialized, auth]);
 
   useEffect(() => {
-    if (!loading && !user && !publicRoutes.includes(pathname)) {
-      router.push('/login');
+    if (!loading) {
+      if (!user && !publicRoutes.includes(pathname)) {
+        router.push('/login');
+      } else if (user && pathname === '/login') {
+        router.push('/');
+      }
     }
   }, [user, loading, router, pathname]);
 
@@ -54,7 +58,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     );
   }
 
-  if (!user) {
+  if (!user || pathname === '/login') {
     if (publicRoutes.includes(pathname)) {
       return <>{children}</>;
     }
