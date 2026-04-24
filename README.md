@@ -1,4 +1,4 @@
-# 📖 Plataforma Leitura (v2.7.6)
+# 📖 Plataforma Leitura (v2.8.0)
 
 Plataforma de avaliação de fluência leitora com Next.js (App Router), persistência em Firebase e processamento de áudio via IA. O projeto foi refatorado para um monorepo Next.js unificado com API routes serverless.
 
@@ -37,8 +37,10 @@ O sistema permite que professores:
 - **[NOVO]** revisem métricas qualitativas justificadas por IA (Fluência, Silabação, etc.) antes de salvar;
 - **[NOVO-SEGURANÇA]** Validação robusta de uploads (Zod) e sanitização de inputs contra Prompt Injection;
 - **[NOVO-ACADÊMICO]** Cálculo automático de estatísticas acadêmicas (Desvio Padrão, IC 95%) e exportação de datasets JSON para pesquisa.
-- **[NOVO]** Importação em Lote Robusta com detecção flexível de cabeçalhos e sinônimos;
-- **[NOVO]** Sincronização automatizada com inicialização do Firebase para evitar listas vazias;
+- **[NOVO]** Diagnóstico de leitura dinâmico calibrado por série e meta de PCM;
+- **[NOVO]** Categorização psicopedagógica de erros (Fonológicos, Visuais, Lexicais e Omissões);
+- **[NOVO]** Indicador de Confiança da IA para auxiliar revisões humanas.
+- **v2.8.0**: Implementação de diagnósticos de leitura dinâmicos calibrados por série e meta de PCM, categorização de erros e indicador de confiança.
 - **v2.7.6**: Ajuste de contraste nos filtros da página de seleção de estudante (correção da cor da fonte nos selects e inputs).
 - **v2.7.5**: Adição de resumo de totais (total de alunos e total com diagnóstico) ao final da listagem de alunos (Desktop e Mobile).
 - **v2.7.4**: Implementação das Regras de Segurança do Firestore (`firestore.rules`) incluindo a coleção de textos.

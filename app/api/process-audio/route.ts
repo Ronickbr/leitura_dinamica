@@ -15,6 +15,8 @@ const uploadSchema = z.object({
     .refine((file) => file?.size <= MAX_FILE_SIZE, "Arquivo muito grande (máximo 10MB).")
     .refine((file) => ALLOWED_MIME.includes(file?.type) || file?.name.endsWith('.webm') || file?.name.endsWith('.mp3') || file?.name.endsWith('.m4a'), "Tipo de arquivo inválido. Use webm, mp3, wav ou m4a."),
   originalText: z.string().min(1, "O texto original é obrigatório.").max(10000, "O texto original excede o limite de 10000 caracteres."),
+  studentGrade: z.string().optional(),
+  targetPCM: z.string().optional().transform(v => v ? parseInt(v) : undefined),
 });
 
 export async function POST(req: NextRequest) {
@@ -31,16 +33,28 @@ export async function POST(req: NextRequest) {
     const formData = await req.formData();
     const file = formData.get("file");
     const originalText = formData.get("original_text");
+    const studentGrade = formData.get("student_grade");
+    const targetPCM = formData.get("target_pcm");
 
     // Validação com Zod
-    const validation = uploadSchema.safeParse({ file, originalText });
+    const validation = uploadSchema.safeParse({ file, originalText, studentGrade, targetPCM });
 
     if (!validation.success) {
       const errorMsg = validation.error.issues[0].message;
       return NextResponse.json({ detail: errorMsg }, { status: 400 });
     }
 
-    const { file: validatedFile, originalText: validatedText } = validation.data as { file: File, originalText: string };
+    const {
+      file: validatedFile,
+      originalText: validatedText,
+      studentGrade: validatedGrade,
+      targetPCM: validatedTarget
+    } = validation.data as {
+      file: File,
+      originalText: string,
+      studentGrade?: string,
+      targetPCM?: number
+    };
 
     auditInfo.filename = validatedFile.name;
     auditInfo.fileSize = validatedFile.size;
@@ -59,6 +73,8 @@ export async function POST(req: NextRequest) {
       filePath: tempPath,
       originalText: validatedText,
       filename: validatedFile.name,
+      studentGrade: validatedGrade,
+      targetPCM: validatedTarget,
     });
 
     console.log(JSON.stringify({

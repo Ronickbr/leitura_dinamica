@@ -1,6 +1,6 @@
 import fs from "fs";
 import OpenAI from "openai";
-import { calculatePCM, getPerformanceLevel } from "./pcmUtils";
+import { calculatePCM, getPerformanceLevel, getNormaNacional } from "./pcmUtils";
 
 const MAX_ORIGINAL_TEXT_LENGTH = 10000;
 
@@ -71,6 +71,7 @@ function getFallbackAnalysis() {
       pontuacao: false,
     },
     padrao_de_erro_detectado: "Análise indisponível",
+    nivel_de_confianca: 0
   };
 }
 
@@ -87,47 +88,65 @@ async function getPedagogicalDiagnosis(
   pcm: number,
   level: string,
   originalText: string,
-  transcription: string
+  transcription: string,
+  studentGrade?: string,
+  targetPCM?: number
 ) {
-  const prompt = `
-  Aja como uma Psicopedagoga Clinica especialista em alfabetização e fluência leitora.
-  Analise o desempenho de um aluno do 3o ano com base nos critérios de avaliação de fluência.
+  const gradeNorm = studentGrade ? getNormaNacional(studentGrade) : 80;
+  const gradeContext = studentGrade ? `O aluno é do ${studentGrade}. A norma nacional esperada para esta série é de ${gradeNorm} PCM.` : "O aluno é do 3º ano (contexto padrão).";
+  const targetContext = targetPCM ? `A meta individual definida para este aluno é de ${targetPCM} PCM.` : "";
 
-  DADOS DA AVALIAÇÃO:
+  const prompt = `
+  Aja como uma Psicopedagoga Clínica especialista em alfabetização, neurociência da leitura e fluência leitora.
+  Analise o desempenho de um aluno com base nos critérios científicos de fluência (Acurácia, Automaticidade e Prosódia).
+
+  CONTEXTO DO ALUNO:
+  - ${gradeContext}
+  - ${targetContext}
+  
+  DADOS DA AVALIAÇÃO ATUAL:
   - PCM (Palavras Corretas por Minuto): ${pcm}
-  - Classificação Atual: ${level}
-  (Referência: Até 60: Fase inicial | 61-75: Em desenvolvimento | 76-95: Em consolidação | 96+: Fluente)
+  - Classificação: ${level}
   - Texto Base: "${originalText}"
   - Transcrição da Leitura: "${transcription}"
 
-  SUA TAREFA:
-  1. Compare o Texto Base com a Transcrição para identificar padrões de erro (substituições, omissões ou repetições).
-  2. Avalie se o nível "${level}" condiz com o comportamento transcrito.
-  3. Gere um diagnóstico que foque na causa da dificuldade (ex: decodificação lenta, falta de automaticidade ou desatenção à pontuação).
-  4. Recomende uma intervenção prática que o professor possa aplicar em sala de aula.
+  SUA TAREFA DE ANÁLISE DETALHADA:
+  1. Comparação Fonológica e Lexical: Identifique se as discrepâncias entre o Texto Base e a Transcrição são:
+     - Substituições Fonológicas: Troca por sons parecidos (ex: p/b, t/d, f/v). Indica dificuldade de processamento fonológico.
+     - Substituições Visuais/Gráficas: Troca por letras visualmente similares (ex: m/n, p/q). Indica dificuldade de processamento visual.
+     - Substituições Lexicais/Semânticas: Troca por palavras de sentido similar (ex: "casa" por "lar"). Indica uso de contexto para compensar decodificação falha.
+     - Omissões ou Invenções: Pular palavras ou inventar finais. Indica falta de monitoramento ou tentativa de adivinhação.
+  
+  2. Avaliação de Prosódia e Ritmo:
+     - Analise a transcrição em busca de sinais de leitura silabada (excesso de pausas ou hesitações).
+     - Verifique se a pontuação foi respeitada (pausas nos lugares certos).
+  
+  3. Diagnóstico e Intervenção:
+     - O diagnóstico deve ser técnico e preciso, focando na "Fase de Leitura" (Logográfica, Alfabética ou Ortográfica).
+     - A intervenção deve ser uma técnica baseada em evidências (ex: Leitura Repetida, Leitura Compartilhada, Treino de Consciência Fonológica).
 
   REGRAS DE RESPOSTA (JSON):
   Retorne APENAS um objeto JSON no seguinte formato:
   {
-    "diagnostico": "Máximo 3 linhas. Foque no comportamento leitor observado.",
-    "intervencao": "Máximo 2 linhas. Uma atividade prática e específica.",
+    "diagnostico": "Máximo 3 linhas. Use termos técnicos como 'decodificação', 'automaticidade', 'prosódia'.",
+    "intervencao": "Máximo 2 linhas. Atividade prática baseada em evidências.",
     "metricas_qualitativas": {
       "leitura_precisa": boolean,
-      "leitura_precisa_justificativa": "Curta explicação baseada nas trocas observadas.",
+      "leitura_precisa_justificativa": "Análise técnica das trocas (ex: 'Houve 3 trocas fonológicas de p por b').",
       "leitura_silabada": boolean,
-      "leitura_silabada_justificativa": "Explicar se houve hesitação ou falta de fluidez.",
+      "leitura_silabada_justificativa": "Descrever se há falta de síntese fonêmica ou automatização.",
       "boa_entonacao": boolean,
-      "boa_entonacao_justificativa": "Citar se a leitura foi monótona ou expressiva.",
+      "boa_entonacao_justificativa": "Análise da melodia e expressividade.",
       "interpretacao": boolean,
-      "interpretacao_justificativa": "Inferir compreensão pela fluidez e ênfase.",
+      "interpretacao_justificativa": "Probabilidade de compreensão baseada na fluidez.",
       "pontuacao": boolean,
-      "pontuacao_justificativa": "Indicar se respeitou ou ignorou sinais gráficos."
+      "pontuacao_justificativa": "Indicar se as pausas transcrevem a estrutura sintática."
     },
-    "padrao_de_erro_detectado": "Descreva em poucas palavras o erro mais frequente."
+    "padrao_de_erro_detectado": "Categoria principal: fonológico, visual, lexical, omissão ou adivinhação.",
+    "nivel_de_confianca": number (1 a 100, baseado na clareza da transcrição vs texto base)
   }
 
   ATENÇÃO: Requer-se ALTA PRECISÃO. Se a precisão original estiver abaixo de 80%, 'leitura_precisa' DEVE ser false. Se houver muitas vírgulas ignoradas na transcrição, 'pontuacao' DEVE ser false. Use as justificativas para mostrar que você analisou detalhadamente a transcrição.
-
   `;
 
   try {
@@ -160,6 +179,8 @@ interface ProcessAudioParams {
   filePath: string;
   originalText: string;
   filename: string;
+  studentGrade?: string;
+  targetPCM?: number;
 }
 
 interface ProcessAudioResult {
@@ -189,14 +210,16 @@ interface ProcessAudioResult {
       pontuacao_justificativa: string;
     };
     padrao_de_erro_detectado: string;
+    nivel_de_confianca: number;
   };
 }
-
 
 export async function processReadingAudio({
   filePath,
   originalText,
   filename,
+  studentGrade,
+  targetPCM,
 }: ProcessAudioParams): Promise<ProcessAudioResult> {
   const sanitizedOriginalText = sanitizeInput(originalText);
 
@@ -228,7 +251,9 @@ export async function processReadingAudio({
     pcm,
     level,
     sanitizedOriginalText,
-    transcription
+    transcription,
+    studentGrade,
+    targetPCM
   );
 
   console.log("Diagnóstico OpenRouter finalizado");
