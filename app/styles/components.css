@@ -96,7 +96,7 @@
 .dashboard-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 2rem;
+    gap: 3rem;
 }
 
 .dashboard-side-column,
@@ -109,13 +109,20 @@
 .grid-cards {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-    gap: 1.5rem;
+    gap: 2rem;
 }
 
 .responsive-form-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 1rem;
+    gap: 2.5rem;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+    margin-bottom: 1.5rem;
 }
 
 .responsive-split-grid {
@@ -143,8 +150,8 @@
     flex-direction: column;
     width: 100%;
     text-align: left;
-    padding: 1.25rem;
-    gap: 1rem;
+    padding: 1.5rem;
+    gap: 1.5rem;
 }
 
 .mobile-card-header {
@@ -834,14 +841,14 @@
 .filter-bar {
     display: flex;
     align-items: center;
-    gap: 1.5rem;
+    gap: 3rem;
     flex-wrap: wrap;
     background: var(--glass-bg);
-    padding: 1rem 1.5rem;
-    border-radius: 16px;
+    padding: 2.5rem 3rem;
+    border-radius: var(--radius-lg);
     border: 1px solid var(--glass-border);
     backdrop-filter: blur(10px);
-    margin-bottom: 2rem;
+    margin-bottom: 4rem;
 }
 
 .filter-select {
@@ -866,9 +873,10 @@
     font-size: 0.85rem;
     font-weight: 700;
     color: var(--text-muted);
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.8rem;
     display: block;
     padding-left: 0.25rem;
+    letter-spacing: 0.02em;
 }
 
 /* --- Media Queries Gerais --- */

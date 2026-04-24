@@ -26,11 +26,18 @@
     -webkit-backdrop-filter: var(--glass-blur);
     border: 1px solid var(--glass-border);
     border-radius: var(--radius-lg);
-    padding: 2.5rem;
+    padding: 3.5rem 3rem;
     position: relative;
     overflow: hidden;
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     box-shadow: var(--glass-shadow);
+}
+
+.glass-card+.glass-card,
+.glass-panel+.glass-panel,
+.glass-card+.glass-panel,
+.glass-panel+.glass-card {
+    margin-top: 3rem;
 }
 
 .glass-card::before {
