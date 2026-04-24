@@ -124,30 +124,30 @@ export default function EvaluationDetailsPage() {
     return (
         <div className="animate-in" style={{ paddingBottom: "4rem" }}>
             <header className="page-header evaluation-detail-header">
-                <button
-                    onClick={() => router.push("/history")}
-                    className="btn-outline-round no-print"
-                    aria-label="Voltar para o histórico"
-                    style={{ marginRight: "1rem" }}
-                >
-                    ⬅️
-                </button>
-                <div style={{ minWidth: 0, flex: 1 }}>
-                    <h2 className="page-title" style={{ fontSize: "clamp(1.6rem, 4vw, 2.2rem)" }}>
-                        Detalhes da <span style={{ color: "var(--primary)" }}>Avaliação</span>
-                    </h2>
-                    <p className="page-subtitle">Realizada em {formatDate(avaliacao.data)}</p>
-                    <div className="evaluation-meta-chips" style={{ marginTop: "0.85rem" }}>
-                        <span className="perf-chip no-print">{isMobile ? "Resumo mobile" : "Visualização completa"}</span>
-                        {aluno?.serie ? <span className="perf-chip">{aluno.serie}</span> : null}
-                        {aluno?.turma ? <span className="perf-chip">Turma {aluno.turma}</span> : null}
-                        {aluno?.anoLetivo ? <span className="perf-chip">Ano {aluno.anoLetivo}</span> : null}
+                <div className="page-header-content">
+                    <button
+                        onClick={() => router.push("/history")}
+                        className="btn-outline-round no-print"
+                        aria-label="Voltar para o histórico"
+                    >
+                        ⬅️
+                    </button>
+                    <div className="page-header-info">
+                        <h2 className="page-title">
+                            Detalhes da <span style={{ color: "var(--primary)" }}>Avaliação</span>
+                        </h2>
+                        <p className="page-subtitle">Realizada em {formatDate(avaliacao.data)}</p>
+                        <div className="evaluation-meta-chips" style={{ marginTop: "0.85rem" }}>
+                            <span className="perf-chip no-print">{isMobile ? "Resumo mobile" : "Visualização completa"}</span>
+                            {aluno?.serie ? <span className="perf-chip">{aluno.serie}</span> : null}
+                            {aluno?.turma ? <span className="perf-chip">Turma {aluno.turma}</span> : null}
+                            {aluno?.anoLetivo ? <span className="perf-chip">Ano {aluno.anoLetivo}</span> : null}
+                        </div>
                     </div>
                 </div>
                 <button
                     onClick={() => window.print()}
                     className="btn-primary no-print"
-                    style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexShrink: 0 }}
                 >
                     <span>🖨️</span> Imprimir Relatório
                 </button>
@@ -218,7 +218,7 @@ export default function EvaluationDetailsPage() {
                         <h3 className="evaluation-detail-section-title">Diagnóstico da IA</h3>
                         <p className="evaluation-detail-body">{avaliacao.diagnosticoIA}</p>
 
-                        <h4 style={{ fontSize: "1rem", marginTop: "1.5rem", marginBottom: "0.5rem", color: "var(--primary)" }}>Plano de Intervenção</h4>
+                        <h4 className="evaluation-detail-subtitle" style={{ marginTop: "1.5rem" }}>Plano de Intervenção</h4>
                         <p className="evaluation-detail-body" style={{ color: "var(--text-muted)" }}>{avaliacao.intervencaoIA}</p>
                     </div>
 
@@ -226,14 +226,14 @@ export default function EvaluationDetailsPage() {
                         <h3 className="evaluation-detail-section-title">Transcrição e Análise</h3>
                         {texto && (
                             <div className="evaluation-original-text-box">
-                                <span style={{ fontSize: "0.75rem", color: "var(--text-muted)", textTransform: "uppercase", fontWeight: 800, letterSpacing: "0.06em" }}>
+                                <span className="mobile-data-label">
                                     Texto Original: {texto.titulo}
                                 </span>
                                 <p className="evaluation-original-text">"{texto.conteudo}"</p>
                             </div>
                         )}
                         <div className="evaluation-transcription-box">
-                            <span style={{ fontSize: "0.85rem", color: "var(--text-main)", fontWeight: 700 }}>O que o aluno leu</span>
+                            <span className="mobile-data-label" style={{ color: "var(--text-main)" }}>O que o aluno leu</span>
                             <p className="evaluation-transcription-text">{avaliacao.transcricao}</p>
                         </div>
                     </div>
@@ -241,24 +241,24 @@ export default function EvaluationDetailsPage() {
 
                 <div className="evaluation-detail-sidebar">
                     <div className="glass-card evaluation-detail-section" style={{ padding: "1.5rem" }}>
-                        <h3 style={{ fontSize: "1rem", color: "var(--text-muted)", marginBottom: "1.25rem" }}>Métricas de Desempenho</h3>
+                        <h3 className="mobile-data-label" style={{ marginBottom: "1.25rem" }}>Métricas de Desempenho</h3>
 
                         <div className="evaluation-detail-metrics-grid">
-                            <div className="evaluation-detail-metric-tile" style={{ gridColumn: "span 2", background: "var(--bg-deep)", border: "1px solid var(--glass-border)" }}>
-                                <span className="evaluation-detail-metric-label" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                                    PCM Alcançado
+                            <div className="evaluation-detail-metric-tile" style={{ gridColumn: "span 2", background: "var(--bg-deep)" }}>
+                                <span className="evaluation-detail-metric-label">
+                                    <span>PCM Alcançado</span>
                                     <span style={{ fontSize: "0.7rem", opacity: 0.7 }}>SAEB/ANA: {getNormaNacional(aluno?.serie || "")}</span>
                                 </span>
                                 <div style={{ display: "flex", alignItems: "baseline", gap: "0.75rem" }}>
                                     <span className="evaluation-detail-metric-value" style={{ color: "var(--accent)", fontSize: "2.5rem" }}>{avaliacao.pcm}</span>
                                     <span style={{ fontSize: "0.85rem", fontWeight: 700, color: avaliacao.pcm >= getNormaNacional(aluno?.serie || "") ? "var(--success)" : "var(--error)" }}>
-                                        {avaliacao.pcm >= getNormaNacional(aluno?.serie || "") ? "🟢 Acima da Norma" : "🔴 Abaixo da Norma"}
+                                        {avaliacao.pcm >= getNormaNacional(aluno?.serie || "") ? "🟢 Acima" : "🔴 Abaixo"}
                                     </span>
                                 </div>
                                 {aluno?.metaPCM ? (
-                                    <div style={{ marginTop: "0.5rem", fontSize: "0.8rem", color: "var(--text-muted)", borderTop: "1px solid var(--glass-border)", paddingTop: "0.5rem" }}>
-                                        Meta Personalizada: <strong>{aluno.metaPCM} PCM</strong>
-                                        {avaliacao.pcm >= aluno.metaPCM ? " 🎉 Meta Atingida!" : ` (Faltam ${aluno.metaPCM - avaliacao.pcm} para a meta)`}
+                                    <div className="evaluation-detail-meta-info" style={{ marginTop: "0.5rem" }}>
+                                        Meta: <strong>{aluno.metaPCM} PCM</strong>
+                                        {avaliacao.pcm >= aluno.metaPCM ? " 🎉 Atingida!" : ` (-${aluno.metaPCM - avaliacao.pcm})`}
                                     </div>
                                 ) : null}
                             </div>
@@ -270,7 +270,7 @@ export default function EvaluationDetailsPage() {
                     </div>
 
                     <div className="glass-card evaluation-detail-section" style={{ padding: "1.5rem" }}>
-                        <h3 style={{ fontSize: "1rem", color: "var(--text-muted)", marginBottom: "1rem" }}>Aluno & Texto</h3>
+                        <h3 className="mobile-data-label" style={{ marginBottom: "1rem" }}>Aluno & Texto</h3>
                         <div className="evaluation-detail-info-grid">
                             <div className="evaluation-detail-info-item">
                                 <span className="evaluation-detail-info-label">Nome</span>
@@ -293,7 +293,7 @@ export default function EvaluationDetailsPage() {
 
                     {avaliacao.metricasQualitativas && (
                         <div className="glass-card evaluation-detail-section" style={{ padding: "1.5rem" }}>
-                            <h3 style={{ fontSize: "1rem", color: "var(--text-muted)", marginBottom: "1rem" }}>Métricas Qualitativas</h3>
+                            <h3 className="mobile-data-label" style={{ marginBottom: "1rem" }}>Métricas Qualitativas</h3>
                             <div className="evaluation-detail-qualitative-list">
                                 {qualitativeMetrics.map((metric) => {
                                     const metricValue = Boolean(
@@ -328,6 +328,6 @@ export default function EvaluationDetailsPage() {
                     )}
                 </div>
             </div>
-        </div >
+        </div>
     );
 }

@@ -203,7 +203,7 @@ export default function ReadingPage() {
 
   return (
     <div className="animate-in" style={{ paddingBottom: '4rem' }}>
-      <header className="page-header evaluation-header">
+      <header className="page-header">
         <div className="page-header-content">
           <button
             onClick={() => router.push('/evaluations/new')}
@@ -212,7 +212,7 @@ export default function ReadingPage() {
           >
             ⬅️
           </button>
-          <div className="evaluation-header-info">
+          <div className="page-header-info">
             <h2 className="page-title">
               Avaliação de <span style={{ color: 'var(--primary)' }}>Fluência</span>
             </h2>
@@ -232,8 +232,8 @@ export default function ReadingPage() {
         <div className="glass-card evaluation-text-card">
           <div className="evaluation-text-header">
             <div>
-              <h3 style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: '0.5rem' }}>{texto?.titulo}</h3>
-              <span className="perf-chip">
+              <h3 className="section-title" style={{ marginBottom: '0.5rem' }}>{texto?.titulo}</h3>
+              <span className="library-badge library-badge-primary">
                 {texto?.serie}
               </span>
             </div>
@@ -241,7 +241,7 @@ export default function ReadingPage() {
               <select
                 value={texto?.id}
                 onChange={e => setTexto(textosDisponiveis.find(t => t.id === e.target.value) || null)}
-                className="glass-panel evaluation-text-select"
+                className="filter-select"
                 aria-label="Selecionar texto"
               >
                 {textosDisponiveis.map(t => <option key={t.id} value={t.id}>{t.titulo}</option>)}
@@ -254,8 +254,9 @@ export default function ReadingPage() {
             </p>
           ) : (
             <div className="empty-state-card" style={{ padding: '3rem', textAlign: 'center' }}>
-              <p style={{ fontWeight: 800, marginBottom: '0.5rem', color: 'var(--error)' }}>📚 Nenhum texto encontrado</p>
-              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Não existem textos cadastrados para a série <strong>{aluno?.serie}</strong>.</p>
+              <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>📚</div>
+              <h3 className="section-title" style={{ color: 'var(--error)' }}>Nenhum texto encontrado</h3>
+              <p className="page-subtitle" style={{ fontSize: '0.85rem' }}>Não existem textos cadastrados para a série <strong>{aluno?.serie}</strong>.</p>
               <button onClick={() => router.push('/texts')} className="btn-outline" style={{ marginTop: '1.5rem' }}>Ir para Biblioteca</button>
             </div>
           )}
@@ -302,9 +303,11 @@ export default function ReadingPage() {
             )}
           </div>
 
-          <div className="glass-card evaluation-tip-card" style={{ padding: '1.5rem', fontSize: '0.85rem' }}>
-            <h4 style={{ marginBottom: '0.5rem' }}>Dica Pedagógica</h4>
-            <p style={{ color: 'var(--text-muted)' }}>Garanta que o aluno esteja em postura confortável e o microfone posicionado corretamente.</p>
+          <div className="glass-card evaluation-tip-card">
+            <h4 style={{ marginBottom: '0.5rem', fontWeight: 800 }}>Dica Pedagógica</h4>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', lineHeight: 1.5 }}>
+              Garanta que o aluno esteja em postura confortável e o microfone posicionado corretamente.
+            </p>
           </div>
         </div>
       </div>
@@ -319,7 +322,7 @@ export default function ReadingPage() {
             <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem", marginBottom: "2rem" }}>
               <div>
                 <p className="mobile-data-label" style={{ marginBottom: "0.5rem" }}>RESULTADO QUANTITATIVO</p>
-                <div className="evaluation-results-grid glass-panel" style={{ padding: "1rem" }}>
+                <div className="evaluation-results-grid glass-panel">
                   <div>
                     <div style={{ fontSize: "1.75rem", fontWeight: 900, color: "var(--primary)" }}>{tempResult.pcm}</div>
                     <div className="mobile-data-label">PCM</div>
@@ -345,11 +348,7 @@ export default function ReadingPage() {
                     <div
                       key={m.key}
                       onClick={() => toggleMetric(m.key)}
-                      className="evaluation-metric-card"
-                      style={{
-                        background: tempResult.analysis.metricas_qualitativas[m.key] ? "rgba(16, 185, 129, 0.1)" : undefined,
-                        borderColor: tempResult.analysis.metricas_qualitativas[m.key] ? "var(--success)" : undefined,
-                      }}
+                      className={`evaluation-metric-card ${tempResult.analysis.metricas_qualitativas[m.key] ? 'selected' : ''}`}
                     >
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.4rem" }}>
                         <span style={{ fontWeight: 800, fontSize: "1rem" }}>{m.icon} {m.label}</span>

@@ -87,29 +87,27 @@ export default function TextsPage() {
   );
 
   return (
-    <div className="animate-in" style={{ paddingBottom: '4rem', maxWidth: 'var(--container-max-width)', margin: '0 auto' }}>
-      <header className="page-header" style={{ marginBottom: '2.5rem' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', flex: 1 }}>
+    <div className="animate-in" style={{ paddingBottom: '4rem' }}>
+      <header className="page-header">
+        <div className="page-header-content">
           <button
             onClick={() => router.push('/')}
             className="btn-outline-round"
             aria-label="Voltar para dashboard"
-            style={{ width: '44px', height: '44px', border: '1px solid var(--glass-border)', background: 'var(--glass-bg)' }}
           >
-            ←
+            ⬅️
           </button>
-          <div style={{ minWidth: 0 }}>
-            <h2 className="page-title" style={{ fontSize: '1.8rem', letterSpacing: '-0.02em', marginBottom: '0.2rem' }}>
-              Biblioteca de <span style={{ background: 'linear-gradient(135deg, var(--primary), var(--accent))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', fontWeight: 900 }}>Textos</span>
+          <div className="page-header-info">
+            <h2 className="page-title">
+              Biblioteca de <span style={{ color: 'var(--primary)' }}>Textos</span>
             </h2>
-            <p className="page-subtitle" style={{ color: 'var(--text-muted)', fontSize: '0.95rem' }}>Gerencie o acervo de leitura para as avaliações.</p>
+            <p className="page-subtitle">Gerencie o acervo de leitura para as avaliações.</p>
           </div>
         </div>
-        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+        <div className="page-header-actions">
           <button
             onClick={editingId ? handleCancel : () => setShowForm(!showForm)}
             className={showForm ? "btn-outline" : "btn-primary"}
-            style={{ height: '44px', padding: '0 1.5rem' }}
           >
             {showForm ? '❌ Cancelar' : '✨ Novo Texto'}
           </button>
@@ -117,18 +115,18 @@ export default function TextsPage() {
       </header>
 
       {showForm && (
-        <div className="glass-card animate-in" style={{ marginBottom: '3rem', border: '1px solid var(--primary)', background: 'rgba(var(--primary-rgb), 0.03)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', marginBottom: '1.8rem' }}>
+        <div className="glass-card animate-in" style={{ marginBottom: '3rem' }}>
+          <div className="form-section-header">
             <span style={{ fontSize: '1.5rem' }}>{editingId ? '✍️' : '📝'}</span>
-            <h3 style={{ fontSize: '1.4rem', fontWeight: 800 }}>
+            <h3 className="section-title" style={{ margin: 0 }}>
               {editingId ? 'Editar Texto' : 'Cadastrar Novo Texto'}
             </h3>
           </div>
 
           <form onSubmit={handleSubmit}>
-            <div className="responsive-form-grid" style={{ marginBottom: '1.5rem', gap: '1.5rem' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
-                <label style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-muted)', marginLeft: '0.5rem' }}>Título do Texto</label>
+            <div className="responsive-form-grid" style={{ marginBottom: '1.5rem' }}>
+              <div>
+                <label className="form-label">Título do Texto</label>
                 <input
                   type="text"
                   placeholder="Ex: A Grande Descoberta"
@@ -136,17 +134,17 @@ export default function TextsPage() {
                   onChange={e => setFormData({ ...formData, titulo: e.target.value })}
                   required
                   className="glass-panel"
-                  style={{ padding: '0.9rem 1.2rem', color: 'var(--text-main)', border: '1px solid var(--glass-border)', fontSize: '1rem', background: 'var(--bg-dark)' }}
+                  style={{ width: '100%' }}
                 />
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
-                <label style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-muted)', marginLeft: '0.5rem' }}>Série Recomendada</label>
+              <div>
+                <label className="form-label">Série Recomendada</label>
                 <select
                   value={formData.serie}
                   onChange={e => setFormData({ ...formData, serie: e.target.value })}
                   required
-                  className="glass-panel"
-                  style={{ padding: '0.9rem 1.2rem', color: 'var(--text-main)', border: '1px solid var(--glass-border)', fontSize: '1rem', background: 'var(--bg-dark)', cursor: 'pointer' }}
+                  className="filter-select"
+                  style={{ width: '100%' }}
                 >
                   <option value="1º Ano">1º Ano (E.F.)</option>
                   <option value="2º Ano">2º Ano (E.F.)</option>
@@ -157,8 +155,8 @@ export default function TextsPage() {
               </div>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem', marginBottom: '2rem' }}>
-              <label style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-muted)', marginLeft: '0.5rem' }}>Conteúdo para Leitura</label>
+            <div style={{ marginBottom: '2rem' }}>
+              <label className="form-label">Conteúdo para Leitura</label>
               <textarea
                 placeholder="Insira o texto que o aluno deverá ler..."
                 value={formData.conteudo}
@@ -166,16 +164,16 @@ export default function TextsPage() {
                 required
                 rows={8}
                 className="glass-panel"
-                style={{ width: '100%', padding: '1rem 1.2rem', color: 'var(--text-main)', border: '1px solid var(--glass-border)', resize: 'vertical', fontSize: '1.1rem', lineBreak: 'strict', background: 'var(--bg-dark)' }}
+                style={{ width: '100%', resize: 'vertical', fontSize: '1.1rem' }}
               />
             </div>
 
             <div style={{ display: 'flex', gap: '1rem', borderTop: '1px solid var(--glass-border)', paddingTop: '2rem' }}>
-              <button type="submit" disabled={saving} className="btn-primary" style={{ minWidth: '180px', height: '48px' }}>
+              <button type="submit" disabled={saving} className="btn-primary" style={{ minWidth: '180px' }}>
                 {saving ? '⌛ Salvando...' : (editingId ? '✅ Atualizar Texto' : '💾 Salvar Texto')}
               </button>
               {editingId && (
-                <button type="button" onClick={handleCancel} className="btn-outline" style={{ height: '48px' }}>
+                <button type="button" onClick={handleCancel} className="btn-outline">
                   Cancelar Edição
                 </button>
               )}
@@ -184,8 +182,8 @@ export default function TextsPage() {
         </div>
       )}
 
-      <div style={{ marginBottom: '2rem', display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-        <div className="glass-panel" style={{ flex: 1, minWidth: '300px', display: 'flex', alignItems: 'center', padding: '0 1.2rem', height: '48px' }}>
+      <div className="filter-bar">
+        <div className="glass-panel" style={{ flex: 1, minWidth: '300px', display: 'flex', alignItems: 'center', padding: '0 1.2rem', height: '44px' }}>
           <span style={{ marginRight: '0.8rem', opacity: 0.5 }}>🔍</span>
           <input
             type="text"
@@ -209,70 +207,27 @@ export default function TextsPage() {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.2rem', gap: '1rem' }}>
                 <div style={{ minWidth: 0 }}>
                   <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                    <span style={{
-                      fontSize: '0.7rem',
-                      fontWeight: 800,
-                      textTransform: 'uppercase',
-                      background: 'rgba(var(--primary-rgb), 0.15)',
-                      color: 'var(--primary)',
-                      padding: '0.25rem 0.6rem',
-                      borderRadius: '6px'
-                    }}>
+                    <span className="library-badge library-badge-primary">
                       {texto.serie}
                     </span>
-                    <span style={{
-                      fontSize: '0.7rem',
-                      fontWeight: 800,
-                      textTransform: 'uppercase',
-                      background: 'rgba(var(--success-rgb), 0.1)',
-                      color: 'var(--success)',
-                      padding: '0.25rem 0.6rem',
-                      borderRadius: '6px'
-                    }}>
+                    <span className="library-badge library-badge-success">
                       {texto.numeroPalavras} PALAVRAS
                     </span>
                   </div>
-                  <h3 style={{ fontWeight: 900, fontSize: '1.25rem', lineHeight: '1.3', color: 'var(--text-main)', wordBreak: 'break-word' }}>
+                  <h3 className="card-title" style={{ wordBreak: 'break-word', margin: 0 }}>
                     {texto.titulo}
                   </h3>
                 </div>
                 <div style={{ display: 'flex', gap: '0.4rem', flexShrink: 0 }}>
-                  <button onClick={() => handleEdit(texto)} className="btn-icon" title="Editar" style={{ background: 'var(--glass-bg)', width: '36px', height: '36px' }}>✏️</button>
-                  <button onClick={() => handleDelete(texto.id)} className="btn-icon" title="Excluir" style={{ background: 'var(--glass-bg)', color: 'var(--accent)', width: '36px', height: '36px' }}>🗑️</button>
+                  <button onClick={() => handleEdit(texto)} className="btn-icon" title="Editar">✏️</button>
+                  <button onClick={() => handleDelete(texto.id)} className="btn-icon" title="Excluir" style={{ color: 'var(--accent)' }}>🗑️</button>
                 </div>
               </div>
 
-              <div style={{
-                flex: 1,
-                background: 'rgba(0,0,0,0.02)',
-                borderRadius: '12px',
-                padding: '1.2rem',
-                border: '1px solid var(--glass-border)',
-                marginBottom: '1rem',
-                position: 'relative',
-                overflow: 'hidden'
-              }}>
-                <p style={{
-                  fontSize: '0.95rem',
-                  lineHeight: '1.6',
-                  color: 'var(--text-muted)',
-                  display: '-webkit-box',
-                  WebkitLineClamp: 4,
-                  WebkitBoxOrient: 'vertical',
-                  overflow: 'hidden',
-                  margin: 0
-                }}>
+              <div className="text-preview-box">
+                <p className="text-preview-content">
                   {texto.conteudo}
                 </p>
-                <div style={{
-                  position: 'absolute',
-                  bottom: 0,
-                  left: 0,
-                  right: 0,
-                  height: '40px',
-                  background: 'linear-gradient(transparent, rgba(var(--bg-dark), 0.05))',
-                  pointerEvents: 'none'
-                }}></div>
               </div>
 
               <button

@@ -229,7 +229,7 @@ export default function HistoryPage() {
   return (
     <div className="animate-in" style={{ paddingBottom: '4rem' }}>
       <header className="page-header">
-        <div className="page-header-content" style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem' }}>
+        <div className="page-header-content">
           <button
             onClick={() => router.push('/')}
             className="btn-outline-round"
@@ -237,7 +237,7 @@ export default function HistoryPage() {
           >
             ⬅️
           </button>
-          <div style={{ minWidth: 0 }}>
+          <div className="page-header-info">
             <h2 className="page-title">Histórico de <span style={{ color: 'var(--primary)' }}>Avaliações</span></h2>
             <p className="page-subtitle">Acompanhe a evolução e o desempenho dos alunos.</p>
           </div>
@@ -266,12 +266,13 @@ export default function HistoryPage() {
           value={filterAnoLetivo}
           onChange={e => setFilterAnoLetivo(e.target.value)}
           className="glass-panel"
-          style={{ width: '120px', padding: '0.5rem 0.75rem', fontSize: '1rem', color: 'var(--text-main)', border: '1px solid var(--glass-border)' }}
+          style={{ width: '120px' }}
         />
         {filterAnoLetivo && (
           <button
             onClick={() => setFilterAnoLetivo('')}
-            style={{ padding: '0.3rem 0.6rem', fontSize: '0.75rem', border: 'none', background: 'transparent', color: 'var(--text-muted)', cursor: 'pointer' }}
+            className="btn-icon"
+            style={{ padding: '0.3rem 0.6rem', fontSize: '0.75rem' }}
           >
             ✕ Limpar
           </button>
@@ -300,30 +301,24 @@ export default function HistoryPage() {
 
               return (
                 <div key={group.alunoId} className="glass-card" style={{ padding: '0', overflow: 'hidden' }}>
-                  {/* Resumo do Aluno e Gráfico - Clique para expandir */}
                   <div
-                    className="hover-row history-group-summary"
-                    style={{
-                      background: isExpanded ? 'var(--btn-outline-hover-bg)' : 'transparent',
-                      borderBottom: isExpanded ? '1px solid var(--glass-border)' : 'none'
-                    }}
+                    className={`hover-row history-group-summary ${isExpanded ? 'expanded' : ''}`}
                     onClick={() => setExpandedStudentId(isExpanded ? null : group.alunoId)}
                   >
                     <div className="history-group-meta">
-                      <h3 style={{ fontSize: '1.25rem', fontWeight: 700, margin: 0, color: 'var(--text-main)' }}>
+                      <h3 className="history-group-title">
                         {anonymizeName(group.alunoId, group.aluno?.nome || 'Aluno Desconhecido')}
                       </h3>
-                      <div style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '0.25rem' }}>
+                      <div className="history-group-subtitle">
                         {group.aluno?.serie ? `${group.aluno.serie} - Turma ${group.aluno.turma}` : 'Sem turma informada'} • {group.evaluations.length} avaliaç{group.evaluations.length !== 1 ? 'ões' : 'ão'}
                       </div>
                     </div>
 
                     {/* Gráfico em barras e resumos numéricos */}
                     <div className="history-group-insights">
-
                       {chartData.length >= 1 && (
                         <div className="history-chart-block">
-                          <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: '0.4rem', fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+                          <div className="mobile-data-label" style={{ marginBottom: "0.4rem" }}>
                             Evolução PCM
                           </div>
                           <div className="history-chart-canvas">
@@ -332,7 +327,6 @@ export default function HistoryPage() {
                                 const maxPcm = Math.max(1, ...chartData.map(c => c.pcm || 0));
                                 const points = chartData.map((ev, i) => {
                                   const x = chartData.length === 1 ? 50 : (i / (chartData.length - 1)) * 100;
-                                  // Inverter Y para SVG, adicionando padding de 4px para os círculos
                                   const y = 32 - ((ev.pcm || 0) / maxPcm) * 28;
                                   return { x, y, pcm: ev.pcm, date: ev.data, color: getLevelColor(ev.pcm) };
                                 });
@@ -380,18 +374,13 @@ export default function HistoryPage() {
                       )}
 
                       <div className="history-summary-stat">
-                        <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 600, marginBottom: '0.2rem', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Último PCM</div>
-                        <div style={{ color: getLevelColor(latestEv.pcm), fontSize: '1.6rem', fontWeight: 900, lineHeight: 1 }}>
+                        <div className="mobile-data-label">Último PCM</div>
+                        <div className="latest-pcm-value" style={{ color: getLevelColor(latestEv.pcm) }}>
                           {latestEv.pcm}
                         </div>
                       </div>
 
-                      <div className="history-expand-indicator" style={{
-                        color: 'var(--text-muted)',
-                        transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                        transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
-                        background: 'var(--btn-outline-hover-bg)'
-                      }}>
+                      <div className={`history-expand-indicator ${isExpanded ? 'is-expanded' : ''}`}>
                         ▼
                       </div>
                     </div>
@@ -399,17 +388,17 @@ export default function HistoryPage() {
 
                   {/* Lista aninhada de avaliações */}
                   {isExpanded && (
-                    <div style={{ background: 'var(--bg-deep)', opacity: 0.8 }} className="animate-in fade-in slide-in-from-top-2 duration-300">
+                    <div className="history-details-expanded">
                       <div className="desktop-only-view">
                         <div className="table-scroll">
-                          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                          <table className="history-table">
                             <thead>
-                              <tr style={{ borderBottom: '1px solid var(--glass-border)' }}>
-                                <th style={{ padding: '1rem 2rem', textAlign: 'left', fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 800 }}>DATA</th>
-                                <th style={{ padding: '1rem 2rem', textAlign: 'left', fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 800 }}>PCM</th>
-                                <th style={{ padding: '1rem 2rem', textAlign: 'left', fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 800 }}>PRECISÃO</th>
-                                <th style={{ padding: '1rem 2rem', textAlign: 'left', fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 800 }}>DIAG ALUNO</th>
-                                <th style={{ padding: '1rem 2rem', textAlign: 'left', fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 800 }}>ANÁLISE IA</th>
+                              <tr>
+                                <th>DATA</th>
+                                <th>PCM</th>
+                                <th>PRECISÃO</th>
+                                <th>DIAG ALUNO</th>
+                                <th>ANÁLISE IA</th>
                               </tr>
                             </thead>
                             <tbody>
@@ -417,38 +406,25 @@ export default function HistoryPage() {
                                 <tr
                                   key={ev.id}
                                   className="hover-row"
-                                  style={{
-                                    background: group.aluno?.diagnostico ? getDiagnosisStyle(group.aluno.diagnostico).bg : 'transparent',
-                                    borderBottom: idx === group.evaluations.length - 1 ? 'none' : '1px solid var(--glass-border)',
-                                    cursor: 'pointer'
-                                  }}
                                   onClick={() => router.push(`/history/${ev.id}`)}
                                 >
-                                  <td style={{ padding: '1rem 2rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>{formatDate(ev.data)}</td>
-                                  <td style={{ padding: '1rem 2rem' }}>
-                                    <span style={{ color: getLevelColor(ev.pcm), fontWeight: 800, fontSize: '0.9rem' }}>{ev.pcm}</span>
+                                  <td>{formatDate(ev.data)}</td>
+                                  <td>
+                                    <span className="pcm-value" style={{ color: getLevelColor(ev.pcm) }}>{ev.pcm}</span>
                                   </td>
-                                  <td style={{ padding: '1rem 2rem', fontSize: '0.9rem' }}>{ev.precisao}%</td>
-                                  <td style={{ padding: '1rem 2rem' }}>
-                                    {group.aluno?.diagnostico ? (() => {
-                                      const style = getDiagnosisStyle(group.aluno.diagnostico);
-                                      return (
-                                        <span style={{
-                                          color: style.text,
-                                          background: style.bg,
-                                          padding: '0.2rem 0.6rem',
-                                          borderRadius: '12px',
-                                          fontSize: '0.75rem',
-                                          fontWeight: 800,
-                                          letterSpacing: '0.02em',
-                                          border: `1px solid ${style.text}44`
-                                        }}>
-                                          {group.aluno.diagnostico.toUpperCase()}
-                                        </span>
-                                      );
-                                    })() : <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>Sem diagnóstico</span>}
+                                  <td>{ev.precisao}%</td>
+                                  <td>
+                                    {group.aluno?.diagnostico ? (
+                                      <span className="perf-chip" style={{
+                                        color: getDiagnosisStyle(group.aluno.diagnostico).text,
+                                        background: getDiagnosisStyle(group.aluno.diagnostico).bg,
+                                        border: `1px solid ${getDiagnosisStyle(group.aluno.diagnostico).text}44`
+                                      }}>
+                                        {group.aluno.diagnostico.toUpperCase()}
+                                      </span>
+                                    ) : <span className="mobile-data-label">Sem diagnóstico</span>}
                                   </td>
-                                  <td style={{ padding: '1rem 2rem', fontSize: '0.8rem', maxWidth: '300px', color: 'var(--text-muted)', fontStyle: 'italic', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                  <td className="ai-analysis-cell">
                                     {anonymizeText(ev.diagnosticoIA)}
                                   </td>
                                 </tr>
@@ -457,7 +433,7 @@ export default function HistoryPage() {
                           </table>
                         </div>
                       </div>
-                      <div className="mobile-only-view" style={{ padding: '1rem' }}>
+                      <div className="mobile-only-view">
                         <MobileCardList testId="history-mobile-cards">
                           {group.evaluations.map((ev) => (
                             <MobileCard

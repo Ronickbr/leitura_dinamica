@@ -66,7 +66,7 @@ export default function SelectionPage() {
   return (
     <div className="animate-in" style={{ paddingBottom: '4rem' }}>
       <header className="page-header">
-        <div className="page-header-content" style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem' }}>
+        <div className="page-header-content">
           <button
             onClick={() => router.push('/')}
             className="btn-outline-round"
@@ -74,62 +74,55 @@ export default function SelectionPage() {
           >
             ⬅️
           </button>
-          <div style={{ minWidth: 0 }}>
+          <div className="page-header-info">
             <h2 className="page-title">Seleção de <span style={{ color: 'var(--primary)' }}>Estudante</span></h2>
             <p className="page-subtitle">Escolha um aluno para iniciar a avaliação.</p>
           </div>
         </div>
       </header>
 
-      <div className="glass-panel" style={{ padding: '1rem 1.5rem', marginBottom: '2rem', borderRadius: '16px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', flexWrap: 'wrap' }}>
-          <span style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Filtros Ativos:</span>
-
-          <div style={{ display: 'flex', gap: '1rem', flex: 1, minWidth: '300px' }}>
-            <div style={{ position: 'relative', flex: 1 }}>
-              <span style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', opacity: 0.5 }}><SearchIcon /></span>
-              <input
-                type="text"
-                placeholder="Pesquisar por nome..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="glass-panel"
-                style={{ width: '100%', padding: '0.6rem 1rem 0.6rem 2.5rem', fontSize: '0.9rem', color: 'var(--text-main)', border: '1px solid var(--glass-border)' }}
-              />
-            </div>
+      <div className="filter-bar">
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flex: 1, minWidth: '300px' }}>
+          <div style={{ position: 'relative', flex: 1 }}>
+            <span style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', opacity: 0.5 }}><SearchIcon /></span>
+            <input
+              type="text"
+              placeholder="Pesquisar por nome..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="glass-panel"
+              style={{ width: '100%', paddingLeft: '2.5rem' }}
+            />
           </div>
+        </div>
 
-          <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-            <select
-              value={selectedSerie}
-              onChange={e => setSelectedSerie(e.target.value)}
-              className="glass-panel"
-              style={{ padding: '0.6rem 1rem', color: 'var(--text-main)', borderRadius: '10px', fontSize: '0.85rem' }}
-            >
-              <option value="Todas">Todas as Séries</option>
-              {series.filter(s => s !== 'Todas').map(s => <option key={s} value={s}>{s}</option>)}
-            </select>
+        <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+          <select
+            value={selectedSerie}
+            onChange={e => setSelectedSerie(e.target.value)}
+            className="filter-select"
+          >
+            <option value="Todas">Todas as Séries</option>
+            {series.filter(s => s !== 'Todas').map(s => <option key={s} value={s}>{s}</option>)}
+          </select>
 
-            <select
-              value={selectedTurma}
-              onChange={e => setSelectedTurma(e.target.value)}
-              className="glass-panel"
-              style={{ padding: '0.6rem 1rem', color: 'var(--text-main)', borderRadius: '10px', fontSize: '0.85rem' }}
-            >
-              <option value="Todas">Todas as Turmas</option>
-              {turmas.filter(t => t !== 'Todas').map(t => <option key={t} value={t}>{t}</option>)}
-            </select>
+          <select
+            value={selectedTurma}
+            onChange={e => setSelectedTurma(e.target.value)}
+            className="filter-select"
+          >
+            <option value="Todas">Todas as Turmas</option>
+            {turmas.filter(t => t !== 'Todas').map(t => <option key={t} value={t}>{t}</option>)}
+          </select>
 
-            <select
-              value={selectedDiag}
-              onChange={e => setSelectedDiag(e.target.value)}
-              className="glass-panel"
-              style={{ padding: '0.6rem 1rem', color: 'var(--text-main)', borderRadius: '10px', fontSize: '0.85rem' }}
-            >
-              <option value="Todos">Todos Diagnósticos</option>
-              {diagnos.filter(d => d !== 'Todos').map(d => <option key={d} value={d}>{d}</option>)}
-            </select>
-          </div>
+          <select
+            value={selectedDiag}
+            onChange={e => setSelectedDiag(e.target.value)}
+            className="filter-select"
+          >
+            <option value="Todos">Todos Diagnósticos</option>
+            {diagnos.filter(d => d !== 'Todos').map(d => <option key={d} value={d}>{d}</option>)}
+          </select>
         </div>
       </div>
 
