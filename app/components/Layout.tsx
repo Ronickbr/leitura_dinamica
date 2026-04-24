@@ -113,57 +113,39 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   ];
 
   return (
-    <div className="app-shell" style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
+    <div className="app-shell">
       <header className="app-header-fixed glass-panel">
-        <div className="container app-header-content" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0.5rem 1rem" }}>
-          <Link href="/" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: "0.5rem" }}>
-            <span style={{ fontSize: "1.5rem", fontWeight: 900 }}>📖</span>
-            <span style={{ fontSize: "1.1rem", fontWeight: 800 }} className="app-title">Fluência <span style={{ color: "var(--primary)" }}>Leitora</span></span>
+        <div className="container app-header-content">
+          <Link href="/" className="app-title">
+            <span className="logo-emoji">📖</span>
+            <span>Fluência <span style={{ color: "var(--primary)" }}>Leitora</span></span>
           </Link>
 
-          <nav className="desktop-nav" style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+          <nav className="desktop-nav">
             {navItems.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
-                style={{
-                  padding: "0.5rem 1rem",
-                  borderRadius: "12px",
-                  textDecoration: "none",
-                  color: pathname === item.href ? "var(--primary)" : "var(--text-muted)",
-                  background: pathname === item.href ? "rgba(99, 102, 241, 0.1)" : "transparent",
-                  fontSize: "0.9rem",
-                  fontWeight: 600,
-                  transition: "all 0.2s ease",
-                }}
+                className={`desktop-nav-link ${pathname === item.href ? 'active' : ''}`}
+                style={{ color: pathname === item.href ? "var(--primary)" : undefined }}
               >
                 {item.label}
               </Link>
             ))}
           </nav>
 
-          <div className="app-header-actions" style={{ display: "flex", alignItems: "center", gap: "1rem", position: "relative" }}>
+          <div className="user-nav">
             <ThemeToggle />
             <button
               onClick={() => setShowUserDropdown(!showUserDropdown)}
               className="app-user-button"
               aria-expanded={showUserDropdown}
               aria-label="Abrir menu do usuário"
-              style={{
-                background: "transparent",
-                border: "none",
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                gap: "0.5rem",
-                minWidth: isTouchDevice ? "44px" : undefined,
-                minHeight: isTouchDevice ? "44px" : undefined,
-              }}
             >
               {user.photoURL ? (
-                <img src={user.photoURL} alt={user.displayName || "Usuário"} style={{ width: "36px", height: "36px", borderRadius: "50%" }} />
+                <img src={user.photoURL} alt={user.displayName || "Usuário"} style={{ width: "32px", height: "32px", borderRadius: "50%" }} />
               ) : (
-                <div style={{ width: "36px", height: "36px", borderRadius: "50%", background: "var(--primary)", display: "flex", alignItems: "center", justifyContent: "center", color: "white", fontWeight: "bold" }}>
+                <div className="user-avatar">
                   {user.email?.charAt(0).toUpperCase() || "U"}
                 </div>
               )}
@@ -181,17 +163,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 )}
                 <div
                   className={`glass-card user-dropdown ${isMobile ? "user-dropdown-mobile" : "user-dropdown-desktop"}`}
-                  style={{
-                    position: "absolute",
-                    top: "100%",
-                    right: 0,
-                    marginTop: "0.5rem",
-                    padding: "0.5rem",
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: "0.25rem",
-                    minWidth: "220px",
-                  }}
                 >
                   <div style={{ padding: "0.75rem", borderBottom: "1px solid var(--glass-border)", marginBottom: "0.5rem" }}>
                     <span style={{ fontSize: "0.75rem", color: "var(--text-muted)", display: "block" }}>Logado como</span>
@@ -226,7 +197,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         </div>
       </header>
 
-      <main className="container page-content" style={{ padding: "2rem", paddingTop: "6rem", flex: 1 }}>
+      <main className="container page-content">
         {children}
       </main>
 

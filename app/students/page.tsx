@@ -104,7 +104,7 @@ export default function StudentsPage() {
   return (
     <div className="animate-in" style={{ paddingBottom: '4rem' }}>
       <header className="page-header">
-        <div className="page-header-content" style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem' }}>
+        <div className="page-header-content">
           <button
             onClick={() => router.push('/')}
             className="btn-outline-round"
@@ -112,12 +112,12 @@ export default function StudentsPage() {
           >
             ⬅️
           </button>
-          <div style={{ minWidth: 0 }}>
+          <div className="page-header-info">
             <h2 className="page-title">Gerenciar <span style={{ color: 'var(--primary)' }}>Alunos</span></h2>
             <p className="page-subtitle">Cadastre e gerencie os estudantes cadastrados no sistema.</p>
           </div>
         </div>
-        <button onClick={() => { if (showForm) { setEditingId(null); setFormData({ nome: '', turma: '', serie: '', turno: '', diagnostico: '', observacoes: '', anoLetivo: new Date().getFullYear().toString(), metaPCM: 0 }); } setShowForm(!showForm); }} className="btn-primary" style={{ flexShrink: 0 }}>
+        <button onClick={() => { if (showForm) { setEditingId(null); setFormData({ nome: '', turma: '', serie: '', turno: '', diagnostico: '', observacoes: '', anoLetivo: new Date().getFullYear().toString(), metaPCM: 0 }); } setShowForm(!showForm); }} className="btn-primary">
           {showForm ? 'Cancelar' : '+ Novo'}
         </button>
       </header>
@@ -125,13 +125,13 @@ export default function StudentsPage() {
       {showForm && (
         <form onSubmit={handleSubmit} className="glass-card animate-in fade-in slide-in-from-top-4 duration-500" style={{ marginBottom: '2rem', padding: '2rem' }}>
           <h3 style={{ marginBottom: '1.5rem', fontWeight: 800, fontSize: '1.25rem' }}>{editingId ? '✏️ Editar Aluno' : '✨ Novo Aluno'}</h3>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem', marginBottom: '1.5rem' }}>
+          <div className="responsive-form-grid" style={{ marginBottom: '1.5rem' }}>
             <div className="form-group">
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.85rem', fontWeight: 600 }}>Nome Completo</label>
-              <input required value={formData.nome} onChange={e => setFormData({ ...formData, nome: e.target.value })} placeholder="Ex: João Silva" className="glass-panel" style={{ width: '100%', padding: '0.75rem', color: 'var(--text-main)', border: '1px solid var(--glass-border)' }} />
+              <label className="mobile-data-label">Nome Completo</label>
+              <input required value={formData.nome} onChange={e => setFormData({ ...formData, nome: e.target.value })} placeholder="Ex: João Silva" className="glass-panel" style={{ width: '100%' }} />
             </div>
             <div className="form-group">
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.85rem', fontWeight: 600 }}>Série/Ano</label>
+              <label className="mobile-data-label">Série/Ano</label>
               <select
                 required
                 value={formData.serie}
@@ -148,7 +148,7 @@ export default function StudentsPage() {
                   setFormData({ ...formData, serie: val, metaPCM: suggestedMeta });
                 }}
                 className="glass-panel"
-                style={{ width: '100%', padding: '0.75rem', color: 'var(--text-main)', border: '1px solid var(--glass-border)' }}
+                style={{ width: '100%' }}
               >
                 <option value="">Selecione...</option>
                 <option value="1º Ano">1º Ano (Fund. I)</option>
@@ -161,18 +161,18 @@ export default function StudentsPage() {
               </select>
             </div>
             <div className="form-group">
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.85rem', fontWeight: 600 }}>Turma</label>
-              <input required value={formData.turma} onChange={e => setFormData({ ...formData, turma: e.target.value })} placeholder="Ex: A" className="glass-panel" style={{ width: '100%', padding: '0.75rem', color: 'var(--text-main)', border: '1px solid var(--glass-border)' }} />
+              <label className="mobile-data-label">Turma</label>
+              <input required value={formData.turma} onChange={e => setFormData({ ...formData, turma: e.target.value })} placeholder="Ex: A" className="glass-panel" style={{ width: '100%' }} />
             </div>
             <div className="form-group">
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.85rem', fontWeight: 600 }}>Meta de PCM</label>
+              <label className="mobile-data-label">Meta de PCM</label>
               <input
                 type="number"
                 value={formData.metaPCM}
                 onChange={e => setFormData({ ...formData, metaPCM: parseInt(e.target.value) || 0 })}
                 placeholder="Ex: 80"
                 className="glass-panel"
-                style={{ width: '100%', padding: '0.75rem', color: 'var(--text-main)', border: '1px solid var(--glass-border)' }}
+                style={{ width: '100%' }}
               />
               <small style={{ color: 'var(--text-muted)', fontSize: '0.7rem' }}>Sugerido para esta série se vazio.</small>
             </div>
@@ -194,8 +194,8 @@ export default function StudentsPage() {
       ) : (
         <>
           {/* Barra de Filtros */}
-          <div className="glass-card" style={{ marginBottom: '2rem', padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+          <div className="glass-card" style={{ marginBottom: '2rem', padding: '1.5rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem' }}>
               <span style={{ fontSize: '1.2rem' }}>🔍</span>
               <h3 style={{ fontSize: '1rem', fontWeight: 700, margin: 0 }}>Filtros de Busca</h3>
             </div>
@@ -206,7 +206,6 @@ export default function StudentsPage() {
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
                 className="glass-panel"
-                style={{ padding: '0.6rem 1rem', fontSize: '0.9rem', color: 'var(--text-main)', border: '1px solid var(--glass-border)' }}
               />
               <input
                 type="text"
@@ -214,13 +213,11 @@ export default function StudentsPage() {
                 value={filterTurma}
                 onChange={e => setFilterTurma(e.target.value)}
                 className="glass-panel"
-                style={{ padding: '0.6rem 1rem', fontSize: '0.9rem', color: 'var(--text-main)', border: '1px solid var(--glass-border)' }}
               />
               <select
                 value={filterSerie}
                 onChange={e => setFilterSerie(e.target.value)}
                 className="glass-panel"
-                style={{ padding: '0.6rem 1rem', fontSize: '0.9rem', color: 'var(--text-main)', border: '1px solid var(--glass-border)' }}
               >
                 <option value="">Todas as séries</option>
                 <option value="1º Ano">1º Ano</option>
@@ -235,7 +232,6 @@ export default function StudentsPage() {
                 value={filterDiagnostico}
                 onChange={e => setFilterDiagnostico(e.target.value)}
                 className="glass-panel"
-                style={{ padding: '0.6rem 1rem', fontSize: '0.9rem', color: 'var(--text-main)', border: '1px solid var(--glass-border)' }}
               />
               <input
                 type="number"
@@ -243,7 +239,6 @@ export default function StudentsPage() {
                 value={filterAnoLetivo}
                 onChange={e => setFilterAnoLetivo(e.target.value)}
                 className="glass-panel"
-                style={{ padding: '0.6rem 1rem', fontSize: '0.9rem', color: 'var(--text-main)', border: '1px solid var(--glass-border)' }}
               />
             </div>
             {(searchTerm || filterTurma || filterSerie || filterDiagnostico) && (

@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { writeFile, unlink } from "fs/promises";
+import os from "os";
+import path from "path";
 import { processReadingAudio } from "@/lib/analysisService";
 
 import { z } from "zod";
@@ -39,12 +41,12 @@ export async function POST(req: NextRequest) {
     const history = formData.get("history");
 
     // Validação com Zod
-    const validation = uploadSchema.safeParse({ 
-      file, 
-      originalText, 
-      studentGrade: studentGrade || undefined, 
-      targetPCM: targetPCM || undefined, 
-      history: history || undefined 
+    const validation = uploadSchema.safeParse({
+      file,
+      originalText,
+      studentGrade: studentGrade || undefined,
+      targetPCM: targetPCM || undefined,
+      history: history || undefined
     });
 
     if (!validation.success) {
@@ -72,7 +74,7 @@ export async function POST(req: NextRequest) {
 
     const bytes = await validatedFile.arrayBuffer();
     const buffer = Buffer.from(bytes);
-    tempPath = `/tmp/leitura-${Date.now()}-${validatedFile.name.replace(/\s+/g, "_")}`;
+    tempPath = path.join(os.tmpdir(), `leitura-${Date.now()}-${validatedFile.name.replace(/\s+/g, "_")}`);
     await writeFile(tempPath, buffer);
 
     console.log(

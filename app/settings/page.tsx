@@ -114,10 +114,15 @@ export default function SettingsPage() {
                 const turno = idxTurno !== -1 && row[idxTurno] ? row[idxTurno] : "Manhã";
                 const diagnostico = idxDiag !== -1 && row[idxDiag] ? row[idxDiag] : "Nenhum";
 
-                // Normalização de série (ex: "3" ou "3º" -> "3º Ano")
+                // Normalização de série (ex: "3", "3º", "3o", "3 Ano" -> "3º Ano")
                 let serie = String(serieRaw).trim();
-                if (/^\d+º?$/.test(serie)) {
-                    serie = serie.endsWith("º") ? `${serie} Ano` : `${serie}º Ano`;
+                // Tenta extrair o número da série (ex: "3º ano" -> 3)
+                const numMatch = serie.match(/(\d+)/);
+                if (numMatch) {
+                    const num = numMatch[1];
+                    serie = `${num}º Ano`;
+                } else if (!serie) {
+                    serie = "1º Ano";
                 }
 
                 // Verifica duplicata localmente antes de tentar salvar

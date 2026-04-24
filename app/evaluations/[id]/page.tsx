@@ -47,11 +47,24 @@ export default function ReadingPage() {
 
         if (studentData) {
           setAluno(studentData);
-          const filtered = allTexts.filter(t =>
-            t.serie.toLowerCase().trim() === studentData.serie.toLowerCase().trim()
-          );
+
+          const studentSerieNorm = studentData.serie.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+
+          const filtered = allTexts.filter(t => {
+            const textSerieNorm = t.serie.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+
+            // Tenta match exato ou match parcial se houver números iguais (resiliência)
+            if (studentSerieNorm === textSerieNorm) return true;
+
+            const sNum = studentData.serie.match(/(\d+)/)?.[1];
+            const tNum = t.serie.match(/(\d+)/)?.[1];
+            return sNum && tNum && sNum === tNum;
+          });
+
           setTextosDisponiveis(filtered);
-          if (filtered.length > 0) setTexto(filtered[0]);
+          if (filtered.length > 0) {
+            setTexto(filtered[0]);
+          }
           setHistorico(studentHistory);
         }
       } catch (err) {
@@ -190,8 +203,8 @@ export default function ReadingPage() {
 
   return (
     <div className="animate-in" style={{ paddingBottom: '4rem' }}>
-      <header className="page-header evaluation-header" style={{ marginBottom: '2rem' }}>
-        <div className="page-header-content" style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem' }}>
+      <header className="page-header evaluation-header">
+        <div className="page-header-content">
           <button
             onClick={() => router.push('/evaluations/new')}
             className="btn-outline-round"
@@ -199,11 +212,11 @@ export default function ReadingPage() {
           >
             ⬅️
           </button>
-          <div style={{ minWidth: 0 }}>
-            <h2 className="page-title" style={{ fontSize: 'clamp(1.5rem, 4vw, 2.1rem)', marginBottom: '0.3rem' }}>
+          <div className="evaluation-header-info">
+            <h2 className="page-title">
               Avaliação de <span style={{ color: 'var(--primary)' }}>Fluência</span>
             </h2>
-            <p className="page-subtitle" style={{ marginBottom: '0.9rem' }}>
+            <p className="page-subtitle">
               Aluno: <strong>{aluno?.nome}</strong> ({aluno?.turma})
             </p>
             <div className="evaluation-meta-chips">
@@ -219,8 +232,8 @@ export default function ReadingPage() {
         <div className="glass-card evaluation-text-card">
           <div className="evaluation-text-header">
             <div>
-              <h3 style={{ fontSize: '1.2rem', marginBottom: '0.4rem' }}>{texto?.titulo}</h3>
-              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', background: 'rgba(255,255,255,0.05)', padding: '0.3rem 0.65rem', borderRadius: '999px', display: 'inline-flex' }}>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: '0.5rem' }}>{texto?.titulo}</h3>
+              <span className="perf-chip">
                 {texto?.serie}
               </span>
             </div>
@@ -230,15 +243,22 @@ export default function ReadingPage() {
                 onChange={e => setTexto(textosDisponiveis.find(t => t.id === e.target.value) || null)}
                 className="glass-panel evaluation-text-select"
                 aria-label="Selecionar texto"
-                style={{ padding: '0.6rem 0.85rem', fontSize: '0.9rem', color: 'var(--text-main)' }}
               >
                 {textosDisponiveis.map(t => <option key={t.id} value={t.id}>{t.titulo}</option>)}
               </select>
             )}
           </div>
-          <p className="evaluation-reading-text" style={{ fontStyle: isRecording ? 'italic' : 'normal' }}>
-            {texto?.conteudo}
-          </p>
+          {texto ? (
+            <p className="evaluation-reading-text" style={{ fontStyle: isRecording ? 'italic' : 'normal' }}>
+              {texto.conteudo}
+            </p>
+          ) : (
+            <div className="empty-state-card" style={{ padding: '3rem', textAlign: 'center' }}>
+              <p style={{ fontWeight: 800, marginBottom: '0.5rem', color: 'var(--error)' }}>📚 Nenhum texto encontrado</p>
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Não existem textos cadastrados para a série <strong>{aluno?.serie}</strong>.</p>
+              <button onClick={() => router.push('/texts')} className="btn-outline" style={{ marginTop: '1.5rem' }}>Ir para Biblioteca</button>
+            </div>
+          )}
         </div>
 
         <div className="evaluation-sidebar">
@@ -247,27 +267,27 @@ export default function ReadingPage() {
               <span className="perf-chip">{isRecording ? 'Gravando' : isFinished ? 'Pronto para revisar' : 'Aguardando'}</span>
               <span className="perf-chip">{isMobile ? 'Modo mobile' : 'Modo desktop'}</span>
             </div>
-            <div className="evaluation-timer" style={{ color: timeLeft <= 10 ? 'var(--accent)' : 'var(--text-main)' }}>
+            <div className="evaluation-timer" style={{ color: timeLeft <= 10 ? 'var(--error)' : 'var(--text-main)' }}>
               00:{timeLeft < 10 ? `0${timeLeft}` : timeLeft}
             </div>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '1.5rem', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700 }}>
+            <p className="mobile-data-label" style={{ marginBottom: '1.5rem' }}>
               Segundos restantes
             </p>
 
             {!isRecording && !isFinished && (
-              <button onClick={startRecording} className="btn-primary evaluation-primary-action" style={{ width: '100%', padding: '1.1rem 1.25rem', borderRadius: '18px' }}>
+              <button onClick={startRecording} className="btn-primary evaluation-primary-action" style={{ width: '100%' }}>
                 <MicIcon /> Iniciar gravação
               </button>
             )}
             {isRecording && (
-              <button onClick={stopRecording} className="btn-primary evaluation-primary-action" style={{ width: '100%', background: 'var(--accent)', padding: '1.1rem 1.25rem', borderRadius: '18px' }}>
+              <button onClick={stopRecording} className="btn-primary evaluation-primary-action" style={{ width: '100%', background: 'var(--error)' }}>
                 <SquareIcon /> Parar gravação
               </button>
             )}
             {isFinished && (
               <div className="evaluation-finished-actions">
-                <audio src={audioUrl || ''} controls className="evaluation-audio-player" style={{ width: '100%' }} />
-                <button onClick={handleFinish} className="btn-primary" disabled={processing} style={{ width: '100%', background: 'var(--success)' }}>
+                <audio src={audioUrl || ''} controls className="evaluation-audio-player" />
+                <button onClick={handleFinish} className="btn-primary" disabled={processing} style={{ width: '100%' }}>
                   {processing ? 'Analisando...' : <><CheckCircleIcon /> Revisar resultado</>}
                 </button>
                 <button onClick={() => { setAudioUrl(null); setIsFinished(false); }} className="btn-outline" style={{ width: '100%' }}>
@@ -298,28 +318,28 @@ export default function ReadingPage() {
 
             <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem", marginBottom: "2rem" }}>
               <div>
-                <p style={{ fontSize: "0.85rem", color: "var(--text-muted)", marginBottom: "0.5rem" }}>RESULTADO QUANTITATIVO</p>
-                <div className="evaluation-results-grid" style={{ background: "var(--glass-bg)", padding: "1rem", borderRadius: "12px", border: "1px solid var(--glass-border)" }}>
+                <p className="mobile-data-label" style={{ marginBottom: "0.5rem" }}>RESULTADO QUANTITATIVO</p>
+                <div className="evaluation-results-grid glass-panel" style={{ padding: "1rem" }}>
                   <div>
-                    <div style={{ fontSize: "1.5rem", fontWeight: 900, color: "var(--primary)" }}>{tempResult.pcm}</div>
-                    <div style={{ fontSize: "0.7rem", color: "var(--text-muted)" }}>PCM</div>
+                    <div style={{ fontSize: "1.75rem", fontWeight: 900, color: "var(--primary)" }}>{tempResult.pcm}</div>
+                    <div className="mobile-data-label">PCM</div>
                   </div>
                   <div>
-                    <div style={{ fontSize: "1.5rem", fontWeight: 900, color: "var(--success)" }}>{tempResult.metrics.precisao}%</div>
-                    <div style={{ fontSize: "0.7rem", color: "var(--text-muted)" }}>PRECISÃO</div>
+                    <div style={{ fontSize: "1.75rem", fontWeight: 900, color: "var(--success)" }}>{tempResult.metrics.precisao}%</div>
+                    <div className="mobile-data-label">PRECISÃO</div>
                   </div>
                 </div>
               </div>
 
               {tempResult.analysis.analise_evolucao && (
-                <div style={{ background: "rgba(59, 130, 246, 0.1)", padding: "1rem", borderRadius: "12px", border: "1px solid var(--primary)" }}>
-                  <p style={{ fontSize: "0.85rem", color: "var(--primary)", fontWeight: 700, marginBottom: "0.3rem" }}>📈 ANÁLISE DE EVOLUÇÃO</p>
-                  <p style={{ fontSize: "0.9rem", color: "var(--text-main)" }}>{tempResult.analysis.analise_evolucao}</p>
+                <div className="glass-panel" style={{ background: "rgba(99, 102, 241, 0.1)", padding: "1.25rem", borderColor: "var(--primary)" }}>
+                  <p className="mobile-data-label" style={{ color: "var(--primary)", marginBottom: "0.5rem" }}>📈 ANÁLISE DE EVOLUÇÃO</p>
+                  <p style={{ fontSize: "0.95rem", lineHeight: 1.6 }}>{tempResult.analysis.analise_evolucao}</p>
                 </div>
               )}
 
               <div>
-                <p style={{ fontSize: "0.85rem", color: "var(--text-muted)", marginBottom: "1rem" }}>MÉTRICAS QUALITATIVAS (TOQUE PARA ALTERAR)</p>
+                <p className="mobile-data-label" style={{ marginBottom: "1rem" }}>MÉTRICAS QUALITATIVAS (TOQUE PARA ALTERAR)</p>
                 <div className="evaluation-metrics-list">
                   {qualitativeMetrics.map((m) => (
                     <div
@@ -327,21 +347,17 @@ export default function ReadingPage() {
                       onClick={() => toggleMetric(m.key)}
                       className="evaluation-metric-card"
                       style={{
-                        background: tempResult.analysis.metricas_qualitativas[m.key] ? "rgba(16, 185, 129, 0.1)" : "var(--glass-bg)",
-                        border: `1px solid ${tempResult.analysis.metricas_qualitativas[m.key] ? "var(--success)" : "var(--glass-border)"}`,
+                        background: tempResult.analysis.metricas_qualitativas[m.key] ? "rgba(16, 185, 129, 0.1)" : undefined,
+                        borderColor: tempResult.analysis.metricas_qualitativas[m.key] ? "var(--success)" : undefined,
                       }}
                     >
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.4rem" }}>
-                        <span style={{ fontWeight: 700, fontSize: "0.95rem" }}>{m.icon} {m.label}</span>
-                        <span style={{
-                          fontSize: "0.75rem",
-                          fontWeight: 900,
-                          color: tempResult.analysis.metricas_qualitativas[m.key] ? "var(--success)" : "var(--text-muted)"
-                        }}>
+                        <span style={{ fontWeight: 800, fontSize: "1rem" }}>{m.icon} {m.label}</span>
+                        <span className="mobile-data-label" style={{ color: tempResult.analysis.metricas_qualitativas[m.key] ? "var(--success)" : undefined }}>
                           {tempResult.analysis.metricas_qualitativas[m.key] ? "SIM" : "NÃO"}
                         </span>
                       </div>
-                      <p style={{ fontSize: "0.8rem", color: "var(--text-muted)", fontStyle: "italic" }}>
+                      <p style={{ fontSize: "0.85rem", color: "var(--text-muted)", fontStyle: "italic", lineHeight: 1.5 }}>
                         {tempResult.analysis.metricas_qualitativas[`${m.key}_justificativa`]}
                       </p>
                     </div>

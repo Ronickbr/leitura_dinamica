@@ -117,16 +117,16 @@ export default function Dashboard() {
 
   return (
     <div className="animate-in" style={{ paddingBottom: '4rem' }}>
-      <header className="page-header" style={{ marginBottom: '3.5rem' }}>
+      <header className="page-header">
         <div className="page-header-content">
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap', marginBottom: '0.5rem' }}>
             <span className="perf-chip">Mobile Ready</span>
             <span className="perf-chip">UX Touch</span>
           </div>
-          <h1 className="page-title" style={{ fontWeight: 900 }}>
+          <h1 className="page-title">
             Painel de <span style={{ color: 'var(--primary)' }}>Controle</span>
           </h1>
-          <p className="page-subtitle" style={{ maxWidth: '600px' }}>
+          <p className="page-subtitle">
             Visão panorâmica do progresso de fluência leitora da sua turma.
           </p>
         </div>
@@ -137,7 +137,7 @@ export default function Dashboard() {
         </div>
       </header>
 
-      <div className="grid-cards" style={{ marginBottom: '3rem' }}>
+      <div className="grid-cards">
         <MetricCard title="Total Alunos" value={stats.totalStudents} icon={<UsersIcon />} color="var(--primary)" />
         <MetricCard title="Casos Críticos" value={stats.criticalCases} icon={<LightbulbIcon />} color="var(--accent)" />
         <MetricCard title="PCM Médio" value={stats.avgPCM} icon={<AwardIcon />} color="var(--success)" suffix="pal/min" />
@@ -204,7 +204,7 @@ function MetricCard({ title, value, icon, color, suffix = "" }: { title: string;
   return (
     <div className="glass-card metric-card" style={{ borderLeftColor: color }}>
       <div style={{ position: 'absolute', right: '-10px', top: '-10px', fontSize: '4rem', opacity: 0.05, transform: 'rotate(15deg)' }}>{icon}</div>
-      <div style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>{title}</div>
+      <div className="mobile-data-label" style={{ marginBottom: '0.5rem' }}>{title}</div>
       <div className="metric-card-value">
         <span style={{ fontSize: '2.5rem', fontWeight: 900 }}>{value}</span>
         {suffix && <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 700 }}>{suffix}</span>}
@@ -215,20 +215,20 @@ function MetricCard({ title, value, icon, color, suffix = "" }: { title: string;
 
 function QuickLink({ href, label, icon }: { href: string; label: string; icon: React.ReactNode }) {
   return (
-    <Link href={href} style={{
+    <Link href={href} className="hover-row" style={{
       display: 'flex',
       alignItems: 'center',
       gap: '0.75rem',
       textDecoration: 'none',
       color: 'var(--text-main)',
-      padding: '0.75rem',
-      borderRadius: '12px',
+      padding: '1rem',
+      borderRadius: '16px',
       background: 'var(--glass-bg)',
       border: '1px solid var(--glass-border)',
-      fontSize: '0.9rem',
-      fontWeight: 600
+      fontSize: '0.95rem',
+      fontWeight: 700
     }}>
-      <span style={{ fontSize: '1.1rem' }}>{icon}</span>
+      <span style={{ fontSize: '1.25rem' }}>{icon}</span>
       {label}
     </Link>
   );
