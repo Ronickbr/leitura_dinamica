@@ -90,11 +90,17 @@ async function getPedagogicalDiagnosis(
   originalText: string,
   transcription: string,
   studentGrade?: string,
-  targetPCM?: number
+  targetPCM?: number,
+  history?: any[]
 ) {
   const gradeNorm = studentGrade ? getNormaNacional(studentGrade) : 80;
   const gradeContext = studentGrade ? `O aluno é do ${studentGrade}. A norma nacional esperada para esta série é de ${gradeNorm} PCM.` : "O aluno é do 3º ano (contexto padrão).";
   const targetContext = targetPCM ? `A meta individual definida para este aluno é de ${targetPCM} PCM.` : "";
+
+  const historyContext = history && history.length > 0
+    ? `HISTÓRICO DE EVOLUÇÃO (Últimas ${history.length} avaliações):
+${history.map((h, i) => `  ${i + 1}. Data: ${new Date(h.data?.seconds * 1000).toLocaleDateString()}, PCM: ${h.pcm}, Diagnóstico: ${h.diagnosticoIA}`).join("\n")}`
+    : "Não há histórico de avaliações anteriores para este aluno.";
 
   const prompt = `
   Aja como uma Psicopedagoga Clínica especialista em alfabetização, neurociência da leitura e fluência leitora.
@@ -103,6 +109,8 @@ async function getPedagogicalDiagnosis(
   CONTEXTO DO ALUNO:
   - ${gradeContext}
   - ${targetContext}
+  
+  ${historyContext}
   
   DADOS DA AVALIAÇÃO ATUAL:
   - PCM (Palavras Corretas por Minuto): ${pcm}
@@ -121,14 +129,15 @@ async function getPedagogicalDiagnosis(
      - Analise a transcrição em busca de sinais de leitura silabada (excesso de pausas ou hesitações).
      - Verifique se a pontuação foi respeitada (pausas nos lugares certos).
   
-  3. Diagnóstico e Intervenção:
+  3. Diagnóstico, Evolução e Intervenção:
      - O diagnóstico deve ser técnico e preciso, focando na "Fase de Leitura" (Logográfica, Alfabética ou Ortográfica).
+     - Compare os dados atuais com o HISTÓRICO fornecido (se houver) para identificar se houve evolução, estagnação ou regressão.
      - A intervenção deve ser uma técnica baseada em evidências (ex: Leitura Repetida, Leitura Compartilhada, Treino de Consciência Fonológica).
 
   REGRAS DE RESPOSTA (JSON):
   Retorne APENAS um objeto JSON no seguinte formato:
   {
-    "diagnostico": "Máximo 3 linhas. Use termos técnicos como 'decodificação', 'automaticidade', 'prosódia'.",
+    "diagnostico": "Máximo 3 linhas. Use termos técnicos. Cite a evolução em relação ao histórico se aplicável.",
     "intervencao": "Máximo 2 linhas. Atividade prática baseada em evidências.",
     "metricas_qualitativas": {
       "leitura_precisa": boolean,
@@ -143,7 +152,8 @@ async function getPedagogicalDiagnosis(
       "pontuacao_justificativa": "Indicar se as pausas transcrevem a estrutura sintática."
     },
     "padrao_de_erro_detectado": "Categoria principal: fonológico, visual, lexical, omissão ou adivinhação.",
-    "nivel_de_confianca": number (1 a 100, baseado na clareza da transcrição vs texto base)
+    "nivel_de_confianca": number (1 a 100, baseado na clareza da transcrição vs texto base),
+    "analise_evolucao": "Breve comentário (1 linha) sobre o progresso do aluno comparado ao histórico."
   }
 
   ATENÇÃO: Requer-se ALTA PRECISÃO. Se a precisão original estiver abaixo de 80%, 'leitura_precisa' DEVE ser false. Se houver muitas vírgulas ignoradas na transcrição, 'pontuacao' DEVE ser false. Use as justificativas para mostrar que você analisou detalhadamente a transcrição.
@@ -181,6 +191,7 @@ interface ProcessAudioParams {
   filename: string;
   studentGrade?: string;
   targetPCM?: number;
+  history?: any[];
 }
 
 interface ProcessAudioResult {
@@ -211,6 +222,7 @@ interface ProcessAudioResult {
     };
     padrao_de_erro_detectado: string;
     nivel_de_confianca: number;
+    analise_evolucao?: string;
   };
 }
 
@@ -220,6 +232,7 @@ export async function processReadingAudio({
   filename,
   studentGrade,
   targetPCM,
+  history,
 }: ProcessAudioParams): Promise<ProcessAudioResult> {
   const sanitizedOriginalText = sanitizeInput(originalText);
 
@@ -253,7 +266,8 @@ export async function processReadingAudio({
     sanitizedOriginalText,
     transcription,
     studentGrade,
-    targetPCM
+    targetPCM,
+    history
   );
 
   console.log("Diagnóstico OpenRouter finalizado");

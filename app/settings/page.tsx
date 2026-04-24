@@ -6,6 +6,8 @@ import { useSettings } from "../components/SettingsProvider";
 import { useFirebase } from "../components/FirebaseProvider";
 import * as XLSX from "xlsx";
 import { addAluno, getAlunos, Aluno, addImportRecord, getImportHistory, ImportRecord } from "@/lib/services";
+import { saveAvaliacao } from "@/lib/evaluationsService";
+import { Timestamp } from "firebase/firestore";
 
 export default function SettingsPage() {
     const router = useRouter();
@@ -169,6 +171,126 @@ export default function SettingsPage() {
         }
     };
 
+    const handleHistoryUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        setLoading(true);
+        setUploadStatus({ message: 'Lendo histórico...', type: '' });
+
+        try {
+            const buffer = await file.arrayBuffer();
+            const workbook = XLSX.read(buffer, { type: 'array' });
+            const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+            const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as any[][];
+
+            if (jsonData.length < 2) {
+                setUploadStatus({ message: 'O arquivo de histórico parece estar vazio.', type: 'error' });
+                return;
+            }
+
+            const normalize = (s: any) => (s || "").toString().normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+
+            let headerIdx = -1;
+            for (let i = 0; i < jsonData.length; i++) {
+                if (jsonData[i].some(cell => {
+                    const n = normalize(cell);
+                    return n.includes("aluno") || n.includes("nome");
+                })) {
+                    headerIdx = i;
+                    break;
+                }
+            }
+
+            if (headerIdx === -1) {
+                setUploadStatus({ message: 'Não encontrei a coluna "Aluno" no arquivo.', type: 'error' });
+                return;
+            }
+
+            const headers = jsonData[headerIdx];
+            const getIdx = (targets: string[]) => {
+                const normTargets = targets.map(t => normalize(t));
+                return headers.findIndex(h => {
+                    const nh = normalize(h);
+                    return nh !== "" && normTargets.some(t => nh.includes(t) || t.includes(nh));
+                });
+            };
+
+            const idxAluno = getIdx(["aluno", "nome", "estudante"]);
+            const idxData = getIdx(["data", "dia", "periodo"]);
+            const idxPCM = getIdx(["pcm", "fluencia", "palavras"]);
+            const idxPrec = getIdx(["precisao", "acerto", "taxa"]);
+            const idxDiag = getIdx(["diagnostico", "ia", "analise"]);
+
+            const alunosArr = await getAlunos();
+            const alunoMap = new Map<string, string>();
+            alunosArr.forEach(a => alunoMap.set(normalize(a.nome), a.id));
+
+            let success = 0;
+            let errors = 0;
+            let skip = 0;
+
+            for (let i = headerIdx + 1; i < jsonData.length; i++) {
+                const row = jsonData[i];
+                if (!row || !row[idxAluno]) continue;
+
+                const alunoNomeNorm = normalize(row[idxAluno]);
+                const alunoId = alunoMap.get(alunoNomeNorm);
+
+                if (!alunoId) {
+                    skip++;
+                    continue;
+                }
+
+                try {
+                    let dataAval: Date;
+                    const rawData = row[idxData];
+                    if (typeof rawData === 'number') {
+                        dataAval = new Date(Math.round((rawData - 25569) * 86400 * 1000));
+                    } else if (rawData) {
+                        dataAval = new Date(rawData);
+                    } else {
+                        dataAval = new Date();
+                    }
+
+                    if (isNaN(dataAval.getTime())) dataAval = new Date();
+
+                    await saveAvaliacao({
+                        alunoId,
+                        textoId: "importado_legado",
+                        pcm: parseInt(row[idxPCM]) || 0,
+                        precisao: parseInt(row[idxPrec]) || 100,
+                        transcricao: "Importação histórica de planilha",
+                        diagnosticoIA: row[idxDiag] || "Importado do histórico anterior",
+                        intervencaoIA: "Continuidade do acompanhamento",
+                        data: Timestamp.fromDate(dataAval),
+                        metricasQualitativas: {
+                            leitura_precisa: (parseInt(row[idxPrec]) || 100) >= 90,
+                            leitura_silabada: false,
+                            boa_entonacao: true,
+                            interpretacao: true,
+                            pontuacao: true
+                        }
+                    });
+                    success++;
+                } catch (err) {
+                    errors++;
+                }
+            }
+
+            setUploadStatus({
+                message: `Histórico importado! ${success} registros. ${skip} alunos não encontrados e ${errors} erros.`,
+                type: 'success'
+            });
+
+        } catch (err) {
+            setUploadStatus({ message: 'Falha ao processar arquivo de histórico.', type: 'error' });
+        } finally {
+            setLoading(false);
+            e.target.value = '';
+        }
+    };
+
     return (
         <div className="animate-in" style={{ paddingBottom: "4rem" }}>
             <header className="page-header">
@@ -283,6 +405,27 @@ export default function SettingsPage() {
                             </div>
                         </div>
                     )}
+                </div>
+
+                {/* Card de Importação de Histórico */}
+                <div className="glass-card">
+                    <h2 style={{ fontSize: "1.25rem", fontWeight: 700, marginBottom: "0.5rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                        <span>📊</span> Importar Histórico (Excel)
+                    </h2>
+                    <p style={{ color: "var(--text-muted)", fontSize: "0.95rem", marginBottom: "1.5rem" }}>
+                        Se você já possui dados de avaliações anteriores em Excel, pode importá-los aqui. O mapeamento busca por: <strong>Aluno</strong>, <strong>Data</strong>, <strong>PCM</strong> e <strong>Precisão</strong>.
+                    </p>
+
+                    <label className="btn-outline" style={{ display: "inline-flex", cursor: loading ? "wait" : "pointer", opacity: loading ? 0.6 : 1, maxWidth: "100%", width: "fit-content", background: "rgba(59, 130, 246, 0.1)", border: "1px solid var(--primary)" }}>
+                        {loading ? "⏳ Processando Histórico..." : "Selecionar Planilha de Histórico"}
+                        <input
+                            type="file"
+                            accept=".xlsx, .xls"
+                            onChange={handleHistoryUpload}
+                            disabled={loading}
+                            style={{ display: "none" }}
+                        />
+                    </label>
                 </div>
 
             </div>

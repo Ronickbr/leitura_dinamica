@@ -6,7 +6,7 @@ import { useMobileExperience } from "@/app/components/MobileExperienceProvider";
 import { useFirebase } from "@/app/components/FirebaseProvider";
 import { getAlunoById, type Aluno } from "@/lib/services";
 import { getTextos, type Texto } from "@/lib/textsService";
-import { processAudio, saveAvaliacao } from "@/lib/evaluationsService";
+import { processAudio, saveAvaliacao, getAvaliacoesPorAluno, type Avaliacao } from "@/lib/evaluationsService";
 
 const MicIcon = () => <span>🎤</span>;
 const SquareIcon = () => <span>⏹️</span>;
@@ -28,6 +28,7 @@ export default function ReadingPage() {
   const [processing, setProcessing] = useState(false);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [isFinished, setIsFinished] = useState(false);
+  const [historico, setHistorico] = useState<Avaliacao[]>([]);
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
@@ -38,9 +39,10 @@ export default function ReadingPage() {
       if (!alunoId || !firebaseInitialized) return;
       setLoading(true);
       try {
-        const [studentData, allTexts] = await Promise.all([
+        const [studentData, allTexts, studentHistory] = await Promise.all([
           getAlunoById(alunoId),
-          getTextos()
+          getTextos(),
+          getAvaliacoesPorAluno(alunoId)
         ]);
 
         if (studentData) {
@@ -50,6 +52,7 @@ export default function ReadingPage() {
           );
           setTextosDisponiveis(filtered);
           if (filtered.length > 0) setTexto(filtered[0]);
+          setHistorico(studentHistory);
         }
       } catch (err) {
         console.error("Erro ao carregar dados:", err);
@@ -125,7 +128,13 @@ export default function ReadingPage() {
     setProcessing(true);
     try {
       const audioBlob = await fetch(audioUrl).then(r => r.blob());
-      const result = await processAudio(audioBlob, texto.conteudo);
+      const result = await processAudio(
+        audioBlob,
+        texto.conteudo,
+        aluno?.serie,
+        aluno?.metaPCM,
+        historico.slice(0, 3) // Enviamos as últimas 3 avaliações para contexto
+      );
       setTempResult(result);
       setIsReviewing(true);
     } catch (err: unknown) {
@@ -297,6 +306,13 @@ export default function ReadingPage() {
                   </div>
                 </div>
               </div>
+
+              {tempResult.analysis.analise_evolucao && (
+                <div style={{ background: "rgba(59, 130, 246, 0.1)", padding: "1rem", borderRadius: "12px", border: "1px solid var(--primary)" }}>
+                  <p style={{ fontSize: "0.85rem", color: "var(--primary)", fontWeight: 700, marginBottom: "0.3rem" }}>📈 ANÁLISE DE EVOLUÇÃO</p>
+                  <p style={{ fontSize: "0.9rem", color: "var(--text-main)" }}>{tempResult.analysis.analise_evolucao}</p>
+                </div>
+              )}
 
               <div>
                 <p style={{ fontSize: "0.85rem", color: "var(--text-muted)", marginBottom: "1rem" }}>MÉTRICAS QUALITATIVAS (TOQUE PARA ALTERAR)</p>

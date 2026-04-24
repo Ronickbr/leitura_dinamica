@@ -17,6 +17,7 @@ const uploadSchema = z.object({
   originalText: z.string().min(1, "O texto original é obrigatório.").max(10000, "O texto original excede o limite de 10000 caracteres."),
   studentGrade: z.string().optional(),
   targetPCM: z.string().optional().transform(v => v ? parseInt(v) : undefined),
+  history: z.string().optional().transform(v => v ? JSON.parse(v) : undefined),
 });
 
 export async function POST(req: NextRequest) {
@@ -35,9 +36,10 @@ export async function POST(req: NextRequest) {
     const originalText = formData.get("original_text");
     const studentGrade = formData.get("student_grade");
     const targetPCM = formData.get("target_pcm");
+    const history = formData.get("history");
 
     // Validação com Zod
-    const validation = uploadSchema.safeParse({ file, originalText, studentGrade, targetPCM });
+    const validation = uploadSchema.safeParse({ file, originalText, studentGrade, targetPCM, history });
 
     if (!validation.success) {
       const errorMsg = validation.error.issues[0].message;
@@ -48,12 +50,14 @@ export async function POST(req: NextRequest) {
       file: validatedFile,
       originalText: validatedText,
       studentGrade: validatedGrade,
-      targetPCM: validatedTarget
+      targetPCM: validatedTarget,
+      history: validatedHistory
     } = validation.data as {
       file: File,
       originalText: string,
       studentGrade?: string,
-      targetPCM?: number
+      targetPCM?: number,
+      history?: any[]
     };
 
     auditInfo.filename = validatedFile.name;
@@ -75,6 +79,7 @@ export async function POST(req: NextRequest) {
       filename: validatedFile.name,
       studentGrade: validatedGrade,
       targetPCM: validatedTarget,
+      history: validatedHistory,
     });
 
     console.log(JSON.stringify({

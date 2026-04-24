@@ -44,17 +44,20 @@ export interface Avaliacao {
   diagnosticoIA: string;
   intervencaoIA: string;
   metricasQualitativas?: MetricasQualitativas;
-  data: Timestamp | { seconds?: number; toDate?: () => Date } | null;
+  data?: Timestamp | { seconds?: number; toDate?: () => Date } | null;
   professorId: string;
 }
 
-export const processAudio = async (audioBlob: Blob, originalText: string) => {
+export const processAudio = async (audioBlob: Blob, originalText: string, studentGrade?: string, targetPCM?: number, history?: any[]) => {
   const user = cachedAuth?.currentUser;
   const token = user ? await user.getIdToken() : null;
 
   const formData = new FormData();
   formData.append('file', audioBlob, 'reading.webm');
   formData.append('original_text', originalText);
+  if (studentGrade) formData.append('student_grade', studentGrade);
+  if (targetPCM) formData.append('target_pcm', targetPCM.toString());
+  if (history) formData.append('history', JSON.stringify(history));
 
   const response = await fetch('/api/process-audio', {
     method: 'POST',
@@ -72,7 +75,7 @@ export const processAudio = async (audioBlob: Blob, originalText: string) => {
   return response.json();
 };
 
-export const saveAvaliacao = async (avaliacao: Omit<Avaliacao, 'id' | 'data' | 'professorId'>): Promise<string | null> => {
+export const saveAvaliacao = async (avaliacao: Omit<Avaliacao, 'id' | 'professorId'>): Promise<string | null> => {
   if (!cachedDb || !cachedAuth) return null;
   try {
     const currentUser = cachedAuth.currentUser;
@@ -81,7 +84,7 @@ export const saveAvaliacao = async (avaliacao: Omit<Avaliacao, 'id' | 'data' | '
     const docRef = await addDoc(collection(cachedDb, 'avaliacoes'), {
       ...avaliacao,
       professorId: currentUser.uid,
-      data: Timestamp.now()
+      data: avaliacao.data || Timestamp.now()
     });
     return docRef.id;
   } catch (error) {
