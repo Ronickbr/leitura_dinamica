@@ -127,6 +127,10 @@ export default function ReadingPage() {
     if (!audioUrl || !texto) return;
     setProcessing(true);
     try {
+      if (!texto?.conteudo) {
+        alert('Texto sem conteúdo para avaliação.');
+        return;
+      }
       const audioBlob = await fetch(audioUrl).then(r => r.blob());
       const result = await processAudio(
         audioBlob,

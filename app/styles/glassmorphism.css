@@ -1,0 +1,55 @@
+.glass-panel {
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
+    border-radius: var(--radius-md);
+}
+
+.glass-card {
+    background: var(--bg-card);
+    backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-lg);
+    padding: 2rem;
+    transition: transform 0.3s ease, box-shadow 0.3s ease, background 0.3s ease;
+}
+
+.glass-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.1);
+}
+
+.glass-modal {
+    background: rgba(2, 6, 23, 0.8);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+
+@media (max-width: 768px) {
+
+    .glass-card,
+    .glass-panel {
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+    }
+
+    .glass-card {
+        padding: 1.25rem;
+        border-radius: 20px;
+    }
+}
+
+@media (hover: none) and (pointer: coarse) {
+    .glass-card:hover {
+        transform: none;
+        box-shadow: var(--glass-shadow);
+    }
+}
+
+html[data-reduced-data="true"] .glass-card,
+html[data-reduced-data="true"] .glass-panel {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+}

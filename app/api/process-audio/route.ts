@@ -39,7 +39,13 @@ export async function POST(req: NextRequest) {
     const history = formData.get("history");
 
     // Validação com Zod
-    const validation = uploadSchema.safeParse({ file, originalText, studentGrade, targetPCM, history });
+    const validation = uploadSchema.safeParse({ 
+      file, 
+      originalText, 
+      studentGrade: studentGrade || undefined, 
+      targetPCM: targetPCM || undefined, 
+      history: history || undefined 
+    });
 
     if (!validation.success) {
       const errorMsg = validation.error.issues[0].message;

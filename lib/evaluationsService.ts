@@ -52,6 +52,10 @@ export const processAudio = async (audioBlob: Blob, originalText: string, studen
   const user = cachedAuth?.currentUser;
   const token = user ? await user.getIdToken() : null;
 
+  if (!originalText) {
+    throw new Error('O texto original é obrigatório para o processamento');
+  }
+
   const formData = new FormData();
   formData.append('file', audioBlob, 'reading.webm');
   formData.append('original_text', originalText);

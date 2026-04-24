@@ -6,6 +6,7 @@ import Link from "next/link";
 import { getAlunos, type Aluno } from "@/lib/services";
 import { getAllAvaliacoes, type Avaliacao } from "@/lib/evaluationsService";
 import { useFirebase } from "@/app/components/FirebaseProvider";
+import LoginForm from "@/app/components/LoginForm";
 
 const UsersIcon = () => <span>👥</span>;
 const AwardIcon = () => <span>🏆</span>;
@@ -46,11 +47,7 @@ export default function Dashboard() {
     });
   }, [initialized, firebaseAuth]);
 
-  useEffect(() => {
-    if (!loading && !user && initialized) {
-      router.push('/login');
-    }
-  }, [user, loading, router, initialized]);
+  // Redirection removed as we handle both login and dashboard in this page
 
   useEffect(() => {
     if (!user || !initialized) return;
@@ -100,10 +97,22 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <div style={{ padding: '8rem', textAlign: 'center', color: 'var(--text-muted)' }} className="animate-pulse">
-        Carregando...
+      <div style={{
+        minHeight: "100vh",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "2rem"
+      }}>
+        <div style={{ padding: '8rem', textAlign: 'center', color: 'var(--text-muted)' }} className="animate-pulse">
+          Carregando...
+        </div>
       </div>
     );
+  }
+
+  if (!user) {
+    return <LoginForm />;
   }
 
   return (
@@ -115,7 +124,7 @@ export default function Dashboard() {
             <span className="perf-chip">UX Touch</span>
           </div>
           <h1 className="page-title" style={{ fontWeight: 900 }}>
-              Painel de <span style={{ color: 'var(--primary)' }}>Controle</span>
+            Painel de <span style={{ color: 'var(--primary)' }}>Controle</span>
           </h1>
           <p className="page-subtitle" style={{ maxWidth: '600px' }}>
             Visão panorâmica do progresso de fluência leitora da sua turma.

@@ -244,10 +244,10 @@ export default function HistoryPage() {
         </div>
         {!loading && studentGroups.length > 0 && (
           <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-            <button onClick={handleExportExcel} className="btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <button onClick={handleExportExcel} className="btn-primary">
               <span>📊</span> Excel
             </button>
-            <button onClick={handleExportJSON} className="btn-outline-round" style={{ fontSize: '0.85rem', padding: '0.5rem 1rem' }}>
+            <button onClick={handleExportJSON} className="btn-outline">
               <span>🧬</span> Exportar JSON (Pesquisa)
             </button>
           </div>

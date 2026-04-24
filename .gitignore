@@ -1,9 +1,15 @@
 # Node
 node_modules/
+.next/
 dist/
 frontend/dist/
 .vercel/
 .env
+out/
+build/
+*.sst
+
+.cache/
 
 # OS
 .DS_Store
