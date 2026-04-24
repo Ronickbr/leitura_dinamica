@@ -137,26 +137,25 @@ export default function Dashboard() {
         </div>
       </header>
 
-      <div className="grid-cards">
+      <div className="grid-cards animate-stagger">
         <MetricCard title="Total Alunos" value={stats.totalStudents} icon={<UsersIcon />} color="var(--primary)" />
         <MetricCard title="Casos Críticos" value={stats.criticalCases} icon={<LightbulbIcon />} color="var(--accent)" />
         <MetricCard title="PCM Médio" value={stats.avgPCM} icon={<AwardIcon />} color="var(--success)" suffix="pal/min" />
         <MetricCard title="Testes Feitos" value={stats.totalEvaluations} icon={<HistoryIcon />} color="var(--warning)" />
       </div>
 
-      <div className="dashboard-grid">
+      <div className="dashboard-grid animate-in" style={{ animationDelay: '0.4s' }}>
         <div className="glass-card" style={{ padding: '2rem', height: '100%' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-            <h3 style={{ fontSize: '1.2rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2.5rem' }}>
+            <h3 style={{ fontSize: '1.25rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
               <HistoryIcon /> Avaliações Recentes
             </h3>
-            <Link href="/history" style={{ color: 'var(--primary)', fontSize: '0.85rem', fontWeight: 700, textDecoration: 'none', background: 'rgba(99, 102, 241, 0.1)', padding: '0.4rem 0.8rem', borderRadius: '8px' }}>Ver Tudo</Link>
+            <Link href="/history" className="perf-chip" style={{ textDecoration: 'none', padding: '0.5rem 1rem' }}>Ver Tudo</Link>
           </div>
-
 
           <div className="recent-evaluations-list">
             {recentEvaluations.length > 0 ? recentEvaluations.map(ev => (
-              <div key={ev.id} className="hover-row recent-evaluation-card">
+              <div key={ev.id} className="recent-evaluation-card">
                 <div className="recent-evaluation-main">
                   <div className="recent-evaluation-avatar">{ev.alunoNome[0]}</div>
                   <div className="recent-evaluation-copy">
@@ -165,30 +164,35 @@ export default function Dashboard() {
                   </div>
                 </div>
                 <div className="recent-evaluation-stats">
-                  <div style={{ color: 'var(--primary)', fontWeight: 900, fontSize: '1.2rem' }}>{ev.pcm} PCM</div>
-                  <div style={{ fontSize: '0.7rem', color: 'var(--success)', fontWeight: 700 }}>{ev.precisao}% Precisão</div>
+                  <div style={{ color: 'var(--primary)', fontWeight: 900, fontSize: '1.3rem', letterSpacing: '-0.5px' }}>{ev.pcm} PCM</div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--success)', fontWeight: 700 }}>{ev.precisao}% Precisão</div>
                 </div>
               </div>
             )) : (
-              <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>Nenhuma avaliação realizada recentemente.</div>
+              <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>Nenhuma avaliação realizada recentemente.</div>
             )}
           </div>
         </div>
 
         <div className="dashboard-side-column">
-          <div className="glass-card" style={{ background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.15), transparent)', padding: '2.5rem', borderLeft: '4px solid var(--primary)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.25rem' }}>
-              <div style={{ color: 'var(--primary)', fontSize: '1.5rem' }}><LightbulbIcon /></div>
+          <div className="glass-card" style={{
+            background: 'linear-gradient(135deg, hsla(var(--primary-h), var(--primary-s), var(--primary-l), 0.1), transparent)',
+            padding: '2.5rem',
+            borderLeft: '6px solid var(--primary)',
+            boxShadow: 'var(--shadow-md)'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem' }}>
+              <div style={{ color: 'var(--primary)', fontSize: '1.75rem' }}><LightbulbIcon /></div>
               <h4 style={{ color: 'var(--primary)', fontWeight: 800, fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Dica Pedagógica</h4>
             </div>
-            <p style={{ fontSize: '1rem', lineHeight: '1.7', color: 'var(--text-main)' }}>
+            <p style={{ fontSize: '1.05rem', lineHeight: '1.8', color: 'var(--text-main)', fontWeight: 500 }}>
               "A fluência não é apenas velocidade, mas a integração de precisão, prosódia e compreensão. Foque em alunos com PCM abaixo de 40 para intervenções intensivas."
             </p>
           </div>
 
           <div className="glass-card" style={{ padding: '2.5rem' }}>
-            <h4 style={{ fontWeight: 800, marginBottom: '1.5rem', fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Links Rápidos</h4>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <h4 style={{ fontWeight: 800, marginBottom: '2rem', fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Links Rápidos</h4>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
               <QuickLink href="/students" label="Base de Estudantes" icon={<UsersIcon />} />
               <QuickLink href="/texts" label="Biblioteca de Textos" icon={<BookIcon />} />
               <QuickLink href="/history" label="Relatórios Completos" icon={<HistoryIcon />} />
@@ -203,11 +207,11 @@ export default function Dashboard() {
 function MetricCard({ title, value, icon, color, suffix = "" }: { title: string; value: number; icon: React.ReactNode; color: string; suffix?: string }) {
   return (
     <div className="glass-card metric-card" style={{ borderLeftColor: color }}>
-      <div style={{ position: 'absolute', right: '-10px', top: '-10px', fontSize: '4rem', opacity: 0.05, transform: 'rotate(15deg)' }}>{icon}</div>
-      <div className="mobile-data-label" style={{ marginBottom: '0.5rem' }}>{title}</div>
+      <div style={{ position: 'absolute', right: '-15px', top: '-15px', fontSize: '5rem', opacity: 0.05, transform: 'rotate(15deg)', pointerEvents: 'none' }}>{icon}</div>
+      <div className="mobile-data-label" style={{ marginBottom: '0.75rem', fontSize: '0.75rem' }}>{title}</div>
       <div className="metric-card-value">
-        <span style={{ fontSize: '2.5rem', fontWeight: 900 }}>{value}</span>
-        {suffix && <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 700 }}>{suffix}</span>}
+        <span style={{ fontSize: '3rem', fontWeight: 900, lineHeight: 1 }}>{value}</span>
+        {suffix && <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)', fontWeight: 700, alignSelf: 'flex-end', marginBottom: '0.4rem' }}>{suffix}</span>}
       </div>
     </div>
   );

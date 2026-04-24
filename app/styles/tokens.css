@@ -1,70 +1,98 @@
 :root {
-  --primary: #6366f1;
+  /* Brand Colors - Modern Indigo/Rose Palette */
+  --primary: hsl(245, 82%, 67%);
+  --primary-h: 245;
+  --primary-s: 82%;
+  --primary-l: 67%;
   --primary-rgb: 99, 102, 241;
-  --primary-hover: #4f46e5;
-  --accent: #f43f5e;
+  --primary-hover: hsl(245, 82%, 60%);
+
+  --accent: hsl(343, 90%, 60%);
   --accent-rgb: 244, 63, 94;
-  --accent-hover: #e11d48;
-  --success: #10b981;
+  --accent-hover: hsl(343, 90%, 50%);
+
+  --success: hsl(158, 80%, 40%);
   --success-rgb: 16, 185, 129;
-  --warning: #f59e0b;
+
+  --warning: hsl(38, 92%, 50%);
   --warning-rgb: 245, 158, 11;
-  --error: #ef4444;
+
+  --error: hsl(0, 84%, 60%);
   --error-rgb: 239, 68, 68;
 
-  /* Tema Claro (Padrão) */
-  --bg-deep: #f1f5f9;
-  --bg-dark: #ffffff;
-  --bg-card: rgba(255, 255, 255, 0.85);
-  --text-main: #0f172a;
-  --text-muted: #64748b;
+  /* Surface & Backgrounds - Airy & Modern */
+  --bg-deep: hsl(210, 40%, 98%);
+  --bg-dark: hsl(0, 0%, 100%);
+  --bg-card: hsla(0, 0%, 100%, 0.7);
+  --bg-panel: hsla(210, 40%, 96%, 0.4);
 
-  --glass-bg: rgba(255, 255, 255, 0.6);
-  --glass-border: rgba(0, 0, 0, 0.1);
-  --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.05);
-  --glass-blur: blur(12px);
+  /* Text - High Legibility */
+  --text-main: hsl(222, 47%, 11%);
+  --text-muted: hsl(215, 25%, 47%);
+  --text-inverse: hsl(210, 40%, 98%);
 
-  --btn-outline-text: #0f172a;
-  --btn-outline-hover-bg: rgba(0, 0, 0, 0.05);
+  /* Glassmorphism System - Premium Shine */
+  --glass-bg: hsla(0, 0%, 100%, 0.4);
+  --glass-border: hsla(222, 47%, 11%, 0.08);
+  --glass-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 20px 40px -10px rgba(0, 0, 0, 0.1);
+  --glass-blur: blur(16px);
+  --glass-shine: linear-gradient(135deg, hsla(0, 0%, 100%, 0.3) 0%, hsla(0, 0%, 100%, 0) 50%, hsla(0, 0%, 100%, 0.1) 100%);
 
-  --select-bg: #ffffff;
-  --select-text: #0f172a;
-  --select-stroke: #0f172a;
+  /* UI Components */
+  --btn-outline-text: var(--text-main);
+  --btn-outline-hover-bg: hsla(222, 47%, 11%, 0.04);
 
-  --scrollbar-thumb: #cbd5e1;
+  --select-bg: white;
+  --select-text: var(--text-main);
+  --select-stroke: var(--text-main);
 
+  --scrollbar-thumb: hsl(215, 25%, 85%);
+
+  /* Elevation Levels */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+
+  /* Geometry & Scaling */
   --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 24px;
-  --container-max-width: 1200px;
-  --header-height: 88px;
-  --mobile-nav-height: 88px;
+  --radius-md: 14px;
+  --radius-lg: 28px;
+  --container-max-width: 1240px;
+  --header-height: 80px;
+  --mobile-nav-height: 80px;
   --touch-target-size: 44px;
 
-  --body-bg: radial-gradient(circle at top right, #e2e8f0, #f1f5f9);
+  --body-bg: radial-gradient(circle at 100% 0%, hsla(245, 82%, 67%, 0.08) 0%, transparent 40%),
+    radial-gradient(circle at 0% 100%, hsla(343, 90%, 60%, 0.05) 0%, transparent 40%),
+    var(--bg-deep);
 }
 
 .dark {
-  --bg-deep: #020617;
-  --bg-dark: #0f172a;
-  --bg-card: rgba(30, 41, 59, 0.5);
-  --text-main: #f8fafc;
-  --text-muted: #94a3b8;
+  --bg-deep: hsl(222, 47%, 4%);
+  --bg-dark: hsl(222, 47%, 7%);
+  --bg-card: hsla(222, 47%, 10%, 0.8);
+  --bg-panel: hsla(222, 47%, 15%, 0.3);
 
-  --glass-bg: rgba(255, 255, 255, 0.03);
-  --glass-border: rgba(255, 255, 255, 0.08);
-  --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  --text-main: hsl(210, 40%, 98%);
+  --text-muted: hsl(215, 25%, 70%);
 
-  --btn-outline-text: #ffffff;
-  --btn-outline-hover-bg: rgba(255, 255, 255, 0.05);
+  --glass-bg: hsla(222, 47%, 15%, 0.3);
+  --glass-border: hsla(210, 40%, 98%, 0.1);
+  --glass-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+  --glass-shine: linear-gradient(135deg, hsla(0, 0%, 100%, 0.05) 0%, transparent 50%, hsla(0, 0%, 100%, 0.02) 100%);
 
-  --select-bg: #0f172a;
-  --select-text: #ffffff;
-  --select-stroke: #ffffff;
+  --btn-outline-text: white;
+  --btn-outline-hover-bg: hsla(210, 40%, 98%, 0.05);
 
-  --scrollbar-thumb: #334155;
+  --select-bg: hsl(222, 47%, 10%);
+  --select-text: white;
+  --select-stroke: white;
 
-  --body-bg: radial-gradient(circle at top right, #1e1b4b, #020617);
+  --scrollbar-thumb: hsl(222, 47%, 20%);
+
+  --body-bg: radial-gradient(circle at 100% 0%, hsla(245, 82%, 67%, 0.15) 0%, transparent 40%),
+    radial-gradient(circle at 0% 100%, hsla(343, 90%, 60%, 0.1) 0%, transparent 40%),
+    var(--bg-deep);
 }
 
 html[data-touch="true"] {
