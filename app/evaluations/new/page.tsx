@@ -134,18 +134,18 @@ export default function SelectionPage() {
         </div>
       </div>
 
-      <div style={{ display: 'flex', gap: '1.5rem', marginBottom: '1.5rem', padding: '0 0.5rem' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-          <div style={{ width: '10px', height: '10px', borderRadius: '3px', background: 'rgba(168, 85, 247, 0.4)' }}></div> TEA
+      <div className="diagnosis-legend">
+        <div className="diagnosis-legend-item">
+          <div className="diagnosis-dot" style={{ background: 'rgba(168, 85, 247, 0.4)' }}></div> TEA
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-          <div style={{ width: '10px', height: '10px', borderRadius: '3px', background: 'rgba(249, 115, 22, 0.4)' }}></div> TDAH
+        <div className="diagnosis-legend-item">
+          <div className="diagnosis-dot" style={{ background: 'rgba(249, 115, 22, 0.4)' }}></div> TDAH
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-          <div style={{ width: '10px', height: '10px', borderRadius: '3px', background: 'rgba(59, 130, 246, 0.4)' }}></div> Dislexia
+        <div className="diagnosis-legend-item">
+          <div className="diagnosis-dot" style={{ background: 'rgba(59, 130, 246, 0.4)' }}></div> Dislexia
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-          <div style={{ width: '10px', height: '10px', borderRadius: '3px', background: 'rgba(234, 179, 8, 0.3)' }}></div> Outros
+        <div className="diagnosis-legend-item">
+          <div className="diagnosis-dot" style={{ background: 'rgba(234, 179, 8, 0.3)' }}></div> Outros
         </div>
       </div>
 
@@ -183,12 +183,12 @@ export default function SelectionPage() {
                     <span className="turma-badge">{aluno.turma}</span>
                   </div>
                   <div className="data-grid-cell">
-                    <span 
-                      className="diagnosis-badge" 
-                      style={{ 
-                        color: getDiagnosisStyle(aluno.diagnostico).text, 
+                    <span
+                      className="diagnosis-badge"
+                      style={{
+                        color: getDiagnosisStyle(aluno.diagnostico).text,
                         borderColor: getDiagnosisStyle(aluno.diagnostico).text,
-                        background: getDiagnosisStyle(aluno.diagnostico).bg 
+                        background: getDiagnosisStyle(aluno.diagnostico).bg
                       }}
                     >
                       {getDiagnosisLabel(aluno.diagnostico)}
@@ -210,6 +210,8 @@ export default function SelectionPage() {
                   title={aluno.nome}
                   subtitle={`${aluno.serie} • Turma ${aluno.turma}`}
                   badge={<span style={{ padding: '0.35rem 0.7rem', borderRadius: '999px', fontSize: '0.75rem', fontWeight: 700, background: getDiagnosisStyle(aluno.diagnostico).bg, color: getDiagnosisStyle(aluno.diagnostico).text, border: `1px solid ${getDiagnosisStyle(aluno.diagnostico).text}44` }}>{getDiagnosisLabel(aluno.diagnostico)}</span>}
+                  collapsible={true}
+                  defaultExpanded={false}
                   onClick={() => router.push(`/evaluations/${aluno.id}`)}
                   footer={<span style={{ color: 'var(--primary)', fontWeight: 700 }}>Toque para iniciar a avaliação</span>}
                 >

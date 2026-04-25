@@ -330,7 +330,7 @@ export default function StudentsPage() {
             </div>
           )}
 
-<div className="glass-card desktop-only-view" style={{ padding: 0, overflow: 'hidden' }}>
+          <div className="glass-card desktop-only-view" style={{ padding: 0, overflow: 'hidden' }}>
             <div className="students-grid">
               <div className="students-grid-header">
                 <div className="students-grid-cell">NOME</div>
@@ -357,7 +357,7 @@ export default function StudentsPage() {
                     </div>
                     <div className="students-grid-cell">
                       {aluno.diagnostico && aluno.diagnostico !== "Nenhum diagnóstico" && aluno.diagnostico !== "Nenhum" ? (
-                        <span 
+                        <span
                           className="diagnosis-badge"
                           style={{
                             background: getDiagnosisStyle(aluno.diagnostico).bg,
@@ -392,10 +392,11 @@ export default function StudentsPage() {
                     <span className="mobile-data-label">TOTAL DE ALUNOS</span>
                     <span style={{ fontSize: '1.1rem', fontWeight: 800 }}>{filteredAlunos.length}</span>
                   </div>
-</div>
+                </div>
               )}
             </div>
           </div>
+
           <div className="mobile-only-view">
             <MobileCardList testId="students-mobile-cards">
               {filteredAlunos.map(aluno => (
@@ -404,17 +405,19 @@ export default function StudentsPage() {
                   testId="student-mobile-card"
                   title={anonymizeName(aluno.id, aluno.nome)}
                   subtitle={`${aluno.serie} • Turma ${aluno.turma}`}
+                  collapsible={true}
+                  defaultExpanded={false}
                   badge={aluno.turno ? (
                     <span style={{ padding: '0.35rem 0.7rem', background: 'rgba(99, 102, 241, 0.1)', borderRadius: '999px', fontSize: '0.75rem', color: 'var(--primary)', fontWeight: 700 }}>
                       {aluno.turno}
                     </span>
                   ) : undefined}
                   footer={
-                    <>
+                    <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', width: '100%' }}>
                       <button onClick={() => setViewingAluno(aluno)} className="btn-outline" style={{ flex: 1 }}>Visualizar</button>
                       <button onClick={() => { setEditingId(aluno.id!); setFormData({ nome: aluno.nome, turma: aluno.turma, serie: aluno.serie, turno: aluno.turno || '', diagnostico: aluno.diagnostico || '', observacoes: aluno.observacoes || '', anoLetivo: aluno.anoLetivo, metaPCM: aluno.metaPCM || 0 }); setShowForm(true); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="btn-outline-round" style={{ padding: '0.4rem 0.8rem' }}>✏️</button>
                       <button onClick={() => handleDelete(aluno.id)} className="btn-outline" style={{ flexBasis: '100%', color: 'var(--error)' }}>Excluir</button>
-                    </>
+                    </div>
                   }
                 >
                   <MobileDataGrid>
@@ -449,12 +452,14 @@ export default function StudentsPage() {
         </>
       )}
 
+      {/* Condicional para quando não houver alunos cadastrados (fora do filtro) */}
       {!loading && alunos.length === 0 && (
         <div className="glass-card" style={{ textAlign: 'center', padding: '4rem' }}>
           <p style={{ color: 'var(--text-muted)' }}>Nenhum aluno cadastrado.</p>
         </div>
       )}
 
+      {/* Modal de Visualização (Sheet) */}
       {viewingAluno && (
         <div className="app-overlay">
           <div className="glass-card app-sheet" style={{ maxWidth: "450px", width: "100%", background: "var(--bg-dark)", boxShadow: "var(--glass-shadow)" }}>

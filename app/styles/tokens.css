@@ -192,10 +192,27 @@ html[data-touch="true"] {
   --touch-target: 52px;
 }
 
-/* Mobile breakpoint */
+/* Mobile breakpoints for tokens */
+@media (max-width: 768px) {
+  :root {
+    --header-height: 56px;
+    --space-8: 1.5rem;
+    --space-10: 2rem;
+    --space-12: 2.5rem;
+    --space-16: 3rem;
+    --radius-lg: 16px;
+    --radius-xl: 20px;
+  }
+}
+
 @media (max-width: 480px) {
   :root {
-    --header-height: 64px;
-    --mobile-nav-height: 64px;
+    --header-height: 56px;
+    --mobile-nav-height: 60px;
+    --space-6: 1.25rem;
+    --space-8: 1.25rem;
+    --space-10: 1.5rem;
+    --space-12: 1.75rem;
+    --touch-target: 44px;
   }
 }

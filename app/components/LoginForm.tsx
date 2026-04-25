@@ -45,13 +45,8 @@ export default function LoginForm() {
     }
 
     return (
-        <div className="animate-in" style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: "2rem"
-        }}>
-            <div className="glass-card" style={{ maxWidth: "420px", width: "100%", padding: "3rem", textAlign: "center" }}>
+        <div className="auth-page-container animate-in">
+            <div className="glass-card login-card">
                 <h1 className="page-title" style={{ fontWeight: 900 }}>
                     Fluência <span style={{ color: "var(--primary)" }}>Leitora</span>
                 </h1>
@@ -73,21 +68,17 @@ export default function LoginForm() {
                     </div>
                 )}
 
-                <form onSubmit={handleLogin} style={{ width: "100%", display: "flex", flexDirection: "column", gap: "1rem" }}>
+                <form onSubmit={handleLogin} className="login-form">
                     <input
                         type="email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         placeholder="E-mail"
                         required
+                        className="form-input"
                         style={{
-                            width: "100%",
-                            padding: "1rem",
-                            borderRadius: "8px",
-                            border: "1px solid var(--glass-border)",
                             background: "rgba(0,0,0,0.2)",
-                            color: "white",
-                            fontSize: "1rem"
+                            color: "white"
                         }}
                     />
                     <input
@@ -96,21 +87,17 @@ export default function LoginForm() {
                         onChange={(e) => setPassword(e.target.value)}
                         placeholder="Senha"
                         required
+                        className="form-input"
                         style={{
-                            width: "100%",
-                            padding: "1rem",
-                            borderRadius: "8px",
-                            border: "1px solid var(--glass-border)",
                             background: "rgba(0,0,0,0.2)",
-                            color: "white",
-                            fontSize: "1rem"
+                            color: "white"
                         }}
                     />
                     <button
                         type="submit"
                         disabled={loading}
                         className="btn-primary"
-                        style={{ width: "100%", padding: "1rem", fontSize: "1rem", marginTop: "0.5rem" }}
+                        style={{ width: "100%", marginTop: "0.5rem" }}
                     >
                         {loading ? "Entrando..." : "Entrar"}
                     </button>

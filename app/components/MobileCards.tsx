@@ -1,4 +1,4 @@
-"use client";
+import { useState } from "react";
 
 type MobileCardListProps = {
   children: React.ReactNode;
@@ -13,6 +13,8 @@ type MobileCardProps = {
   onClick?: () => void;
   children: React.ReactNode;
   testId?: string;
+  collapsible?: boolean;
+  defaultExpanded?: boolean;
 };
 
 type MobileDataPointProps = {
@@ -38,22 +40,46 @@ export function MobileCard({
   onClick,
   children,
   testId,
+  collapsible = false,
+  defaultExpanded = true,
 }: MobileCardProps) {
+  const [isExpanded, setIsExpanded] = useState(defaultExpanded);
+
+  const toggleExpand = (e: React.MouseEvent) => {
+    if (collapsible) {
+      e.stopPropagation();
+      setIsExpanded(!isExpanded);
+    }
+  };
+
   const content = (
     <>
-      <div className="mobile-card-header">
+      <div
+        className={`mobile-card-header ${collapsible ? 'is-collapsible' : ''}`}
+        onClick={collapsible ? toggleExpand : undefined}
+      >
         <div className="mobile-card-heading">
           <div className="mobile-card-title">{title}</div>
           {subtitle ? <div className="mobile-card-subtitle">{subtitle}</div> : null}
         </div>
-        {badge ? <div className="mobile-card-badge">{badge}</div> : null}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          {badge ? <div className="mobile-card-badge">{badge}</div> : null}
+          {collapsible && (
+            <div className={`mobile-card-expand-icon ${isExpanded ? 'is-expanded' : ''}`}>
+              ▼
+            </div>
+          )}
+        </div>
       </div>
-      <div className="mobile-card-content">{children}</div>
-      {footer ? <div className="mobile-card-footer">{footer}</div> : null}
+
+      <div className={`mobile-card-collapsible-wrapper ${isExpanded ? 'is-expanded' : 'is-collapsed'}`}>
+        <div className="mobile-card-content">{children}</div>
+        {footer ? <div className="mobile-card-footer">{footer}</div> : null}
+      </div>
     </>
   );
 
-  if (onClick) {
+  if (onClick && !collapsible) {
     return (
       <button
         type="button"
@@ -67,7 +93,12 @@ export function MobileCard({
   }
 
   return (
-    <div className="glass-card mobile-card" data-testid={testId}>
+    <div
+      className={`glass-card mobile-card ${collapsible && !isExpanded ? 'is-collapsed' : ''}`}
+      data-testid={testId}
+      onClick={!collapsible ? onClick : undefined}
+      style={onClick && !collapsible ? { cursor: 'pointer' } : undefined}
+    >
       {content}
     </div>
   );

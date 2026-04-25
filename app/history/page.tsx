@@ -229,11 +229,11 @@ export default function HistoryPage() {
   // Calcular estatísticas globais
   const totalAvaliacoes = studentGroups.reduce((sum, g) => sum + g.evaluations.length, 0);
   const ultimasAvaliacoes = studentGroups.map(g => g.evaluations[0]).filter(Boolean);
-  const mediaPCM = ultimasAvaliacoes.length > 0 
-    ? Math.round(ultimasAvaliacoes.reduce((sum, ev) => sum + (ev.pcm || 0), 0) / ultimasAvaliacoes.length) 
+  const mediaPCM = ultimasAvaliacoes.length > 0
+    ? Math.round(ultimasAvaliacoes.reduce((sum, ev) => sum + (ev.pcm || 0), 0) / ultimasAvaliacoes.length)
     : 0;
-  const mediaPrecisao = ultimasAvaliacoes.length > 0 
-    ? Math.round(ultimasAvaliacoes.reduce((sum, ev) => sum + (ev.precisao || 0), 0) / ultimasAvaliacoes.length) 
+  const mediaPrecisao = ultimasAvaliacoes.length > 0
+    ? Math.round(ultimasAvaliacoes.reduce((sum, ev) => sum + (ev.precisao || 0), 0) / ultimasAvaliacoes.length)
     : 0;
 
   return (
@@ -464,8 +464,17 @@ export default function HistoryPage() {
                               title={`${ev.pcm} PCM`}
                               subtitle={formatDate(ev.data)}
                               badge={<span style={{ color: getLevelColor(ev.pcm), fontWeight: 800 }}>{ev.precisao}%</span>}
-                              onClick={() => router.push(`/history/${ev.id}`)}
-                              footer={<span style={{ color: 'var(--primary)', fontWeight: 700 }}>Toque para ver detalhes</span>}
+                              collapsible={true}
+                              defaultExpanded={false}
+                              footer={
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); router.push(`/history/${ev.id}`); }}
+                                  className="btn-primary"
+                                  style={{ width: '100%', padding: '0.5rem', marginTop: '0.5rem' }}
+                                >
+                                  Ver Detalhes Completos
+                                </button>
+                              }
                             >
                               <MobileDataGrid>
                                 <MobileDataPoint label="PCM" value={ev.pcm} accent />
