@@ -119,6 +119,13 @@ export default function MobilePerformanceMonitor() {
       reportMetric("load", navigationEntry.loadEventEnd, "ms");
     }
 
+    // Garante um snapshot inicial para testes e monitoramento logo no primeiro paint.
+    reportMetric(
+      "resourceCount",
+      performance.getEntriesByType("resource").length,
+      "count"
+    );
+
     try {
       const paintObserver = new PerformanceObserver((list) => {
         list.getEntries().forEach((entry) => {

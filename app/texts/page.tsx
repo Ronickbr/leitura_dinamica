@@ -168,12 +168,12 @@ export default function TextsPage() {
               />
             </div>
 
-            <div style={{ display: 'flex', gap: '1rem', borderTop: '1px solid var(--glass-border)', paddingTop: '2rem' }}>
-              <button type="submit" disabled={saving} className="btn-primary" style={{ minWidth: '180px' }}>
+            <div style={{ display: 'flex', gap: '1rem', borderTop: '1px solid var(--glass-border)', paddingTop: '2rem', flexWrap: 'wrap' }}>
+              <button type="submit" disabled={saving} className="btn-primary" style={{ flex: '1 1 180px' }}>
                 {saving ? '⌛ Salvando...' : (editingId ? '✅ Atualizar Texto' : '💾 Salvar Texto')}
               </button>
               {editingId && (
-                <button type="button" onClick={handleCancel} className="btn-outline">
+                <button type="button" onClick={handleCancel} className="btn-outline" style={{ flex: '1 1 180px' }}>
                   Cancelar Edição
                 </button>
               )}
@@ -183,7 +183,7 @@ export default function TextsPage() {
       )}
 
       <div className="filter-bar">
-        <div className="glass-panel" style={{ flex: 1, minWidth: '300px', display: 'flex', alignItems: 'center', padding: '0 1.2rem', height: '44px' }}>
+        <div className="glass-panel" style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', padding: '0 1.2rem', height: '44px' }}>
           <span style={{ marginRight: '0.8rem', opacity: 0.5 }}>🔍</span>
           <input
             type="text"

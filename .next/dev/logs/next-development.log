@@ -88,3 +88,33 @@
 {"timestamp":"00:42:19.490","source":"Browser","level":"LOG","message":"Firebase inicializado. Usuário atual: hoUPi2GD5VYDpW0D4zoXHdcXhJo2"}
 {"timestamp":"00:42:20.306","source":"Browser","level":"LOG","message":"Busca finalizada. Total de alunos no banco: 390"}
 {"timestamp":"00:42:20.306","source":"Browser","level":"LOG","message":"Busca finalizada. Total de alunos no banco: 390"}
+{"timestamp":"01:08:27.268","source":"Server","level":"WARN","message":"⚠ Blocked cross-origin request to Next.js dev resource /_next/webpack-hmr from \"127.0.0.1\".\nCross-origin access to Next.js dev resources is blocked by default for safety.\n\nTo allow this host in development, add it to \"allowedDevOrigins\" in next.config.js and restart the dev server:\n\n// next.config.js\nmodule.exports = {\n  allowedDevOrigins: ['127.0.0.1'],\n}\n\nRead more: https://nextjs.org/docs/app/api-reference/config/next-config-js/allowedDevOrigins"}
+{"timestamp":"01:09:04.375","source":"Browser","level":"INFO","message":"%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"}
+{"timestamp":"01:09:04.609","source":"Browser","level":"LOG","message":"PWA Service Worker registrado: http://localhost:3000/"}
+{"timestamp":"01:09:17.456","source":"Browser","level":"INFO","message":"%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"}
+{"timestamp":"01:09:17.474","source":"Browser","level":"LOG","message":"PWA Service Worker registrado: http://localhost:3000/"}
+{"timestamp":"01:09:42.453","source":"Browser","level":"WARN","message":"Detected `scroll-behavior: smooth` on the `<html>` element. To disable smooth scrolling during route transitions, add `data-scroll-behavior=\"smooth\"` to your <html> element. Learn more: https://nextjs.org/docs/messages/missing-data-scroll-behavior"}
+{"timestamp":"01:09:42.462","source":"Server","level":"WARN","message":"[browser] \"\\u001b[33mDetected `scroll-behavior: smooth` on the `<html>` element. To disable smooth scrolling during route transitions, add `data-scroll-behavior=\\\"smooth\\\"` to your <html> element. Learn more: https://nextjs.org/docs/messages/missing-data-scroll-behavior\\u001b[39m\""}
+{"timestamp":"01:09:42.462","source":"Browser","level":"WARN","message":"\u001b[33mDetected `scroll-behavior: smooth` on the `<html>` element. To disable smooth scrolling during route transitions, add `data-scroll-behavior=\"smooth\"` to your <html> element. Learn more: https://nextjs.org/docs/messages/missing-data-scroll-behavior\u001b[39m"}
+{"timestamp":"01:24:57.419","source":"Server","level":"LOG","message":"✓ Compiled in 712ms"}
+{"timestamp":"01:25:04.856","source":"Server","level":"LOG","message":"✓ Compiled in 352ms"}
+{"timestamp":"01:25:26.892","source":"Server","level":"LOG","message":"✓ Compiled in 249ms"}
+{"timestamp":"01:25:37.884","source":"Server","level":"LOG","message":"✓ Compiled in 198ms"}
+{"timestamp":"01:26:02.363","source":"Server","level":"LOG","message":"✓ Compiled in 30ms"}
+{"timestamp":"01:26:17.353","source":"Server","level":"LOG","message":"✓ Compiled in 43ms"}
+{"timestamp":"01:26:27.615","source":"Server","level":"LOG","message":"✓ Compiled in 36ms"}
+{"timestamp":"01:28:41.982","source":"Browser","level":"INFO","message":"%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"}
+{"timestamp":"01:28:48.832","source":"Browser","level":"INFO","message":"%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"}
+{"timestamp":"01:28:49.035","source":"Browser","level":"LOG","message":"PWA Service Worker registrado: http://localhost:3000/"}
+{"timestamp":"01:28:57.232","source":"Browser","level":"WARN","message":"Detected `scroll-behavior: smooth` on the `<html>` element. To disable smooth scrolling during route transitions, add `data-scroll-behavior=\"smooth\"` to your <html> element. Learn more: https://nextjs.org/docs/messages/missing-data-scroll-behavior"}
+{"timestamp":"01:28:57.246","source":"Server","level":"WARN","message":"[browser] \"\\u001b[33mDetected `scroll-behavior: smooth` on the `<html>` element. To disable smooth scrolling during route transitions, add `data-scroll-behavior=\\\"smooth\\\"` to your <html> element. Learn more: https://nextjs.org/docs/messages/missing-data-scroll-behavior\\u001b[39m\""}
+{"timestamp":"01:28:57.246","source":"Browser","level":"WARN","message":"\u001b[33mDetected `scroll-behavior: smooth` on the `<html>` element. To disable smooth scrolling during route transitions, add `data-scroll-behavior=\"smooth\"` to your <html> element. Learn more: https://nextjs.org/docs/messages/missing-data-scroll-behavior\u001b[39m"}
+{"timestamp":"01:29:02.566","source":"Browser","level":"INFO","message":"%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"}
+{"timestamp":"01:29:02.828","source":"Browser","level":"LOG","message":"PWA Service Worker registrado: http://localhost:3000/"}
+{"timestamp":"01:29:03.097","source":"Server","level":"WARN","message":"[browser] \"\\u001b[33mDetected `scroll-behavior: smooth` on the `<html>` element. To disable smooth scrolling during route transitions, add `data-scroll-behavior=\\\"smooth\\\"` to your <html> element. Learn more: https://nextjs.org/docs/messages/missing-data-scroll-behavior\\u001b[39m\""}
+{"timestamp":"01:29:03.097","source":"Browser","level":"WARN","message":"\u001b[33mDetected `scroll-behavior: smooth` on the `<html>` element. To disable smooth scrolling during route transitions, add `data-scroll-behavior=\"smooth\"` to your <html> element. Learn more: https://nextjs.org/docs/messages/missing-data-scroll-behavior\u001b[39m"}
+{"timestamp":"01:29:03.097","source":"Browser","level":"WARN","message":"Detected `scroll-behavior: smooth` on the `<html>` element. To disable smooth scrolling during route transitions, add `data-scroll-behavior=\"smooth\"` to your <html> element. Learn more: https://nextjs.org/docs/messages/missing-data-scroll-behavior"}
+{"timestamp":"01:29:53.566","source":"Browser","level":"LOG","message":"Firebase inicializado. Usuário atual: hoUPi2GD5VYDpW0D4zoXHdcXhJo2"}
+{"timestamp":"01:29:53.566","source":"Browser","level":"LOG","message":"Firebase inicializado. Usuário atual: hoUPi2GD5VYDpW0D4zoXHdcXhJo2"}
+{"timestamp":"01:29:54.473","source":"Browser","level":"LOG","message":"Busca finalizada. Total de alunos no banco: 390"}
+{"timestamp":"01:29:54.473","source":"Browser","level":"LOG","message":"Busca finalizada. Total de alunos no banco: 390"}

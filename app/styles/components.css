@@ -147,8 +147,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
+  width: var(--touch-target);
+  min-width: var(--touch-target);
+  height: var(--touch-target);
   padding: 0;
   color: var(--text-secondary);
   background: transparent;
@@ -553,7 +554,7 @@ select.form-input {
   align-items: center;
   justify-content: center;
   gap: var(--space-2);
-  min-height: 40px;
+  min-height: var(--touch-target);
   padding: 0 var(--space-4);
   font-family: inherit;
   font-size: 0.8rem;
@@ -603,6 +604,18 @@ select.form-input {
   margin-bottom: var(--space-12);
 }
 
+.page-header>* {
+  min-width: 0;
+}
+
+.page-header-content {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-4);
+  min-width: 0;
+  flex: 1;
+}
+
 .page-header-inner {
   display: flex;
   flex-direction: column;
@@ -628,6 +641,8 @@ select.form-input {
   display: flex;
   gap: var(--space-3);
   flex-shrink: 0;
+  flex-wrap: wrap;
+  align-items: center;
 }
 
 /* Header */
@@ -925,6 +940,13 @@ select.form-input {
   background: var(--glass-bg);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-lg);
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+}
+
+.table-scroll table {
+  width: max-content;
+  min-width: 100%;
 }
 
 .history-table {
@@ -1271,6 +1293,20 @@ select.form-input {
   box-shadow: var(--input-shadow);
 }
 
+.filter-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-8);
+}
+
+.responsive-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+
 .filter-search-icon {
   position: absolute;
   left: var(--space-3);
@@ -1385,6 +1421,20 @@ select.form-input {
   overflow: hidden;
 }
 
+.history-filter-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  margin-bottom: var(--space-8);
+}
+
+.history-filter-heading {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-shrink: 0;
+}
+
 .history-group-summary {
   display: flex;
   align-items: center;
@@ -1411,12 +1461,15 @@ select.form-input {
 .history-group-subtitle {
   font-size: 0.85rem;
   color: var(--text-tertiary);
+  overflow-wrap: anywhere;
 }
 
 .history-group-insights {
   display: flex;
   align-items: center;
   gap: var(--space-5);
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
 .history-summary-stat {
@@ -1462,7 +1515,7 @@ select.form-input {
 
 .history-eval-header {
   display: grid;
-  grid-template-columns: 110px 70px 70px 130px 1fr;
+  grid-template-columns: minmax(96px, 110px) minmax(60px, 70px) minmax(60px, 70px) minmax(130px, 160px) minmax(240px, 1fr);
   gap: 0;
   padding: var(--space-3) var(--space-5);
   background: var(--glass-bg);
@@ -1479,7 +1532,7 @@ select.form-input {
 
 .history-eval-row {
   display: grid;
-  grid-template-columns: 110px 70px 70px 130px 1fr;
+  grid-template-columns: minmax(96px, 110px) minmax(60px, 70px) minmax(60px, 70px) minmax(130px, 160px) minmax(240px, 1fr);
   gap: 0;
   padding: var(--space-4) var(--space-5);
   border-bottom: 1px solid var(--glass-border-light);
@@ -1523,9 +1576,8 @@ select.form-input {
 .history-eval-ia {
   font-size: 0.8rem;
   color: var(--text-secondary);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
 /* Texts Grid - Cards Layout */
@@ -1621,7 +1673,8 @@ select.form-input {
   background: none;
   border: none;
   cursor: pointer;
-  padding: 4px 8px;
+  min-height: var(--touch-target);
+  padding: 8px 12px;
   border-radius: 4px;
   transition: all 0.2s ease;
 }
@@ -1987,14 +2040,21 @@ select.form-input {
     gap: var(--space-4);
   }
 
+  .page-header-content {
+    width: 100%;
+  }
+
   .page-header-actions {
     width: 100%;
     justify-content: stretch;
   }
 
   .page-header-actions .btn-primary,
-  .page-header-actions .btn-outline {
+  .page-header-actions .btn-outline,
+  .page-header>.btn-primary,
+  .page-header>.btn-outline {
     flex: 1;
+    width: 100%;
   }
 
   .page-content {
@@ -2015,8 +2075,17 @@ select.form-input {
     align-items: stretch;
   }
 
+  .filter-bar>* {
+    width: 100%;
+    min-width: 0 !important;
+  }
+
   .filter-select {
     width: 100%;
+  }
+
+  .responsive-form-grid {
+    grid-template-columns: 1fr;
   }
 
   .glass-card {
@@ -2051,6 +2120,54 @@ select.form-input {
 
   .app-sheet {
     padding: var(--space-6);
+    max-width: min(100%, calc(100vw - (2 * var(--space-4))));
+  }
+
+  .history-group-summary {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--space-4);
+  }
+
+  .history-filter-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--space-3);
+  }
+
+  .history-filter-heading {
+    width: 100%;
+  }
+
+  .history-filter-label {
+    white-space: normal !important;
+  }
+
+  .history-filter-bar .filter-search-input {
+    width: 100% !important;
+  }
+
+  .history-filter-bar .btn-icon {
+    align-self: flex-end;
+  }
+
+  .history-group-insights {
+    width: 100%;
+    gap: var(--space-3);
+    justify-content: space-between;
+  }
+
+  .history-chart-block {
+    flex: 1 1 100%;
+  }
+
+  .history-evaluations-list {
+    min-width: 620px;
+  }
+
+  .history-eval-header,
+  .history-eval-row {
+    min-width: 620px;
   }
 
   .metric-card-value {
@@ -2073,6 +2190,14 @@ select.form-input {
 
   .hero-card {
     padding: var(--space-6);
+  }
+
+  .page-header-content {
+    gap: var(--space-3);
+  }
+
+  .history-group-title {
+    font-size: 1rem;
   }
 
   .students-filter-input,

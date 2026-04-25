@@ -27,6 +27,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const publicRoutes = ["/login", "/mobile-preview"];
+  const isPublicRoute = publicRoutes.includes(pathname);
 
   useEffect(() => {
     if (!initialized || !auth) {
@@ -50,6 +51,11 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     }
   }, [user, loading, router, pathname]);
 
+  // Permite que rotas publicas renderizem sem depender do bootstrap global do Firebase.
+  if (isPublicRoute) {
+    return <>{children}</>;
+  }
+
   if (loading || !initialized) {
     return (
       <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -59,9 +65,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   }
 
   if (!user || pathname === '/login') {
-    if (publicRoutes.includes(pathname)) {
-      return <>{children}</>;
-    }
     return null;
   }
 

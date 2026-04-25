@@ -18,6 +18,14 @@
   .mobile-only-view {
     display: block !important;
   }
+
+  .settings-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .settings-toggle-row {
+    align-items: flex-start;
+  }
 }
 
 /* Glass Modal Overlay */
@@ -37,7 +45,7 @@
 /* Settings Toggle */
 .settings-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 380px), 1fr));
   gap: var(--space-6);
 }
 

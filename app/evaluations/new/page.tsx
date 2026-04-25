@@ -93,7 +93,7 @@ export default function SelectionPage() {
       </header>
 
       <div className="filter-bar">
-        <div style={{ position: 'relative', flex: 1, minWidth: '280px' }}>
+        <div style={{ position: 'relative', flex: 1, minWidth: 0 }}>
           <span className="filter-search-icon"><SearchIcon /></span>
           <input
             type="text"

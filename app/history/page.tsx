@@ -253,7 +253,7 @@ export default function HistoryPage() {
           </div>
         </div>
         {!loading && studentGroups.length > 0 && (
-          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+          <div className="page-header-actions">
             <button onClick={handleExportExcel} className="btn-primary">
               <span>📊</span> Excel
             </button>
@@ -287,10 +287,10 @@ export default function HistoryPage() {
       )}
 
       {/* Barra de Filtros */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem', flexWrap: 'nowrap' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0 }}>
+      <div className="history-filter-bar" style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem', flexWrap: 'nowrap' }}>
+        <div className="history-filter-heading" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0 }}>
           <span style={{ fontSize: '1.2rem' }}>📅</span>
-          <span style={{ fontWeight: 700, fontSize: '0.95rem', whiteSpace: 'nowrap' }}>Ano Letivo:</span>
+          <span className="history-filter-label" style={{ fontWeight: 700, fontSize: '0.95rem', whiteSpace: 'nowrap' }}>Ano Letivo:</span>
         </div>
         <input
           type="number"
@@ -421,7 +421,7 @@ export default function HistoryPage() {
                   {/*Lista aninhada de avaliações*/}
                   {isExpanded && (
                     <div className="history-details-expanded">
-                      <div className="desktop-only-view" style={{ overflowX: 'auto' }}>
+                      <div className="desktop-only-view table-scroll">
                         <div className="history-evaluations-list">
                           <div className="history-eval-header">
                             <span>DATA</span>

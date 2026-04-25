@@ -62,6 +62,19 @@ a {
   transition: color 0.2s ease;
 }
 
+img,
+svg,
+video,
+canvas {
+  max-width: 100%;
+}
+
+img,
+video,
+canvas {
+  height: auto;
+}
+
 /* ========================================
    INTERACTIVE ELEMENTS
    ======================================== */

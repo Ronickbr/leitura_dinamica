@@ -36,14 +36,6 @@ export default function LoginForm() {
         }
     };
 
-    if (!initialized) {
-        return (
-            <div style={{ textAlign: 'center', padding: '2rem' }}>
-                <div className="animate-pulse" style={{ color: "var(--text-muted)" }}>Carregando configuracoes...</div>
-            </div>
-        );
-    }
-
     return (
         <div className="auth-page-container animate-in">
             <div className="glass-card login-card">
@@ -53,6 +45,20 @@ export default function LoginForm() {
                 <p className="page-subtitle" style={{ marginBottom: "2.5rem" }}>
                     Avaliação de fluência leitora com IA
                 </p>
+
+                {!initialized && (
+                    <div style={{
+                        background: "rgba(99, 102, 241, 0.08)",
+                        border: "1px solid rgba(99, 102, 241, 0.18)",
+                        padding: "0.75rem 1rem",
+                        borderRadius: "12px",
+                        marginBottom: "1.5rem",
+                        color: "var(--text-secondary)",
+                        fontSize: "0.9rem"
+                    }}>
+                        Preparando acesso...
+                    </div>
+                )}
 
                 {(error || firebaseError) && (
                     <div style={{
@@ -95,11 +101,11 @@ export default function LoginForm() {
                     />
                     <button
                         type="submit"
-                        disabled={loading}
+                        disabled={loading || !initialized}
                         className="btn-primary"
                         style={{ width: "100%", marginTop: "0.5rem" }}
                     >
-                        {loading ? "Entrando..." : "Entrar"}
+                        {!initialized ? "Preparando..." : loading ? "Entrando..." : "Entrar"}
                     </button>
                 </form>
             </div>

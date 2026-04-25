@@ -162,9 +162,11 @@ export default function StudentsPage() {
             <p className="page-subtitle">Cadastre e gerencie os estudantes cadastrados no sistema.</p>
           </div>
         </div>
-        <button onClick={() => { if (showForm) { setEditingId(null); setFormData({ nome: '', turma: '', serie: '', turno: '', diagnostico: '', observacoes: '', anoLetivo: new Date().getFullYear().toString(), metaPCM: 0 }); } setShowForm(!showForm); }} className="btn-primary">
-          {showForm ? 'Cancelar' : '+ Novo'}
-        </button>
+        <div className="page-header-actions">
+          <button onClick={() => { if (showForm) { setEditingId(null); setFormData({ nome: '', turma: '', serie: '', turno: '', diagnostico: '', observacoes: '', anoLetivo: new Date().getFullYear().toString(), metaPCM: 0 }); } setShowForm(!showForm); }} className="btn-primary">
+            {showForm ? 'Cancelar' : '+ Novo'}
+          </button>
+        </div>
       </header>
 
       {showForm && (

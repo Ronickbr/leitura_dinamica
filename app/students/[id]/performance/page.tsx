@@ -55,7 +55,7 @@ export default function StudentPerformancePage() {
     return (
         <div className="animate-in" style={{ paddingBottom: "4rem" }}>
             <header className="page-header" style={{ marginBottom: "2rem" }}>
-                <div style={{ display: "flex", alignItems: "flex-start", gap: "1rem" }}>
+                <div className="page-header-content">
                     <button onClick={() => router.back()} className="btn-outline-round">⬅️</button>
                     <div>
                         <h2 className="page-title">Perfil de <span style={{ color: "var(--primary)" }}>Evolução</span></h2>
@@ -64,7 +64,7 @@ export default function StudentPerformancePage() {
                 </div>
             </header>
 
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "2rem" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 300px), 1fr))", gap: "2rem" }}>
                 {/* Métricas e Metas */}
                 <div className="glass-card" style={{ padding: "2rem" }}>
                     <h3 style={{ fontSize: "1.1rem", fontWeight: 800, marginBottom: "1.5rem", borderBottom: "1px solid var(--glass-border)", paddingBottom: "0.75rem" }}>

@@ -5,6 +5,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useState,
 } from "react";
@@ -103,7 +104,13 @@ export function MobileExperienceProvider({
 }: {
   children: React.ReactNode;
 }) {
-  const [state, setState] = useState<MobileExperienceState>(defaultState);
+  const [state, setState] = useState<MobileExperienceState>(() => {
+    if (typeof window === "undefined") {
+      return defaultState;
+    }
+
+    return detectMobileExperience();
+  });
 
   const syncState = useCallback(() => {
     setState(detectMobileExperience());
@@ -128,7 +135,7 @@ export function MobileExperienceProvider({
     };
   }, [syncState]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const root = document.documentElement;
     const body = document.body;
 

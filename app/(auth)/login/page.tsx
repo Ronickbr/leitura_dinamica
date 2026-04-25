@@ -38,22 +38,6 @@ export default function LoginPage() {
     }
   };
 
-  if (!initialized) {
-    return (
-      <div className="animate-in" style={{
-        minHeight: "100vh",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "2rem"
-      }}>
-        <div className="glass-card" style={{ maxWidth: "420px", width: "100%", padding: "3rem", textAlign: "center" }}>
-          <div className="animate-pulse" style={{ color: "var(--text-muted)" }}>Carregando...</div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="animate-in" style={{
       minHeight: "100vh",
@@ -69,6 +53,20 @@ export default function LoginPage() {
         <p className="page-subtitle" style={{ marginBottom: "2.5rem" }}>
           Avaliação de fluência leitora com IA
         </p>
+
+        {!initialized && (
+          <div style={{
+            background: "rgba(99, 102, 241, 0.08)",
+            border: "1px solid rgba(99, 102, 241, 0.18)",
+            padding: "0.75rem 1rem",
+            borderRadius: "12px",
+            marginBottom: "1.5rem",
+            color: "var(--text-secondary)",
+            fontSize: "0.9rem"
+          }}>
+            Preparando acesso...
+          </div>
+        )}
 
         {(error || firebaseError) && (
           <div style={{
@@ -119,11 +117,11 @@ export default function LoginPage() {
           />
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || !initialized}
             className="btn-primary"
             style={{ width: "100%", padding: "1rem", fontSize: "1rem", marginTop: "0.5rem" }}
           >
-            {loading ? "Entrando..." : "Entrar"}
+            {!initialized ? "Preparando..." : loading ? "Entrando..." : "Entrar"}
           </button>
         </form>
       </div>
