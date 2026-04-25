@@ -15,6 +15,7 @@ type MobileCardProps = {
   testId?: string;
   collapsible?: boolean;
   defaultExpanded?: boolean;
+  className?: string;
 };
 
 type MobileDataPointProps = {
@@ -42,6 +43,7 @@ export function MobileCard({
   testId,
   collapsible = false,
   defaultExpanded = true,
+  className = "",
 }: MobileCardProps) {
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
 
@@ -84,7 +86,7 @@ export function MobileCard({
       <button
         type="button"
         onClick={onClick}
-        className="glass-card mobile-card mobile-card-button"
+        className={`glass-card mobile-card mobile-card-button ${className}`}
         data-testid={testId}
       >
         {content}
@@ -94,7 +96,7 @@ export function MobileCard({
 
   return (
     <div
-      className={`glass-card mobile-card ${collapsible && !isExpanded ? 'is-collapsed' : ''}`}
+      className={`glass-card mobile-card ${collapsible && !isExpanded ? 'is-collapsed' : ''} ${className}`}
       data-testid={testId}
       onClick={!collapsible ? onClick : undefined}
       style={onClick && !collapsible ? { cursor: 'pointer' } : undefined}

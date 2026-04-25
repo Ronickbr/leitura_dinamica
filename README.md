@@ -1,4 +1,4 @@
-# 📖 Plataforma Leitura (v3.6.2)
+# 📖 Plataforma Leitura (v3.7.0)
 
 Plataforma de avaliação de fluência leitora com Next.js (App Router), persistência em Firebase e processamento de áudio via IA. O projeto foi refatorado para um monorepo Next.js unificado com API routes serverless.
 
@@ -41,6 +41,7 @@ O sistema permite que professores:
 - **[NOVO]** Análise de Evolução Comparativa via IA baseada em registros anteriores;
 - **[NOVO]** Diagnóstico de leitura dinâmico calibrado por série e meta de PCM;
 - **[NOVO]** Fluxo de login unificado diretamente na página inicial com renderização condicional;
+- **v3.7.0**: Upgrade **Antigravity Design (Alpha)** para dispositivos móveis. Implementação do sistema **Glassmorphism 2.1** com reflexos dinâmicos e profundidade espacial; integração de **Animações Staggered (Cascata)** nas listagens de Alunos, Histórico e Seleção para transições ultra-fluidas; e otimização de performance via GPU (`will-change`) garantindo 60fps no mobile.
 - **v3.6.2**: Refinamento de Layout e Acessibilidade. Padronização de `touch-target` para 48px via variáveis CSS; melhoria na estrutura de cabeçalhos responsivos; implementação de scroll horizontal via CSS em tabelas densas no desktop; e otimização do fluxo de carregamento no formulário de login para uma experiência mais fluida.
 - **v3.6.1**: Implementação de **Cards Expansíveis (Collapsible)** em todas as listagens mobile (Alunos, Histórico e Seleção). Esta funcionalidade permite que informações densas fiquem ocultas por padrão, sendo reveladas apenas sob demanda, otimizando drasticamente o consumo de espaço vertical e eliminando a necessidade de scroll horizontal em tabelas. Inclui animações de transição suaves e ícones indicadores de estado.
 - **v3.6.0**: Otimização profunda da responsividade mobile. Refatoração completa da `MobileNav` (Navegação Inferior) para eliminar falhas de layout e overflow; ajuste global de tokens de espaçamento para telas ultra-estreitas; melhoria nos alvos de toque (mínimo 44px) e legibilidade de fontes. Remoção de estilos inline residuais em páginas críticas.

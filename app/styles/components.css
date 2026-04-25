@@ -181,6 +181,16 @@
   -webkit-backdrop-filter: var(--glass-blur);
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   overflow: hidden;
+  will-change: transform, box-shadow;
+}
+
+.glass-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--glass-shine);
+  opacity: 0.05;
+  pointer-events: none;
 }
 
 .glass-card::before {
@@ -2397,5 +2407,66 @@ select.form-input {
   .no-print,
   .mobile-nav {
     display: none !important;
+  }
+}
+
+/* Antigravity Animations */
+@keyframes floatIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-float-in {
+  animation: floatIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  opacity: 0;
+}
+
+.stagger-1 {
+  animation-delay: var(--delay-1);
+}
+
+.stagger-2 {
+  animation-delay: var(--delay-2);
+}
+
+.stagger-3 {
+  animation-delay: var(--delay-3);
+}
+
+.stagger-4 {
+  animation-delay: var(--delay-4);
+}
+
+.stagger-5 {
+  animation-delay: var(--delay-5);
+}
+
+.stagger-6 {
+  animation-delay: var(--delay-6);
+}
+
+.stagger-7 {
+  animation-delay: var(--delay-7);
+}
+
+.stagger-8 {
+  animation-delay: var(--delay-8);
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+
+  .animate-float-in,
+  .mobile-card-collapsible-wrapper,
+  .mobile-card-expand-icon {
+    animation: none !important;
+    transition: none !important;
   }
 }

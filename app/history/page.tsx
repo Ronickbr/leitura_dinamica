@@ -320,7 +320,7 @@ export default function HistoryPage() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
           {studentGroups
             .filter(group => !filterAnoLetivo || group.aluno?.anoLetivo === filterAnoLetivo)
-            .map(group => {
+            .map((group, index) => {
               const isExpanded = expandedStudentId === group.alunoId;
               const latestEv = group.evaluations[0];
 
@@ -332,9 +332,9 @@ export default function HistoryPage() {
               });
 
               return (
-                <div key={group.alunoId} className="history-group-card">
+                <div key={group.alunoId} className={`history-group-card animate-float-in stagger-${(index % 8) + 1}`} style={{ marginBottom: '1.5rem' }}>
                   <div
-                    className={`history-group-summary ${isExpanded ? 'expanded' : ''}`}
+                    className="history-group-summary"
                     onClick={() => setExpandedStudentId(isExpanded ? null : group.alunoId)}
                   >
                     <div className="history-group-meta">
@@ -457,9 +457,10 @@ export default function HistoryPage() {
                       </div>
                       <div className="mobile-only-view">
                         <MobileCardList testId="history-mobile-cards">
-                          {group.evaluations.map((ev) => (
+                          {group.evaluations.map((ev, idx) => (
                             <MobileCard
                               key={ev.id}
+                              className={`animate-float-in stagger-${(idx % 5) + 1}`}
                               testId="history-mobile-card"
                               title={`${ev.pcm} PCM`}
                               subtitle={formatDate(ev.data)}

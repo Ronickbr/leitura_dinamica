@@ -401,10 +401,11 @@ export default function StudentsPage() {
 
           <div className="mobile-only-view">
             <MobileCardList testId="students-mobile-cards">
-              {filteredAlunos.map(aluno => (
+              {filteredAlunos.map((aluno, index) => (
                 <MobileCard
                   key={aluno.id}
                   testId="student-mobile-card"
+                  className={`animate-float-in stagger-${(index % 8) + 1}`}
                   title={anonymizeName(aluno.id, aluno.nome)}
                   subtitle={`${aluno.serie} • Turma ${aluno.turma}`}
                   collapsible={true}

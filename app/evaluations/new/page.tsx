@@ -203,9 +203,10 @@ export default function SelectionPage() {
           </div>
           <div className="mobile-only-view">
             <MobileCardList testId="evaluation-selection-mobile-cards">
-              {filteredAlunos.map((aluno) => (
+              {filteredAlunos.map((aluno, index) => (
                 <MobileCard
                   key={aluno.id}
+                  className={`animate-float-in stagger-${(index % 8) + 1}`}
                   testId="evaluation-selection-mobile-card"
                   title={aluno.nome}
                   subtitle={`${aluno.serie} • Turma ${aluno.turma}`}
