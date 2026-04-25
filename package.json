@@ -1,7 +1,7 @@
 {
   "name": "leitura",
   "private": true,
-  "version": "3.5.0",
+  "version": "3.5.1",
   "description": "Plataforma de avaliacao de fluencia leitora com Next.js.",
   "engines": {
     "node": ">=22.0.0"
@@ -14,7 +14,8 @@
     "test:mobile": "playwright test --config=playwright.config.ts",
     "test:mobile:headed": "playwright test --config=playwright.config.ts --headed",
     "deploy:preview": "vercel",
-    "deploy:prod": "vercel --prod"
+    "deploy:prod": "vercel --prod",
+    "generate:icons": "node scripts/generate-icons.js"
   },
   "dependencies": {
     "compression": "^1.8.1",

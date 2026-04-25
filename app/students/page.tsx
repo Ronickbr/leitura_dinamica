@@ -2,16 +2,39 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { getAlunos, addAluno, updateAluno, deleteAluno, type Aluno } from "@/lib/services";
+import { getAlunos, addAluno, updateAluno, deleteAluno, getAlunoFilterOptions, type Aluno, type AlunoFilterOptions } from "@/lib/services";
 import { MobileCard, MobileCardList, MobileDataGrid, MobileDataPoint } from "../components/MobileCards";
 import { useSettings } from "../components/SettingsProvider";
 import { useFirebase } from "../components/FirebaseProvider";
 import { getDiagnosisStyle } from "@/lib/styleUtils";
+import { StudentFilterSelects } from "../components/StudentFilterSelects";
+
+const SearchIcon = () => (
+  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" aria-hidden="true">
+    <path d="M11 5a6 6 0 1 0 0 12 6 6 0 0 0 0-12Zm8 14-3.2-3.2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
+const CalendarIcon = () => (
+  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" aria-hidden="true">
+    <path d="M7 3v3M17 3v3M4 9h16" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+    <rect x="4" y="5" width="16" height="15" rx="2" stroke="currentColor" strokeWidth="1.8" />
+  </svg>
+);
+
+const EMPTY_FILTER_OPTIONS: AlunoFilterOptions = {
+  turmas: [],
+  series: [],
+  turnos: [],
+  diagnosticos: [],
+  totalRegistros: 0
+};
 
 export default function StudentsPage() {
   const router = useRouter();
   const { anonymizeName, anonymizeText } = useSettings();
   const { initialized: firebaseInitialized, auth } = useFirebase();
+  const defaultAnoLetivo = new Date().getFullYear().toString();
   const [alunos, setAlunos] = useState<Aluno[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -25,8 +48,12 @@ export default function StudentsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterTurma, setFilterTurma] = useState('');
   const [filterSerie, setFilterSerie] = useState('');
+  const [filterTurno, setFilterTurno] = useState('');
   const [filterDiagnostico, setFilterDiagnostico] = useState('');
-  const [filterAnoLetivo, setFilterAnoLetivo] = useState(new Date().getFullYear().toString());
+  const [filterAnoLetivo, setFilterAnoLetivo] = useState(defaultAnoLetivo);
+  const [filterOptions, setFilterOptions] = useState<AlunoFilterOptions>(EMPTY_FILTER_OPTIONS);
+  const [filtersLoading, setFiltersLoading] = useState(true);
+  const [filtersError, setFiltersError] = useState<string | null>(null);
 
   useEffect(() => {
     if (firebaseInitialized) {
@@ -37,16 +64,25 @@ export default function StudentsPage() {
 
   async function loadAlunos() {
     setLoading(true);
+    setFiltersLoading(true);
     setError(null);
+    setFiltersError(null);
     try {
-      const data = await getAlunos();
+      const [data, dynamicOptions] = await Promise.all([
+        getAlunos(),
+        getAlunoFilterOptions()
+      ]);
       console.log(`Busca finalizada. Total de alunos no banco: ${data.length}`);
       setAlunos(data);
+      setFilterOptions(dynamicOptions);
     } catch (err: any) {
       console.error("Erro ao carregar alunos:", err);
       setError("Erro ao carregar dados do Firebase. Verifique sua conexão e permissões.");
+      setFiltersError("Nao foi possivel carregar as opcoes dos selects dinamicos.");
+      setFilterOptions(EMPTY_FILTER_OPTIONS);
     } finally {
       setLoading(false);
+      setFiltersLoading(false);
     }
   }
 
@@ -86,6 +122,7 @@ export default function StudentsPage() {
     const matchesName = normalize(aluno.nome).includes(searchNorm);
     const matchesTurma = filterTurma === '' || normalize(aluno.turma).includes(turmaNorm);
     const matchesSerie = filterSerie === '' || aluno.serie === filterSerie;
+    const matchesTurno = filterTurno === '' || normalize(aluno.turno).includes(normalize(filterTurno));
     const matchesDiagnostico = filterDiagnostico === '' || (aluno.diagnostico && normalize(aluno.diagnostico).includes(diagNorm));
 
     // Tratativa para registros antigos sem anoLetivo: assume-se 2026 se estiver vazio
@@ -93,13 +130,21 @@ export default function StudentsPage() {
       aluno.anoLetivo === filterAnoLetivo ||
       (!aluno.anoLetivo && filterAnoLetivo === "2026");
 
-    return matchesName && matchesTurma && matchesSerie && matchesDiagnostico && matchesAno;
+    return matchesName && matchesTurma && matchesSerie && matchesTurno && matchesDiagnostico && matchesAno;
   });
 
   const totalAlunos = filteredAlunos.length;
   const totalComDiagnostico = filteredAlunos.filter(aluno =>
     aluno.diagnostico && aluno.diagnostico !== "Nenhum diagnóstico" && aluno.diagnostico !== "Nenhum"
   ).length;
+  const hasActiveFilters = Boolean(
+    searchTerm ||
+    filterTurma ||
+    filterSerie ||
+    filterTurno ||
+    filterDiagnostico ||
+    filterAnoLetivo !== defaultAnoLetivo
+  );
 
   return (
     <div className="animate-in" style={{ paddingBottom: '4rem' }}>
@@ -194,73 +239,88 @@ export default function StudentsPage() {
       ) : (
         <>
           {/* Barra de Filtros */}
-          <div className="glass-card" style={{ marginBottom: '2rem', padding: '1.5rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem' }}>
-              <span style={{ fontSize: '1.2rem' }}>🔍</span>
-              <h3 style={{ fontSize: '1rem', fontWeight: 700, margin: 0 }}>Filtros de Busca</h3>
+          <div
+            className="glass-card students-filters-card"
+            style={{ paddingTop: "20px", paddingRight: "20px", paddingBottom: "20px", paddingLeft: "20px" }}
+          >
+            <div className="students-filters-header">
+              <div className="students-filters-title-wrap">
+                <span className="students-filters-header-icon">
+                  <SearchIcon />
+                </span>
+                <div>
+                  <h3 className="students-filters-title">Filtros de Busca</h3>
+                  <p className="students-filters-subtitle">Refine a lista por nome, turma, serie, diagnostico e ano letivo.</p>
+                </div>
+              </div>
             </div>
-            <div className="responsive-form-grid">
-              <input
-                type="text"
-                placeholder="Buscar por nome..."
-                value={searchTerm}
-                onChange={e => setSearchTerm(e.target.value)}
-                className="glass-panel"
-              />
-              <input
-                type="text"
-                placeholder="Filtrar por turma..."
-                value={filterTurma}
-                onChange={e => setFilterTurma(e.target.value)}
-                className="glass-panel"
-              />
-              <select
-                value={filterSerie}
-                onChange={e => setFilterSerie(e.target.value)}
-                className="glass-panel"
-              >
-                <option value="">Todas as séries</option>
-                <option value="1º Ano">1º Ano</option>
-                <option value="2º Ano">2º Ano</option>
-                <option value="3º Ano">3º Ano</option>
-                <option value="4º Ano">4º Ano</option>
-                <option value="5º Ano">5º Ano</option>
-              </select>
-              <input
-                type="text"
-                placeholder="Filtrar diagnóstico..."
-                value={filterDiagnostico}
-                onChange={e => setFilterDiagnostico(e.target.value)}
-                className="glass-panel"
-              />
-              <input
-                type="number"
-                placeholder="Ano Letivo..."
-                value={filterAnoLetivo}
-                onChange={e => setFilterAnoLetivo(e.target.value)}
-                className="glass-panel"
-              />
+            <div className="students-filters-top-grid">
+              <label className="students-filter-field">
+                <span className="students-filter-label">Nome do aluno</span>
+                <span className="students-filter-control">
+                  <span className="students-filter-icon">
+                    <SearchIcon />
+                  </span>
+                  <input
+                    type="text"
+                    placeholder="Buscar por nome"
+                    value={searchTerm}
+                    onChange={e => setSearchTerm(e.target.value)}
+                    className="students-filter-input"
+                  />
+                </span>
+              </label>
+              <label className="students-filter-field">
+                <span className="students-filter-label">Ano letivo</span>
+                <span className="students-filter-control">
+                  <span className="students-filter-icon">
+                    <CalendarIcon />
+                  </span>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    placeholder="Ano letivo"
+                    value={filterAnoLetivo}
+                    onChange={e => setFilterAnoLetivo(e.target.value.replace(/\D/g, "").slice(0, 4))}
+                    className="students-filter-input"
+                  />
+                </span>
+              </label>
             </div>
-            {(searchTerm || filterTurma || filterSerie || filterDiagnostico) && (
-              <button
-                onClick={() => { setSearchTerm(''); setFilterTurma(''); setFilterSerie(''); setFilterDiagnostico(''); setFilterAnoLetivo(''); }}
-                style={{
-                  alignSelf: 'flex-start',
-                  background: 'rgba(239, 68, 68, 0.1)',
-                  border: '1px solid rgba(239, 68, 68, 0.2)',
-                  color: 'var(--error)',
-                  cursor: 'pointer',
-                  fontSize: '0.75rem',
-                  fontWeight: 700,
-                  padding: '0.3rem 0.8rem',
-                  borderRadius: '6px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.4rem'
-                }}
-              >
-                <span>✕</span> Limpar Filtros
-              </button>
+            <StudentFilterSelects
+              values={{
+                turma: filterTurma,
+                serie: filterSerie,
+                turno: filterTurno,
+                diagnostico: filterDiagnostico
+              }}
+              options={filterOptions}
+              loading={filtersLoading}
+              error={filtersError}
+              onChange={(field, value) => {
+                if (field === "turma") setFilterTurma(value);
+                if (field === "serie") setFilterSerie(value);
+                if (field === "turno") setFilterTurno(value);
+                if (field === "diagnostico") setFilterDiagnostico(value);
+              }}
+            />
+            {hasActiveFilters && (
+              <div className="students-filters-actions">
+                <button
+                  onClick={() => {
+                    setSearchTerm('');
+                    setFilterTurma('');
+                    setFilterSerie('');
+                    setFilterTurno('');
+                    setFilterDiagnostico('');
+                    setFilterAnoLetivo(defaultAnoLetivo);
+                  }}
+                  className="students-filter-clear"
+                >
+                  <span aria-hidden="true">✕</span>
+                  Limpar filtros
+                </button>
+              </div>
             )}
           </div>
 
@@ -270,85 +330,70 @@ export default function StudentsPage() {
             </div>
           )}
 
-          <div className="glass-card desktop-only-view" style={{ padding: 0, overflow: 'hidden' }}>
-            <div className="table-scroll">
-              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                <thead>
-                  <tr style={{ background: 'var(--glass-bg)', borderBottom: '1px solid var(--glass-border)' }}>
-                    <th style={{ padding: '1.25rem 2rem', textAlign: 'left', fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 800 }}>NOME</th>
-                    <th style={{ padding: '1.25rem 2rem', textAlign: 'left', fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 800 }}>TURMA E SÉRIE</th>
-                    <th style={{ padding: '1.25rem 2rem', textAlign: 'left', fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 800 }}>TURNO</th>
-                    <th style={{ padding: '1.25rem 2rem', textAlign: 'left', fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 800 }}>DIAGNÓSTICO</th>
-                    <th style={{ padding: '1.25rem 2rem', textAlign: 'right', fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 800 }}>AÇÕES</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredAlunos.map(aluno => (
-                    <tr key={aluno.id} className="hover-row" style={{ borderBottom: '1px solid var(--glass-border)' }}>
-                      <td style={{ padding: '1.25rem 2rem', fontWeight: 700 }}>
-                        {anonymizeName(aluno.id, aluno.nome)}
-                      </td>
-                      <td style={{ padding: '1.25rem 2rem', color: 'var(--text-muted)' }}>
-                        {aluno.serie} - Turma {aluno.turma}
-                      </td>
-                      <td style={{ padding: '1.25rem 2rem' }}>
-                        {aluno.turno ? (
-                          <span style={{ padding: '0.4rem 0.75rem', background: 'rgba(99, 102, 241, 0.1)', borderRadius: '8px', fontSize: '0.8rem', color: 'var(--primary)', fontWeight: 600 }}>
-                            {aluno.turno}
-                          </span>
-                        ) : (
-                          <span style={{ color: 'var(--text-muted)' }}>-</span>
-                        )}
-                      </td>
-                      <td style={{ padding: '1.25rem 2rem' }}>
-                        {aluno.diagnostico && aluno.diagnostico !== "Nenhum diagnóstico" && aluno.diagnostico !== "Nenhum" ? (
-                          <span style={{
-                            padding: '0.4rem 0.75rem',
+<div className="glass-card desktop-only-view" style={{ padding: 0, overflow: 'hidden' }}>
+            <div className="students-grid">
+              <div className="students-grid-header">
+                <div className="students-grid-cell">NOME</div>
+                <div className="students-grid-cell">TURMA E SÉRIE</div>
+                <div className="students-grid-cell">TURNO</div>
+                <div className="students-grid-cell">DIAGNÓSTICO</div>
+                <div className="students-grid-cell">AÇÕES</div>
+              </div>
+              <div className="students-grid-body">
+                {filteredAlunos.map(aluno => (
+                  <div key={aluno.id} className="students-grid-row">
+                    <div className="students-grid-cell">
+                      <span style={{ fontWeight: 600 }}>{anonymizeName(aluno.id, aluno.nome)}</span>
+                    </div>
+                    <div className="students-grid-cell" style={{ color: 'var(--text-tertiary)' }}>
+                      {aluno.serie} - Turma {aluno.turma}
+                    </div>
+                    <div className="students-grid-cell">
+                      {aluno.turno ? (
+                        <span className="turma-badge">{aluno.turno}</span>
+                      ) : (
+                        <span style={{ color: 'var(--text-tertiary)' }}>-</span>
+                      )}
+                    </div>
+                    <div className="students-grid-cell">
+                      {aluno.diagnostico && aluno.diagnostico !== "Nenhum diagnóstico" && aluno.diagnostico !== "Nenhum" ? (
+                        <span 
+                          className="diagnosis-badge"
+                          style={{
                             background: getDiagnosisStyle(aluno.diagnostico).bg,
-                            borderRadius: '8px',
-                            fontSize: '0.8rem',
                             color: getDiagnosisStyle(aluno.diagnostico).text,
-                            fontWeight: 800,
-                            border: `1px solid ${getDiagnosisStyle(aluno.diagnostico).text}33`
-                          }}>
-                            {anonymizeText(aluno.diagnostico)}
-                          </span>
-                        ) : (
-                          <span style={{ color: 'var(--text-muted)' }}>-</span>
-                        )}
-                      </td>
-                      <td style={{ padding: '1.25rem 2rem', textAlign: 'right' }}>
-                        <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
-                          <button onClick={() => setViewingAluno(aluno)} className="btn-icon" title="Visualizar">👁️</button>
-                          <button onClick={() => { setFormData({ nome: aluno.nome, turma: aluno.turma, serie: aluno.serie, turno: aluno.turno || '', diagnostico: aluno.diagnostico || '', observacoes: aluno.observacoes || '', anoLetivo: aluno.anoLetivo, metaPCM: aluno.metaPCM || 0 }); setEditingId(aluno.id); setShowForm(true); window.scrollTo(0, 0); }} className="btn-icon" title="Editar">✏️</button>
-                          <button onClick={() => handleDelete(aluno.id)} className="btn-icon" title="Excluir">🗑️</button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-                {filteredAlunos.length > 0 && (
-                  <tfoot>
-                    <tr style={{ background: 'var(--glass-bg)', borderTop: '2px solid var(--primary)' }}>
-                      <td colSpan={3} style={{ padding: '1.5rem 2rem', borderBottomLeftRadius: '16px' }}>
-                        <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 800, letterSpacing: '0.05em' }}>RESUMO DA LISTA</span>
-                      </td>
-                      <td style={{ padding: '1.5rem 2rem' }}>
-                        <div style={{ display: 'flex', flexDirection: 'column' }}>
-                          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 700, marginBottom: '0.2rem' }}>COM DIAGNÓSTICO</span>
-                          <span style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--primary)' }}>{totalComDiagnostico}</span>
-                        </div>
-                      </td>
-                      <td style={{ padding: '1.5rem 2rem', textAlign: 'right', borderBottomRightRadius: '16px' }}>
-                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-                          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 700, marginBottom: '0.2rem' }}>TOTAL DE ALUNOS</span>
-                          <span style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--text-main)' }}>{totalAlunos}</span>
-                        </div>
-                      </td>
-                    </tr>
-                  </tfoot>
-                )}
-              </table>
+                            borderColor: getDiagnosisStyle(aluno.diagnostico).text
+                          }}
+                        >
+                          {anonymizeText(aluno.diagnostico)}
+                        </span>
+                      ) : (
+                        <span style={{ color: 'var(--text-tertiary)' }}>-</span>
+                      )}
+                    </div>
+                    <div className="students-grid-cell students-grid-cell-actions">
+                      <button onClick={() => setViewingAluno(aluno)} className="btn-icon" title="Visualizar">👁️</button>
+                      <button onClick={() => { setFormData({ nome: aluno.nome, turma: aluno.turma, serie: aluno.serie, turno: aluno.turno || '', diagnostico: aluno.diagnostico || '', observacoes: aluno.observacoes || '', anoLetivo: aluno.anoLetivo, metaPCM: aluno.metaPCM || 0 }); setEditingId(aluno.id); setShowForm(true); window.scrollTo(0, 0); }} className="btn-icon" title="Editar">✏️</button>
+                      <button onClick={() => handleDelete(aluno.id)} className="btn-icon" title="Excluir">🗑️</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              {filteredAlunos.length > 0 && (
+                <div className="students-grid-footer">
+                  <div className="students-grid-cell">
+                    <span className="mobile-data-label">RESUMO DA LISTA</span>
+                  </div>
+                  <div className="students-grid-cell">
+                    <span className="mobile-data-label">COM DIAGNÓSTICO</span>
+                    <span style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--primary)' }}>{totalComDiagnostico}</span>
+                  </div>
+                  <div className="students-grid-cell">
+                    <span className="mobile-data-label">TOTAL DE ALUNOS</span>
+                    <span style={{ fontSize: '1.1rem', fontWeight: 800 }}>{filteredAlunos.length}</span>
+                  </div>
+</div>
+              )}
             </div>
           </div>
           <div className="mobile-only-view">

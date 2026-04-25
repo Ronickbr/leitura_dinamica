@@ -201,53 +201,31 @@ export default function TextsPage() {
           <p style={{ color: 'var(--text-muted)', fontWeight: 600 }}>Carregando biblioteca...</p>
         </div>
       ) : (
-        <div className="grid-cards">
+        <div className="texts-grid">
           {filteredTextos.map((texto, idx) => (
-            <div key={texto.id} className="glass-card animate-in" style={{ animationDelay: `${idx * 0.05}s`, display: 'flex', flexDirection: 'column' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.2rem', gap: '1rem' }}>
-                <div style={{ minWidth: 0 }}>
-                  <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                    <span className="library-badge library-badge-primary">
-                      {texto.serie}
-                    </span>
-                    <span className="library-badge library-badge-success">
-                      {texto.numeroPalavras} PALAVRAS
-                    </span>
-                  </div>
-                  <h3 className="card-title" style={{ wordBreak: 'break-word', margin: 0 }}>
-                    {texto.titulo}
-                  </h3>
+            <div key={texto.id} className="text-card animate-in" style={{ animationDelay: `${idx * 0.03}s` }}>
+              <div className="text-card-header">
+                <div className="text-card-badges">
+                  <span className="text-card-badge-primary">{texto.serie}</span>
+                  <span className="text-card-badge-success">{texto.numeroPalavras} palavras</span>
                 </div>
-                <div style={{ display: 'flex', gap: '0.4rem', flexShrink: 0 }}>
+                <div className="text-card-actions">
                   <button onClick={() => handleEdit(texto)} className="btn-icon" title="Editar">✏️</button>
                   <button onClick={() => handleDelete(texto.id)} className="btn-icon" title="Excluir" style={{ color: 'var(--accent)' }}>🗑️</button>
                 </div>
               </div>
-
-              <div className="text-preview-box">
-                <p className="text-preview-content">
-                  {texto.conteudo}
-                </p>
+              
+              <h3 className="text-card-title">{texto.titulo}</h3>
+              
+              <p className="text-card-preview">
+                {texto.conteudo}
+              </p>
+              
+              <div className="text-card-footer">
+                <button onClick={() => handleEdit(texto)} className="text-btn">
+                  Ver detalhes →
+                </button>
               </div>
-
-              <button
-                onClick={() => handleEdit(texto)}
-                style={{
-                  background: 'transparent',
-                  border: 'none',
-                  color: 'var(--primary)',
-                  fontWeight: 700,
-                  fontSize: '0.85rem',
-                  textAlign: 'left',
-                  cursor: 'pointer',
-                  padding: '0.5rem 0',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.4rem'
-                }}
-              >
-                Visualizar texto completo →
-              </button>
             </div>
           ))}
         </div>

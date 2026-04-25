@@ -226,6 +226,16 @@ export default function HistoryPage() {
     return <div style={{ textAlign: 'center', padding: '5rem', color: 'var(--text-muted)' }} className="animate-pulse">Carregando histórico...</div>;
   }
 
+  // Calcular estatísticas globais
+  const totalAvaliacoes = studentGroups.reduce((sum, g) => sum + g.evaluations.length, 0);
+  const ultimasAvaliacoes = studentGroups.map(g => g.evaluations[0]).filter(Boolean);
+  const mediaPCM = ultimasAvaliacoes.length > 0 
+    ? Math.round(ultimasAvaliacoes.reduce((sum, ev) => sum + (ev.pcm || 0), 0) / ultimasAvaliacoes.length) 
+    : 0;
+  const mediaPrecisao = ultimasAvaliacoes.length > 0 
+    ? Math.round(ultimasAvaliacoes.reduce((sum, ev) => sum + (ev.precisao || 0), 0) / ultimasAvaliacoes.length) 
+    : 0;
+
   return (
     <div className="animate-in" style={{ paddingBottom: '4rem' }}>
       <header className="page-header">
@@ -248,33 +258,55 @@ export default function HistoryPage() {
               <span>📊</span> Excel
             </button>
             <button onClick={handleExportJSON} className="btn-outline">
-              <span>🧬</span> Exportar JSON (Pesquisa)
+              <span>🧬</span> Exportar JSON
             </button>
           </div>
         )}
       </header>
 
+      {/* Cards de Estatísticas */}
+      {!loading && studentGroups.length > 0 && (
+        <div className="grid-cards" style={{ marginBottom: 'var(--space-8)' }}>
+          <div className="metric-card" style={{ borderLeft: '4px solid var(--primary)' }}>
+            <div className="mobile-data-label">Total de Alunos</div>
+            <div className="metric-card-value">{studentGroups.length}</div>
+          </div>
+          <div className="metric-card" style={{ borderLeft: '4px solid var(--accent)' }}>
+            <div className="mobile-data-label">Avaliações Realizadas</div>
+            <div className="metric-card-value">{totalAvaliacoes}</div>
+          </div>
+          <div className="metric-card" style={{ borderLeft: '4px solid var(--success)' }}>
+            <div className="mobile-data-label">Média PCM</div>
+            <div className="metric-card-value">{mediaPCM}</div>
+          </div>
+          <div className="metric-card" style={{ borderLeft: '4px solid var(--warning)' }}>
+            <div className="mobile-data-label">Média Precisão</div>
+            <div className="metric-card-value">{mediaPrecisao}%</div>
+          </div>
+        </div>
+      )}
+
       {/* Barra de Filtros */}
-      <div className="glass-card" style={{ marginBottom: '2rem', padding: '1.25rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <span style={{ fontSize: '1.1rem' }}>📅</span>
-          <h3 style={{ fontSize: '1rem', fontWeight: 700, margin: 0 }}>Ano Letivo:</h3>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem', flexWrap: 'nowrap' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0 }}>
+          <span style={{ fontSize: '1.2rem' }}>📅</span>
+          <span style={{ fontWeight: 700, fontSize: '0.95rem', whiteSpace: 'nowrap' }}>Ano Letivo:</span>
         </div>
         <input
           type="number"
-          placeholder="Ex: 2026"
+          placeholder="2026"
           value={filterAnoLetivo}
           onChange={e => setFilterAnoLetivo(e.target.value)}
-          className="glass-panel"
-          style={{ width: '120px' }}
+          className="filter-search-input"
+          style={{ width: '120px', flexShrink: 0 }}
         />
         {filterAnoLetivo && (
           <button
             onClick={() => setFilterAnoLetivo('')}
             className="btn-icon"
-            style={{ padding: '0.3rem 0.6rem', fontSize: '0.75rem' }}
+            style={{ flexShrink: 0 }}
           >
-            ✕ Limpar
+            ✕
           </button>
         )}
       </div>
@@ -300,18 +332,18 @@ export default function HistoryPage() {
               });
 
               return (
-                <div key={group.alunoId} className="glass-card" style={{ padding: '0', overflow: 'hidden' }}>
+                <div key={group.alunoId} className="history-group-card">
                   <div
-                    className={`hover-row history-group-summary ${isExpanded ? 'expanded' : ''}`}
+                    className={`history-group-summary ${isExpanded ? 'expanded' : ''}`}
                     onClick={() => setExpandedStudentId(isExpanded ? null : group.alunoId)}
                   >
                     <div className="history-group-meta">
                       <h3 className="history-group-title">
-                        {anonymizeName(group.alunoId, group.aluno?.nome || 'Aluno Desconhecido')}
+                        {anonymizeName(group.alunoId, group.aluno?.nome || 'Aluno')}
                       </h3>
-                      <div className="history-group-subtitle">
-                        {group.aluno?.serie ? `${group.aluno.serie} - Turma ${group.aluno.turma}` : 'Sem turma informada'} • {group.evaluations.length} avaliaç{group.evaluations.length !== 1 ? 'ões' : 'ão'}
-                      </div>
+                      <p className="history-group-subtitle">
+                        {group.aluno?.serie} - Turma {group.aluno?.turma} • {group.evaluations.length} avaliação{group.evaluations.length !== 1 ? 'ções' : ''}
+                      </p>
                     </div>
 
                     {/* Gráfico em barras e resumos numéricos */}
@@ -386,51 +418,41 @@ export default function HistoryPage() {
                     </div>
                   </div>
 
-                  {/* Lista aninhada de avaliações */}
+                  {/*Lista aninhada de avaliações*/}
                   {isExpanded && (
                     <div className="history-details-expanded">
-                      <div className="desktop-only-view">
-                        <div className="table-scroll">
-                          <table className="history-table">
-                            <thead>
-                              <tr>
-                                <th>DATA</th>
-                                <th>PCM</th>
-                                <th>PRECISÃO</th>
-                                <th>DIAG ALUNO</th>
-                                <th>ANÁLISE IA</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {group.evaluations.map((ev, idx) => (
-                                <tr
-                                  key={ev.id}
-                                  className="hover-row"
-                                  onClick={() => router.push(`/history/${ev.id}`)}
-                                >
-                                  <td>{formatDate(ev.data)}</td>
-                                  <td>
-                                    <span className="pcm-value" style={{ color: getLevelColor(ev.pcm) }}>{ev.pcm}</span>
-                                  </td>
-                                  <td>{ev.precisao}%</td>
-                                  <td>
-                                    {group.aluno?.diagnostico ? (
-                                      <span className="perf-chip" style={{
-                                        color: getDiagnosisStyle(group.aluno.diagnostico).text,
-                                        background: getDiagnosisStyle(group.aluno.diagnostico).bg,
-                                        border: `1px solid ${getDiagnosisStyle(group.aluno.diagnostico).text}44`
-                                      }}>
-                                        {group.aluno.diagnostico.toUpperCase()}
-                                      </span>
-                                    ) : <span className="mobile-data-label">Sem diagnóstico</span>}
-                                  </td>
-                                  <td className="ai-analysis-cell">
-                                    {anonymizeText(ev.diagnosticoIA)}
-                                  </td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
+                      <div className="desktop-only-view" style={{ overflowX: 'auto' }}>
+                        <div className="history-evaluations-list">
+                          <div className="history-eval-header">
+                            <span>DATA</span>
+                            <span>PCM</span>
+                            <span>PREC.</span>
+                            <span>DIAGNÓSTICO</span>
+                            <span>ANÁLISE IA</span>
+                          </div>
+                          {group.evaluations.map((ev, idx) => (
+                            <div
+                              key={ev.id}
+                              className="history-eval-row"
+                              onClick={() => router.push(`/history/${ev.id}`)}
+                            >
+                              <span className="history-eval-date">{formatDate(ev.data)}</span>
+                              <span className="history-eval-pcm" style={{ color: getLevelColor(ev.pcm) }}>{ev.pcm}</span>
+                              <span className="history-eval-prec">{ev.precisao}%</span>
+                              <span className="history-eval-diag">
+                                {group.aluno?.diagnostico ? (
+                                  <span className="diagnosis-badge" style={{
+                                    color: getDiagnosisStyle(group.aluno.diagnostico).text,
+                                    background: getDiagnosisStyle(group.aluno.diagnostico).bg,
+                                    borderColor: getDiagnosisStyle(group.aluno.diagnostico).text
+                                  }}>
+                                    {group.aluno.diagnostico.toUpperCase()}
+                                  </span>
+                                ) : <span style={{ color: 'var(--text-tertiary)', fontSize: '0.75rem' }}>—</span>}
+                              </span>
+                              <span className="history-eval-ia">{anonymizeText(ev.diagnosticoIA)}</span>
+                            </div>
+                          ))}
                         </div>
                       </div>
                       <div className="mobile-only-view">

@@ -1,68 +1,122 @@
 :root {
-  /* Brand Colors - Modern Indigo/Rose Palette */
-  --primary: hsl(245, 82%, 67%);
-  --primary-h: 245;
-  --primary-s: 82%;
-  --primary-l: 67%;
+  /* Premium Color Palette - Sophisticated Indigo */
+  --primary: #6366f1;
+  --primary-hue: 245;
+  --primary-sat: 82%;
+  --primary-light: 67%;
+  --primary-hover: #4f46e5;
   --primary-rgb: 99, 102, 241;
-  --primary-hover: hsl(245, 82%, 60%);
+  --primary-glow: rgba(99, 102, 241, 0.4);
 
-  --accent: hsl(343, 90%, 60%);
-  --accent-rgb: 244, 63, 94;
-  --accent-hover: hsl(343, 90%, 50%);
+  /* Accent - Coral/Violet */
+  --accent: #f43f5e;
+  --accent-hover: #e11d48;
+  --accent-glow: rgba(244, 63, 94, 0.4);
 
-  --success: hsl(158, 80%, 40%);
-  --success-rgb: 16, 185, 129;
+  /* Success - Emerald */
+  --success: #10b981;
+  --success-light: #34d399;
+  --success-glow: rgba(16, 185, 129, 0.3);
 
-  --warning: hsl(38, 92%, 50%);
-  --warning-rgb: 245, 158, 11;
+  /* Warning - Amber */
+  --warning: #f59e0b;
+  --warning-light: #fbbf24;
 
-  --error: hsl(0, 84%, 60%);
-  --error-rgb: 239, 68, 68;
+  /* Error - Rose */
+  --error: #ef4444;
+  --error-light: #f87171;
 
-  /* Surface & Backgrounds - Airy & Modern */
-  --bg-deep: hsl(210, 40%, 98%);
-  --bg-dark: hsl(0, 0%, 100%);
-  --bg-card: hsla(0, 0%, 100%, 0.7);
-  --bg-panel: hsla(210, 40%, 96%, 0.4);
+  /* Surfaces - Light Mode */
+  --bg-deep: #f1f5f9;
+  --bg-surface: #f8fafc;
+  --bg-elevated: #f8fafc;
+  --bg-card: rgba(248, 250, 252, 0.85);
+  --bg-overlay: rgba(248, 250, 252, 0.72);
 
-  /* Text - High Legibility */
-  --text-main: hsl(222, 47%, 11%);
-  --text-muted: hsl(215, 25%, 47%);
-  --text-inverse: hsl(210, 40%, 98%);
+  /* Text */
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-tertiary: #94a3b8;
+  --text-inverse: #ffffff;
 
-  /* Glassmorphism System - Premium Shine */
-  --glass-bg: hsla(0, 0%, 100%, 0.4);
-  --glass-border: hsla(222, 47%, 11%, 0.08);
-  --glass-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 20px 40px -10px rgba(0, 0, 0, 0.1);
-  --glass-blur: blur(16px);
-  --glass-shine: linear-gradient(135deg, hsla(0, 0%, 100%, 0.3) 0%, hsla(0, 0%, 100%, 0) 50%, hsla(0, 0%, 100%, 0.1) 100%);
+  /* Glass System - Premium */
+  --glass-bg: rgba(248, 250, 252, 0.72);
+  --glass-bg-hover: rgba(248, 250, 252, 0.88);
+  --glass-border: rgba(148, 163, 184, 0.16);
+  --glass-border-light: rgba(148, 163, 184, 0.08);
+  --glass-shadow: 
+    0 1px 2px rgba(0, 0, 0, 0.02),
+    0 4px 8px rgba(0, 0, 0, 0.02),
+    0 12px 24px rgba(0, 0, 0, 0.04),
+    0 24px 48px rgba(0, 0, 0, 0.04);
+  --glass-blur: blur(20px);
+  --glass-shine: 
+    linear-gradient(
+      135deg, 
+      rgba(255, 255, 255, 0.8) 0%, 
+      rgba(255, 255, 255, 0.4) 25%, 
+      rgba(255, 255, 255, 0) 50%, 
+      rgba(255, 255, 255, 0.2) 75%, 
+      rgba(255, 255, 255, 0.6) 100%
+    );
+  --glass-reflection: 
+    linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.4) 0%,
+      transparent 40%
+    );
+
+  /* Glow Effects */
+  --glow-primary: 
+    0 0 40px var(--primary-glow),
+    0 0 80px var(--primary-glow);
+  --glow-accent: 
+    0 0 30px var(--accent-glow),
+    0 0 60px var(--accent-glow);
 
   /* UI Components */
-  --btn-outline-text: var(--text-main);
-  --btn-outline-hover-bg: hsla(222, 47%, 11%, 0.04);
+  --btn-bg: var(--primary);
+  --btn-bg-hover: var(--primary-hover);
+  --btn-text: #ffffff;
+  --btn-outline-border: rgba(99, 102, 241, 0.24);
+  --btn-outline-bg-hover: rgba(99, 102, 241, 0.08);
+  
+  --input-bg: rgba(248, 250, 252, 0.8);
+  --input-border: rgba(203, 213, 225, 0.4);
+  --input-border-focus: var(--primary);
+  --input-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+  
+  --select-bg: #ffffff;
+  --select-border: var(--input-border);
+  
+  --scrollbar-track: rgba(203, 213, 225, 0.12);
+  --scrollbar-thumb: rgba(148, 163, 184, 0.4);
+  --scrollbar-thumb-hover: rgba(148, 163, 184, 0.6);
 
-  --select-bg: white;
-  --select-text: var(--text-main);
-  --select-stroke: var(--text-main);
+  /* Elevation Shadows */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.04), 0 4px 8px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.06), 0 8px 24px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.08), 0 16px 48px rgba(0, 0, 0, 0.08);
+  --shadow-xl: 0 16px 32px rgba(0, 0, 0, 0.1), 0 24px 64px rgba(0, 0, 0, 0.1);
+  --shadow-2xl: 0 24px 48px rgba(0, 0, 0, 0.12), 0 48px 96px rgba(0, 0, 0, 0.12);
 
-  --scrollbar-thumb: hsl(215, 25%, 85%);
+  /* Border Radius */
+  --radius-xs: 6px;
+  --radius-sm: 10px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --radius-xl: 32px;
+  --radius-2xl: 48px;
+  --radius-full: 9999px;
 
-  /* Elevation Levels */
-  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-
-  /* Geometry & Scaling */
-  --radius-sm: 8px;
-  --radius-md: 14px;
-  --radius-lg: 28px;
-  --container-max-width: 1240px;
-  --header-height: 80px;
-  --mobile-nav-height: 80px;
-  --touch-target-size: 44px;
-
-  /* Spacing Scale */
+  /* Layout */
+  --container-max: 1280px;
+  --header-height: 72px;
+  --mobile-nav-height: 72px;
+  --touch-target: 48px;
+  
+  /* Spacing */
   --space-1: 0.25rem;
   --space-2: 0.5rem;
   --space-3: 0.75rem;
@@ -74,46 +128,74 @@
   --space-12: 3rem;
   --space-16: 4rem;
   --space-20: 5rem;
+  --space-24: 6rem;
 
-  --body-bg: radial-gradient(circle at 100% 0%, hsla(245, 82%, 67%, 0.08) 0%, transparent 40%),
-    radial-gradient(circle at 0% 100%, hsla(343, 90%, 60%, 0.05) 0%, transparent 40%),
+  /* Background Pattern */
+  --bg-pattern: 
+    radial-gradient(ellipse at 20% 0%, rgba(99, 102, 241, 0.12) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 100%, rgba(244, 63, 94, 0.08) 0%, transparent 50%),
+    radial-gradient(ellipse at 100% 0%, rgba(16, 185, 129, 0.06) 0%, transparent 40%),
     var(--bg-deep);
+    
+  --bg-noise: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
 }
 
+/* Dark Mode - Sophisticated */
 .dark {
-  --bg-deep: hsl(222, 47%, 4%);
-  --bg-dark: hsl(222, 47%, 7%);
-  --bg-card: hsla(222, 47%, 10%, 0.8);
-  --bg-panel: hsla(222, 47%, 15%, 0.3);
+  --bg-deep: #050507;
+  --bg-surface: #0a0a0f;
+  --bg-elevated: #121218;
+  --bg-card: rgba(18, 18, 24, 0.85);
+  --bg-overlay: rgba(18, 18, 24, 0.88);
 
-  --text-main: hsl(210, 40%, 98%);
-  --text-muted: hsl(215, 25%, 70%);
-
-  --glass-bg: hsla(222, 47%, 15%, 0.3);
-  --glass-border: hsla(210, 40%, 98%, 0.1);
-  --glass-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
-  --glass-shine: linear-gradient(135deg, hsla(0, 0%, 100%, 0.05) 0%, transparent 50%, hsla(0, 0%, 100%, 0.02) 100%);
-
-  --btn-outline-text: white;
-  --btn-outline-hover-bg: hsla(210, 40%, 98%, 0.05);
-
-  --select-bg: hsl(222, 47%, 10%);
-  --select-text: white;
-  --select-stroke: white;
-
-  --scrollbar-thumb: hsl(222, 47%, 20%);
-
-  --body-bg: radial-gradient(circle at 100% 0%, hsla(245, 82%, 67%, 0.15) 0%, transparent 40%),
-    radial-gradient(circle at 0% 100%, hsla(343, 90%, 60%, 0.1) 0%, transparent 40%),
+  --text-primary: #f8fafc;
+  --text-secondary: #cbd5e1;
+  --text-tertiary: #64748b;
+  
+  --glass-bg: rgba(18, 18, 24, 0.72);
+  --glass-bg-hover: rgba(24, 24, 32, 0.88);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-border-light: rgba(255, 255, 255, 0.04);
+  --glass-shadow: 
+    0 1px 2px rgba(0, 0, 0, 0.2),
+    0 4px 8px rgba(0, 0, 0, 0.3),
+    0 12px 24px rgba(0, 0, 0, 0.4),
+    0 24px 48px rgba(0, 0, 0, 0.5);
+  --glass-shine: 
+    linear-gradient(
+      135deg, 
+      rgba(255, 255, 255, 0.1) 0%, 
+      rgba(255, 255, 255, 0.02) 25%, 
+      transparent 50%, 
+      rgba(255, 255, 255, 0.04) 75%, 
+      rgba(255, 255, 255, 0.08) 100%
+    );
+    
+  --btn-outline-border: rgba(99, 102, 241, 0.32);
+  --btn-outline-bg-hover: rgba(99, 102, 241, 0.16);
+  
+  --input-bg: rgba(18, 18, 24, 0.8);
+  --input-border: rgba(71, 85, 105, 0.4);
+  
+  --scrollbar-track: rgba(30, 30, 40, 0.4);
+  --scrollbar-thumb: rgba(71, 85, 105, 0.4);
+  
+  --bg-pattern: 
+    radial-gradient(ellipse at 20% 0%, rgba(99, 102, 241, 0.2) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 100%, rgba(244, 63, 94, 0.12) 0%, transparent 50%),
+    radial-gradient(ellipse at 100% 0%, rgba(16, 185, 129, 0.1) 0%, transparent 40%),
     var(--bg-deep);
 }
 
+/* Touch optimizations */
 html[data-touch="true"] {
-  --touch-target-size: 48px;
+  --touch-target: 52px;
 }
 
+/* Mobile breakpoint */
 @media (max-width: 480px) {
   :root {
-    --header-height: 76px;
+    --header-height: 64px;
+    --mobile-nav-height: 64px;
   }
 }

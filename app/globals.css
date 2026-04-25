@@ -2,10 +2,4 @@
 @import "./styles/base.css";
 @import "./styles/animations.css";
 @import "./styles/glassmorphism.css";
-@import "./styles/layout.css";
 @import "./styles/components.css";
-
-/* 
-  Nota: O arquivo globals.css foi modularizado para facilitar a manutenção e performance.
-  Os estilos principais agora residem na pasta app/styles/.
-*/

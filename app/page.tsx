@@ -47,8 +47,6 @@ export default function Dashboard() {
     });
   }, [initialized, firebaseAuth]);
 
-  // Redirection removed as we handle both login and dashboard in this page
-
   useEffect(() => {
     if (!user || !initialized) return;
 
@@ -118,11 +116,7 @@ export default function Dashboard() {
   return (
     <div className="animate-in" style={{ paddingBottom: '4rem' }}>
       <header className="page-header">
-        <div className="page-header-content">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap', marginBottom: '0.5rem' }}>
-            <span className="perf-chip">Mobile Ready</span>
-            <span className="perf-chip">UX Touch</span>
-          </div>
+        <div className="page-header-inner">
           <h1 className="page-title">
             Painel de <span style={{ color: 'var(--primary)' }}>Controle</span>
           </h1>
@@ -144,7 +138,7 @@ export default function Dashboard() {
         <MetricCard title="Testes Feitos" value={stats.totalEvaluations} icon={<HistoryIcon />} color="var(--warning)" />
       </div>
 
-      <div className="dashboard-grid animate-in" style={{ animationDelay: '0.4s' }}>
+      <div className="dashboard-grid animate-in" style={{ animationDelay: '0.4s', marginTop: 'var(--space-8)' }}>
         <div className="glass-card" style={{ padding: '2rem', height: '100%' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2.5rem' }}>
             <h3 style={{ fontSize: '1.25rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
@@ -158,7 +152,7 @@ export default function Dashboard() {
               <div key={ev.id} className="recent-evaluation-card">
                 <div className="recent-evaluation-main">
                   <div className="recent-evaluation-avatar">{ev.alunoNome[0]}</div>
-                  <div className="recent-evaluation-copy">
+                  <div>
                     <div className="recent-evaluation-name">{ev.alunoNome}</div>
                     <div className="recent-evaluation-date">{formatDate(ev.data)}</div>
                   </div>
@@ -185,7 +179,7 @@ export default function Dashboard() {
               <div style={{ color: 'var(--primary)', fontSize: '1.75rem' }}><LightbulbIcon /></div>
               <h4 style={{ color: 'var(--primary)', fontWeight: 800, fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Dica Pedagógica</h4>
             </div>
-            <p style={{ fontSize: '1.05rem', lineHeight: '1.8', color: 'var(--text-main)', fontWeight: 500 }}>
+            <p style={{ fontSize: '1.05rem', lineHeight: 1.8, color: 'var(--text-main)', fontWeight: 500 }}>
               "A fluência não é apenas velocidade, mas a integração de precisão, prosódia e compreensão. Foque em alunos com PCM abaixo de 40 para intervenções intensivas."
             </p>
           </div>
@@ -206,12 +200,23 @@ export default function Dashboard() {
 
 function MetricCard({ title, value, icon, color, suffix = "" }: { title: string; value: number; icon: React.ReactNode; color: string; suffix?: string }) {
   return (
-    <div className="glass-card metric-card" style={{ borderLeftColor: color }}>
-      <div style={{ position: 'absolute', right: '-15px', top: '-15px', fontSize: '5rem', opacity: 0.05, transform: 'rotate(15deg)', pointerEvents: 'none' }}>{icon}</div>
-      <div className="mobile-data-label" style={{ marginBottom: '0.75rem', fontSize: '0.75rem' }}>{title}</div>
+    <div className="metric-card" style={{ borderLeft: `4px solid ${color}` }}>
+      <div className="mobile-data-label">{title}</div>
       <div className="metric-card-value">
-        <span style={{ fontSize: '3rem', fontWeight: 900, lineHeight: 1 }}>{value}</span>
-        {suffix && <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)', fontWeight: 700, alignSelf: 'flex-end', marginBottom: '0.4rem' }}>{suffix}</span>}
+        <span>{value}</span>
+        {suffix && <span style={{ fontSize: '0.85rem', color: 'var(--text-tertiary)', fontWeight: 600 }}>{suffix}</span>}
+      </div>
+      <div style={{ 
+        position: 'absolute', 
+        right: '-10px', 
+        top: '-10px', 
+        fontSize: '4rem', 
+        opacity: 0.06, 
+        transform: 'rotate(15deg)', 
+        pointerEvents: 'none',
+        color: color
+      }}>
+        {icon}
       </div>
     </div>
   );

@@ -1,16 +1,27 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { useFirebase } from "@/app/components/FirebaseProvider";
 import { getAlunos, type Aluno } from "@/lib/services";
 import { MobileCard, MobileCardList, MobileDataGrid, MobileDataPoint } from "@/app/components/MobileCards";
 import { getDiagnosisStyle } from "@/lib/styleUtils";
 
 const SearchIcon = () => <span>🔍</span>;
-const ChevronRightIcon = () => <span>➡️</span>;
-const UserIcon = () => <span>👤</span>;
+const StudentAvatarIcon = () => (
+  <svg
+    viewBox="0 0 24 24"
+    width="18"
+    height="18"
+    fill="none"
+    aria-hidden="true"
+  >
+    <path
+      d="M12 12a3.75 3.75 0 1 0 0-7.5 3.75 3.75 0 0 0 0 7.5Zm0 2.25c-4.142 0-7.5 2.518-7.5 5.625 0 .345.28.625.625.625h13.75a.625.625 0 0 0 .625-.625c0-3.107-3.358-5.625-7.5-5.625Z"
+      fill="currentColor"
+    />
+  </svg>
+);
 
 export default function SelectionPage() {
   const router = useRouter();
@@ -82,18 +93,15 @@ export default function SelectionPage() {
       </header>
 
       <div className="filter-bar">
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flex: 1, minWidth: '300px' }}>
-          <div style={{ position: 'relative', flex: 1 }}>
-            <span style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', opacity: 0.5 }}><SearchIcon /></span>
-            <input
-              type="text"
-              placeholder="Pesquisar por nome..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="glass-panel"
-              style={{ width: '100%', paddingLeft: '2.5rem' }}
-            />
-          </div>
+        <div style={{ position: 'relative', flex: 1, minWidth: '280px' }}>
+          <span className="filter-search-icon"><SearchIcon /></span>
+          <input
+            type="text"
+            placeholder="Pesquisar por nome..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="filter-search-input"
+          />
         </div>
 
         <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
@@ -147,60 +155,50 @@ export default function SelectionPage() {
         </div>
       ) : (
         <>
-          <div className="glass-card desktop-only-view" style={{ padding: 0, overflow: 'hidden', border: '1px solid var(--glass-border)' }}>
-            <div className="table-scroll">
-              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                <thead>
-                  <tr style={{ background: 'rgba(255,255,255,0.03)', borderBottom: '1px solid var(--glass-border)' }}>
-                    <th style={{ padding: '1.25rem 2rem', textAlign: 'left', fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 800 }}>ESTUDANTE</th>
-                    <th style={{ padding: '1.25rem 2rem', textAlign: 'left', fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 800 }}>SÉRIE</th>
-                    <th style={{ padding: '1.25rem 2rem', textAlign: 'left', fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 800 }}>TURMA</th>
-                    <th style={{ padding: '1.25rem 2rem', textAlign: 'left', fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 800 }}>DIAGNÓSTICO</th>
-                    <th style={{ padding: '1.25rem 2rem', textAlign: 'right' }}></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredAlunos.map(aluno => (
-                    <tr
-                      key={aluno.id}
-                      className="hover-row"
-                      style={{
-                        cursor: 'pointer',
-                        borderBottom: '1px solid var(--glass-border)',
-                        background: getDiagnosisStyle(aluno.diagnostico).bg,
+          <div className="glass-card desktop-only-view" style={{ padding: 0, overflow: 'hidden' }}>
+            <div className="data-grid">
+              <div className="data-grid-header">
+                <div className="data-grid-cell">ESTUDANTE</div>
+                <div className="data-grid-cell">SÉRIE</div>
+                <div className="data-grid-cell">TURMA</div>
+                <div className="data-grid-cell">DIAGNÓSTICO</div>
+                <div className="data-grid-cell data-grid-cell-action"></div>
+              </div>
+              {filteredAlunos.map(aluno => (
+                <div
+                  key={aluno.id}
+                  className="data-grid-row"
+                  onClick={() => router.push(`/evaluations/${aluno.id}`)}
+                >
+                  <div className="data-grid-cell">
+                    <div className="student-cell">
+                      <div className="student-avatar">
+                        <StudentAvatarIcon />
+                      </div>
+                      <span className="student-name">{aluno.nome}</span>
+                    </div>
+                  </div>
+                  <div className="data-grid-cell text-muted">{aluno.serie}</div>
+                  <div className="data-grid-cell">
+                    <span className="turma-badge">{aluno.turma}</span>
+                  </div>
+                  <div className="data-grid-cell">
+                    <span 
+                      className="diagnosis-badge" 
+                      style={{ 
+                        color: getDiagnosisStyle(aluno.diagnostico).text, 
+                        borderColor: getDiagnosisStyle(aluno.diagnostico).text,
+                        background: getDiagnosisStyle(aluno.diagnostico).bg 
                       }}
-                      onClick={() => router.push(`/evaluations/${aluno.id}`)}
                     >
-                      <td style={{ padding: '1.25rem 2rem' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                          <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)' }}><UserIcon /></div>
-                          <span style={{ fontWeight: 700 }}>{aluno.nome}</span>
-                        </div>
-                      </td>
-                      <td style={{ padding: '1.25rem 2rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>{aluno.serie}</td>
-                      <td style={{ padding: '1.25rem 2rem' }}>
-                        <span style={{ padding: '0.3rem 0.6rem', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 700, background: 'rgba(99, 102, 241, 0.1)', color: 'var(--primary)' }}>{aluno.turma}</span>
-                      </td>
-                      <td style={{ padding: '1.25rem 2rem' }}>
-                        <span style={{
-                          fontSize: '0.8rem',
-                          fontWeight: 800,
-                          color: getDiagnosisStyle(aluno.diagnostico).text,
-                          padding: '0.3rem 0.6rem',
-                          background: 'rgba(255,255,255,0.03)',
-                          borderRadius: '6px',
-                          border: `1px solid ${getDiagnosisStyle(aluno.diagnostico).text}44`
-                        }}>
-                          {getDiagnosisLabel(aluno.diagnostico)}
-                        </span>
-                      </td>
-                      <td style={{ padding: '1.25rem 2rem', textAlign: 'right' }}>
-                        <div style={{ opacity: 0.3 }}><ChevronRightIcon /></div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                      {getDiagnosisLabel(aluno.diagnostico)}
+                    </span>
+                  </div>
+                  <div className="data-grid-cell data-grid-cell-action">
+                    <span className="chevron">→</span>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
           <div className="mobile-only-view">

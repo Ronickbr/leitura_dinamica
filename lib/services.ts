@@ -44,6 +44,14 @@ export interface ImportRecord {
   professorId: string;
 }
 
+export interface AlunoFilterOptions {
+  turmas: string[];
+  series: string[];
+  turnos: string[];
+  diagnosticos: string[];
+  totalRegistros: number;
+}
+
 export const getAlunos = async (turma?: string): Promise<Aluno[]> => {
   if (!cachedDb) {
     console.warn("getAlunos chamado antes da inicialização do Firebase");
@@ -68,6 +76,62 @@ export const getAlunos = async (turma?: string): Promise<Aluno[]> => {
   } catch (error) {
     console.error("Erro crítico ao buscar alunos no Firestore:", error);
     return [];
+  }
+};
+
+export const getAlunoFilterOptions = async (): Promise<AlunoFilterOptions> => {
+  const emptyResult: AlunoFilterOptions = {
+    turmas: [],
+    series: [],
+    turnos: [],
+    diagnosticos: [],
+    totalRegistros: 0
+  };
+
+  if (!cachedDb) {
+    console.warn("getAlunoFilterOptions chamado antes da inicialização do Firebase");
+    return emptyResult;
+  }
+
+  try {
+    const querySnapshot = await getDocs(query(collection(cachedDb, 'alunos')));
+
+    if (querySnapshot.empty) {
+      return emptyResult;
+    }
+
+    const turmas = new Set<string>();
+    const series = new Set<string>();
+    const turnos = new Set<string>();
+    const diagnosticos = new Set<string>();
+
+    querySnapshot.forEach((docSnapshot) => {
+      const data = docSnapshot.data() as Partial<Aluno>;
+
+      const turma = data.turma?.trim();
+      const serie = data.serie?.trim();
+      const turno = data.turno?.trim();
+      const diagnostico = data.diagnostico?.trim();
+
+      if (turma) turmas.add(turma);
+      if (serie) series.add(serie);
+      if (turno) turnos.add(turno);
+      if (diagnostico) diagnosticos.add(diagnostico);
+    });
+
+    const sortValues = (values: Set<string>) =>
+      Array.from(values).sort((a, b) => a.localeCompare(b, 'pt-BR', { sensitivity: 'base' }));
+
+    return {
+      turmas: sortValues(turmas),
+      series: sortValues(series),
+      turnos: sortValues(turnos),
+      diagnosticos: sortValues(diagnosticos),
+      totalRegistros: querySnapshot.size
+    };
+  } catch (error) {
+    console.error("Erro ao buscar opções de filtro no Firestore:", error);
+    return emptyResult;
   }
 };
 
