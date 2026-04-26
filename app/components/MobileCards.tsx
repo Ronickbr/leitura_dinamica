@@ -81,12 +81,18 @@ export function MobileCard({
     </>
   );
 
+  const handleRowClick = (e: React.MouseEvent) => {
+    if (onClick) {
+      onClick();
+    }
+  };
+
   if (onClick && !collapsible) {
     return (
       <button
         type="button"
         onClick={onClick}
-        className={`glass-card mobile-card mobile-card-button ${className}`}
+        className={`mobile-list-item mobile-card-button ${className}`}
         data-testid={testId}
       >
         {content}
@@ -96,10 +102,10 @@ export function MobileCard({
 
   return (
     <div
-      className={`glass-card mobile-card ${collapsible && !isExpanded ? 'is-collapsed' : ''} ${className}`}
+      className={`mobile-list-item ${collapsible && !isExpanded ? 'is-collapsed' : ''} ${className}`}
       data-testid={testId}
-      onClick={!collapsible ? onClick : undefined}
-      style={onClick && !collapsible ? { cursor: 'pointer' } : undefined}
+      onClick={handleRowClick}
+      style={onClick ? { cursor: 'pointer' } : undefined}
     >
       {content}
     </div>
