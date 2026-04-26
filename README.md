@@ -1,4 +1,4 @@
-# 📖 Plataforma Leitura (v3.8.3)
+# 📖 Plataforma Leitura (v3.8.4)
 
 Plataforma de avaliação de fluência leitora com Next.js (App Router), persistência em Firebase e processamento de áudio via IA. O projeto foi refatorado para um monorepo Next.js unificado com API routes serverless.
 
@@ -41,6 +41,7 @@ O sistema permite que professores:
 - **[NOVO]** Análise de Evolução Comparativa via IA baseada em registros anteriores;
 - **[NOVO]** Diagnóstico de leitura dinâmico calibrado por série e meta de PCM;
 - **[NOVO]** Fluxo de login unificado diretamente na página inicial com renderização condicional;
+- **v3.8.4**: Melhorias de Usabilidade Mobile. Ajuste no padding superior da página para evitar sobreposição do conteúdo pelo cabeçalho fixo e remoção do efeito glassmorphism da barra de navegação inferior (agora com fundo sólido) para melhor clareza e performance em dispositivos antigos.
 - **v3.8.3**: Ajustes de Contraste e Layout no Relatório. Conversão de todo o texto do relatório para preto puro (#000000) e alinhamento dos cards de métricas (PCM, Precisão, Objetivo) em uma única linha horizontal para melhor densidade de informação.
 - **v3.8.2**: Otimização de Espaçamento no Relatório. Redução do tamanho das métricas de desempenho e ajustes de margens para garantir o encaixe de todo o conteúdo em uma única página A4.
 - **v3.8.1**: Ajustes finos no Relatório PDF. Ocultação do cabeçalho global do sistema na impressão, remoção de emojis coloridos e normalização para 100% Preto e Branco (BW) com bordas sólidas.

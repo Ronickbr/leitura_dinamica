@@ -2156,7 +2156,7 @@
   }
 
   .page-content {
-    padding-top: calc(var(--header-height) + var(--space-5));
+    padding-top: calc(var(--header-height) + var(--space-10));
     padding-bottom: calc(var(--mobile-nav-height) + var(--space-8));
   }
 
@@ -2337,9 +2337,9 @@
   border: 1px solid var(--glass-border);
   box-shadow: var(--shadow-lg);
   padding: 0 var(--space-2);
-  background: var(--glass-bg);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
+  background: var(--bg-surface);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 
 .mobile-nav-link {
