@@ -175,6 +175,7 @@
   padding: var(--space-8);
   background: var(--glass-bg);
   border: 1px solid var(--glass-border);
+  border-bottom: 2px solid var(--glass-border-b);
   border-radius: var(--radius-lg);
   box-shadow: var(--glass-shadow);
   backdrop-filter: var(--glass-blur);
@@ -725,7 +726,7 @@
 .page-subtitle {
   font-size: 1.1rem;
   line-height: 1.6;
-  color: #000000;
+  color: var(--text-secondary);
   max-width: 560px;
 }
 
@@ -894,7 +895,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: #000000;
+  color: var(--text-tertiary);
 }
 
 /* Chips & Badges */
@@ -1946,7 +1947,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: #000000;
+  color: var(--text-primary);
   margin-bottom: var(--space-4);
 }
 
@@ -1971,7 +1972,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: #000000;
+  color: var(--text-primary);
 }
 
 .evaluation-detail-metric-value {
@@ -1979,7 +1980,7 @@
   font-weight: 800;
   letter-spacing: -0.02em;
   line-height: 1;
-  color: #000000;
+  color: var(--text-primary);
 }
 
 .evaluation-original-text-box {
@@ -2586,7 +2587,7 @@
 .evaluation-detail-section-title {
   font-size: 0.95rem;
   font-weight: 800;
-  color: #000000;
+  color: var(--text-primary);
   padding-bottom: var(--space-3);
   border-bottom: 1px solid var(--glass-border);
 }
@@ -2594,7 +2595,7 @@
 .evaluation-detail-body {
   font-size: 1.05rem;
   line-height: 1.7;
-  color: #000000;
+  color: var(--text-primary);
 }
 
 .evaluation-detail-subtitle {
@@ -2650,13 +2651,13 @@
 .pcm-large-number {
   font-size: 3.5rem;
   font-weight: 800;
-  color: #000000;
+  color: var(--text-primary);
   line-height: 1;
 }
 
 .performance-status-pill {
-  color: #000000;
-  border-color: #000000 !important;
+  color: var(--text-primary);
+  border-color: var(--glass-border) !important;
   font-weight: 800;
 }
 
@@ -2698,7 +2699,7 @@
 
 .competence-description {
   font-size: 0.8rem;
-  color: #000000;
+  color: var(--text-primary);
   margin-top: var(--space-1);
 }
 
@@ -2708,9 +2709,9 @@
   border-top: 1px solid var(--glass-border-light);
   font-size: 0.85rem;
   font-style: italic;
-  color: #000000;
+  color: var(--text-primary);
 }
 
 .evaluation-transcription-text {
-  color: #000000;
+  color: var(--text-primary);
 }

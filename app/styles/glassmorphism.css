@@ -14,7 +14,7 @@
   .desktop-only-view {
     display: none !important;
   }
-  
+
   .mobile-only-view {
     display: block !important;
   }
@@ -36,7 +36,7 @@
   align-items: center;
   justify-content: center;
   padding: var(--space-6);
-  background: rgba(5, 5, 7, 0.6);
+  background: var(--bg-overlay);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   z-index: 2000;
@@ -87,11 +87,11 @@
   transition: all 0.3s ease;
 }
 
-.settings-toggle-row input[type="checkbox"]:checked + .settings-switch {
+.settings-toggle-row input[type="checkbox"]:checked+.settings-switch {
   background: var(--primary);
 }
 
-.settings-toggle-row input[type="checkbox"]:checked + .settings-switch .settings-switch-thumb {
+.settings-toggle-row input[type="checkbox"]:checked+.settings-switch .settings-switch-thumb {
   left: 27px;
 }
 
@@ -157,7 +157,7 @@
 .menu-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: var(--bg-overlay);
   z-index: 999;
   border: none;
   cursor: pointer;
@@ -165,6 +165,7 @@
 
 /* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
+
   .glass-card,
   .glass-panel,
   .metric-card {
