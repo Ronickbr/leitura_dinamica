@@ -725,7 +725,7 @@
 .page-subtitle {
   font-size: 1.1rem;
   line-height: 1.6;
-  color: var(--text-secondary);
+  color: #000000;
   max-width: 560px;
 }
 
@@ -894,7 +894,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: var(--text-tertiary);
+  color: #000000;
 }
 
 /* Chips & Badges */
@@ -1946,13 +1946,13 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: var(--text-tertiary);
+  color: #000000;
   margin-bottom: var(--space-4);
 }
 
 .evaluation-detail-metrics-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: var(--space-4);
 }
 
@@ -1971,7 +1971,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: var(--text-tertiary);
+  color: #000000;
 }
 
 .evaluation-detail-metric-value {
@@ -1979,6 +1979,7 @@
   font-weight: 800;
   letter-spacing: -0.02em;
   line-height: 1;
+  color: #000000;
 }
 
 .evaluation-original-text-box {
@@ -2583,10 +2584,9 @@
 }
 
 .evaluation-detail-section-title {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: var(--primary);
-  margin-bottom: var(--space-6);
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #000000;
   padding-bottom: var(--space-3);
   border-bottom: 1px solid var(--glass-border);
 }
@@ -2594,7 +2594,7 @@
 .evaluation-detail-body {
   font-size: 1.05rem;
   line-height: 1.7;
-  color: var(--text-secondary);
+  color: #000000;
 }
 
 .evaluation-detail-subtitle {
@@ -2615,12 +2615,11 @@
 
 .evaluation-metrics-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: var(--space-4);
 }
 
 .pcm-highlight-tile {
-  grid-column: span 2;
   position: relative;
   overflow: hidden;
   padding: var(--space-6);
@@ -2651,8 +2650,14 @@
 .pcm-large-number {
   font-size: 3.5rem;
   font-weight: 800;
-  color: var(--primary);
+  color: #000000;
   line-height: 1;
+}
+
+.performance-status-pill {
+  color: #000000;
+  border-color: #000000 !important;
+  font-weight: 800;
 }
 
 .competence-list {
@@ -2693,7 +2698,7 @@
 
 .competence-description {
   font-size: 0.8rem;
-  color: var(--text-tertiary);
+  color: #000000;
   margin-top: var(--space-1);
 }
 
@@ -2703,5 +2708,9 @@
   border-top: 1px solid var(--glass-border-light);
   font-size: 0.85rem;
   font-style: italic;
-  color: var(--text-secondary);
+  color: #000000;
+}
+
+.evaluation-transcription-text {
+  color: #000000;
 }
