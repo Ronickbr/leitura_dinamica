@@ -186,32 +186,37 @@ export default function EvaluationDetailsPage() {
                     .only-print { display: block !important; }
                     
                     @page {
-                        margin: 1.5cm;
+                        margin: 1cm;
                         size: A4;
                     }
 
                     body {
                         background: white !important;
-                        color: #1a1a1a !important;
-                        -webkit-print-color-adjust: exact !important;
-                        print-color-adjust: exact !important;
+                        color: black !important;
+                        font-family: serif !important;
+                        font-size: 10pt !important;
                     }
 
                     .evaluation-page-container {
                         padding: 0 !important;
+                        max-width: 100% !important;
                     }
 
                     .glass-card {
-                        border: 1.5px solid #e5e5e5 !important;
+                        border: 1px solid #ccc !important;
                         box-shadow: none !important;
                         background: transparent !important;
                         backdrop-filter: none !important;
-                        margin-bottom: 20px !important;
+                        margin-bottom: 8pt !important;
+                        padding: 8pt !important;
+                        border-radius: 0 !important;
                         break-inside: avoid;
                     }
 
                     .print-header {
-                        margin-bottom: 2rem;
+                        margin-bottom: 1rem;
+                        border-bottom: 1.5pt solid black;
+                        padding-bottom: 0.5rem;
                     }
 
                     .print-header-top {
@@ -223,67 +228,161 @@ export default function EvaluationDetailsPage() {
                     .print-logo {
                         display: flex;
                         align-items: center;
-                        gap: 10px;
+                        gap: 8px;
                     }
 
-                    .logo-icon { font-size: 24pt; }
-                    .logo-brand { font-weight: 900; font-size: 18pt; color: #1a1a1a; }
-                    .logo-tag { font-weight: 400; font-size: 14pt; color: #666; margin-left: 4px; }
+                    .logo-icon { font-size: 18pt; filter: grayscale(1); }
+                    .logo-brand { font-weight: 900; font-size: 14pt; color: black; }
+                    .logo-tag { font-weight: 400; font-size: 11pt; color: #444; margin-left: 2px; }
 
                     .print-report-meta { text-align: right; }
-                    .print-report-meta h3 { margin: 0; font-size: 16pt; color: #1a1a1a; }
-                    .print-report-meta p { margin: 2px 0; font-size: 9pt; color: #666; }
+                    .print-report-meta h3 { margin: 0; font-size: 12pt; font-weight: 700; color: black; }
+                    .print-report-meta p { margin: 1pt 0; font-size: 8pt; color: #444; }
 
-                    .print-divider {
-                        height: 2px;
-                        background: #1a1a1a;
-                        margin: 1rem 0;
-                    }
+                    .print-divider { display: none; }
 
                     .evaluation-detail-section-title {
-                        color: #000 !important;
-                        border-bottom: 2px solid #eee !important;
-                        padding-bottom: 0.5rem !important;
-                        margin-bottom: 1rem !important;
+                        font-family: sans-serif !important;
+                        font-size: 10pt !important;
+                        font-weight: 700 !important;
+                        color: black !important;
+                        border-bottom: 0.5pt solid #ddd !important;
+                        padding-bottom: 2pt !important;
+                        margin-bottom: 6pt !important;
+                        text-transform: uppercase;
+                    }
+
+                    .details-student-grid {
+                        display: grid;
+                        grid-template-columns: 2fr 1fr 1fr;
+                        gap: 10pt;
+                    }
+
+                    .details-student-grid p {
+                        margin: 0;
+                        font-size: 9pt;
+                    }
+
+                    .evaluation-detail-layout {
+                        display: block !important;
+                    }
+
+                    .evaluation-detail-main, .evaluation-detail-sidebar {
+                        width: 100% !important;
+                        display: block !important;
+                    }
+
+                    .evaluation-metrics-grid {
+                        display: grid !important;
+                        grid-template-columns: repeat(3, 1fr) !important;
+                        gap: 8pt !important;
+                    }
+
+                    .pcm-highlight-tile {
+                        background: #f9f9f9 !important;
+                        border: 0.5pt solid #ddd !important;
+                        padding: 6pt !important;
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                        justify-content: center;
+                    }
+
+                    .pcm-metric-visual-bg { display: none !important; }
+
+                    .pcm-large-number {
+                        font-size: 18pt !important;
+                        color: black !important;
+                        font-weight: 800 !important;
+                    }
+
+                    .performance-status-pill {
+                        background: white !important;
+                        border: 0.5pt solid #bbb !important;
+                        color: black !important;
+                        font-weight: 700 !important;
+                        font-size: 8pt !important;
+                        padding: 2pt 4pt !important;
+                        margin-top: 4pt !important;
                     }
 
                     .evaluation-detail-metric-tile {
                         background: #f9f9f9 !important;
-                        border: 1px solid #eee !important;
-                    }
-
-                    .print-footer {
-                        position: fixed;
-                        bottom: 0;
-                        left: 0;
-                        right: 0;
-                        padding: 1rem 0;
-                        border-top: 1px solid #eee;
-                        display: flex;
-                        justify-content: space-between;
-                        font-size: 8pt;
-                        color: #999;
-                    }
-
-                    .signature-box {
-                        margin-top: 4rem;
+                        border: 0.5pt solid #ddd !important;
+                        padding: 6pt !important;
                         display: flex;
                         flex-direction: column;
+                        justify-content: center;
                         align-items: center;
-                        break-inside: avoid;
                     }
 
-                    .signature-line {
-                        width: 250px;
-                        border-top: 1px solid #000;
-                        margin-bottom: 5px;
+                    .evaluation-detail-metric-value {
+                        font-size: 14pt !important;
+                        color: black !important;
+                        font-weight: 700 !important;
+                    }
+
+                    .competence-list {
+                        display: grid !important;
+                        grid-template-columns: repeat(3, 1fr) !important;
+                        gap: 5pt !important;
+                    }
+
+                    .competence-card {
+                        border: 0.5pt solid #eee !important;
+                        border-left: 2pt solid black !important;
+                        padding: 4pt !important;
+                        margin: 0 !important;
+                    }
+
+                    .competence-header {
+                        margin-bottom: 1pt !important;
+                    }
+
+                    .competence-label {
+                        font-size: 8pt !important;
+                        font-weight: 700 !important;
+                    }
+
+                    .competence-status {
+                        font-size: 8pt !important;
+                        font-weight: 900 !important;
+                    }
+
+                    .competence-justification {
+                        font-size: 7.5pt !important;
+                        margin-top: 1pt !important;
+                        line-height: 1.2 !important;
+                    }
+
+                    .evaluation-detail-body {
+                        font-size: 9pt !important;
+                        line-height: 1.3 !important;
                     }
 
                     .evaluation-transcription-text {
                         font-family: serif !important;
-                        font-size: 11pt !important;
-                        line-height: 1.6 !important;
-                        color: #333 !important;
+                        font-size: 10pt !important;
+                        line-height: 1.4 !important;
+                        color: black !important;
+                    }
+
+                    .reading-reference-box {
+                        padding: 4pt !important;
+                        background: #fdfdfd !important;
+                        border: 0.5pt dashed #ccc !important;
+                    }
+
+                    .signature-box {
+                        margin-top: 1.5rem;
+                        display: flex;
+                        justify-content: space-around !important;
+                    }
+
+                    .print-footer {
+                        font-size: 6.5pt;
+                        border-top: 0.5pt solid #ddd;
+                        padding-top: 4pt;
                     }
                 }
             `}</style>
@@ -296,7 +395,7 @@ export default function EvaluationDetailsPage() {
                         <div className="details-student-grid">
                             <div>
                                 <span className="mobile-data-label font-ui">Nome Completo</span>
-                                <p style={{ fontSize: "1.15rem", fontWeight: 700 }}>{aluno?.nome || "Não informado"}</p>
+                                <p style={{ fontWeight: 700 }}>{aluno?.nome || "Não informado"}</p>
                             </div>
                             <div>
                                 <span className="mobile-data-label font-ui">Série / Ano</span>
@@ -310,96 +409,90 @@ export default function EvaluationDetailsPage() {
                     </div>
 
                     <div className="glass-card evaluation-detail-section">
-                        <h3 className="evaluation-detail-section-title font-ui">Diagnóstico Pedagógico</h3>
-                        <p className="evaluation-detail-body">{avaliacao.diagnosticoIA}</p>
-
-                        <h4 className="evaluation-detail-subtitle font-ui">Plano de Intervenção Sugerido</h4>
-                        <p className="evaluation-detail-body">{avaliacao.intervencaoIA}</p>
-                    </div>
-
-                    <div className="glass-card evaluation-detail-section">
-                        <h3 className="evaluation-detail-section-title font-ui">Registro da Leitura</h3>
-                        {texto && (
-                            <div className="reading-reference-box">
-                                <span className="mobile-data-label font-ui" style={{ color: "var(--primary)" }}>
-                                    Texto de Referência: {texto.titulo}
-                                </span>
-                                <p className="evaluation-original-text font-reading" style={{ fontSize: "1.1rem", fontStyle: "italic" }}>"{texto.conteudo}"</p>
-                            </div>
-                        )}
-                        <div className="evaluation-transcription-box" style={{ marginTop: "1.5rem" }}>
-                            <span className="mobile-data-label font-ui" style={{ fontWeight: 700 }}>Análise de Erros e Fluência</span>
-                            <div className="transcription-legend only-print" style={{ fontSize: "8pt", marginBottom: "8px", display: "flex", gap: "15px" }}>
-                                <span><strong style={{ color: "#000" }}>[Palavras]</strong>: Omissão/Erro</span>
-                                <span><em style={{ color: "#000" }}>(Sugestão)</em>: Autocorreção</span>
-                                <span><strong>Negrito</strong>: Ênfase</span>
-                            </div>
-                            {avaliacao.transcricaoMarcada ? (
-                                <p
-                                    className="evaluation-transcription-text font-reading"
-                                    style={{ fontSize: "1.2rem" }}
-                                    dangerouslySetInnerHTML={{
-                                        __html: avaliacao.transcricaoMarcada
-                                            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                                            .replace(/\[(.*?)\]/g, '<span style="color: var(--error); text-decoration: line-through;">[$1]</span>')
-                                            .replace(/\((.*?)\)/g, '<span style="color: var(--primary); font-style: italic;">($1)</span>')
-                                    }}
-                                />
-                            ) : (
-                                <p className="evaluation-transcription-text font-reading" style={{ fontSize: "1.2rem" }}>{avaliacao.transcricao}</p>
-                            )}
-                        </div>
-                    </div>
-                </div>
-
-                <div className="evaluation-detail-sidebar">
-                    <div className="glass-card evaluation-detail-section" style={{ padding: "1.5rem", overflow: "hidden" }}>
-                        <h3 className="mobile-data-label font-ui" style={{ marginBottom: "1.25rem" }}>Métricas Analíticas</h3>
-
+                        <h3 className="evaluation-detail-section-title font-ui">Métricas de Desempenho</h3>
                         <div className="evaluation-metrics-grid animate-stagger">
                             <div className="pcm-highlight-tile">
-                                <div className="pcm-metric-visual-bg" style={{ width: `${percPCM}%` }}></div>
-
-                                <span className="evaluation-detail-metric-label font-ui" style={{ position: "relative", zIndex: 1 }}>
-                                    <span style={{ fontWeight: 800 }}>PCM Alcançado</span>
-                                    <span style={{ fontSize: "0.75rem", opacity: 0.7 }}>Meta Nacional: {normaNacional}</span>
+                                <span className="evaluation-detail-metric-label font-ui">
+                                    <span style={{ fontWeight: 800 }}>PCM</span>
                                 </span>
-
-                                <div className="pcm-value-display" style={{ marginTop: "0.5rem" }}>
+                                <div className="pcm-value-display">
                                     <span className="pcm-large-number">{avaliacao.pcm}</span>
-                                    <div style={{ display: "flex", flexDirection: "column" }}>
-                                        <span style={{ fontSize: "0.85rem", fontWeight: 800, color: avaliacao.pcm >= normaNacional ? "var(--success)" : "var(--error)" }}>
-                                            {avaliacao.pcm >= normaNacional ? "Acima da Média" : "Abaixo da Média"}
-                                        </span>
-                                        <span style={{ fontSize: "0.7rem", opacity: 0.6 }}>Palavras por Minuto</span>
-                                    </div>
+                                    <span style={{ fontSize: "0.8rem", opacity: 0.7 }}> ppm</span>
                                 </div>
-
-                                <div className="performance-status-pill font-ui" style={{
-                                    marginTop: "1rem",
-                                    background: "var(--bg-deep)",
-                                    padding: "0.5rem 0.85rem",
-                                    borderRadius: "8px",
-                                    fontSize: "0.9rem",
-                                    fontWeight: 600,
-                                    textAlign: "center"
-                                }}>
-                                    Nível: <span style={{ color: "var(--accent)" }}>{getPerformanceLevel(avaliacao.pcm)}</span>
+                                <div className="performance-status-pill font-ui">
+                                    {getPerformanceLevel(avaliacao.pcm)}
                                 </div>
                             </div>
 
                             <div className="evaluation-detail-metric-tile">
                                 <span className="evaluation-detail-metric-label font-ui">Precisão</span>
-                                <span className="evaluation-detail-metric-value" style={{ color: "var(--success)" }}>{avaliacao.precisao}%</span>
+                                <span className="evaluation-detail-metric-value">{avaliacao.precisao}%</span>
                             </div>
 
                             <div className="evaluation-detail-metric-tile">
                                 <span className="evaluation-detail-metric-label font-ui">Objetivo</span>
-                                <span className="evaluation-detail-metric-value" style={{ fontSize: "1.2rem" }}>{avaliacao.pcm >= normaNacional ? "✅ Sim" : "❌ Não"}</span>
+                                <span className="evaluation-detail-metric-value" style={{ fontSize: "1.1rem" }}>{avaliacao.pcm >= normaNacional ? "Alcançado" : "Em Evolução"}</span>
                             </div>
                         </div>
                     </div>
 
+                    <div className="glass-card evaluation-detail-section">
+                        <h3 className="evaluation-detail-section-title font-ui">Análise Pedagógica</h3>
+                        <div style={{ marginBottom: "0.5rem" }}>
+                            <p className="mobile-data-label font-ui" style={{ marginBottom: "2px", fontSize: "7pt" }}>Diagnóstico</p>
+                            <p className="evaluation-detail-body">{avaliacao.diagnosticoIA}</p>
+                        </div>
+                        <div>
+                            <p className="mobile-data-label font-ui" style={{ marginBottom: "2px", fontSize: "7pt" }}>Intervenção Sugerida</p>
+                            <p className="evaluation-detail-body">{avaliacao.intervencaoIA}</p>
+                        </div>
+                    </div>
+
+                    <div className="glass-card evaluation-detail-section">
+                        <h3 className="evaluation-detail-section-title font-ui">Registro da Leitura</h3>
+                        <div className="evaluation-transcription-box">
+                            <div className="transcription-legend only-print" style={{ fontSize: "7pt", marginBottom: "4px", display: "flex", gap: "10px", opacity: 0.6 }}>
+                                <span>[Palavras]: Omissão</span>
+                                <span>(Sugestão): Autocorreção</span>
+                                <span><strong>Negrito</strong>: Ênfase</span>
+                            </div>
+                            {avaliacao.transcricaoMarcada ? (
+                                <p
+                                    className="evaluation-transcription-text font-reading"
+                                    dangerouslySetInnerHTML={{
+                                        __html: avaliacao.transcricaoMarcada
+                                            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                                            .replace(/\[(.*?)\]/g, '<span style="text-decoration: line-through;">[$1]</span>')
+                                            .replace(/\((.*?)\)/g, '<span style="font-style: italic; font-weight: 600;">($1)</span>')
+                                    }}
+                                />
+                            ) : (
+                                <p className="evaluation-transcription-text font-reading">{avaliacao.transcricao}</p>
+                            )}
+                        </div>
+                    </div>
+
+                    <div className="glass-card evaluation-detail-section only-print">
+                        <h3 className="evaluation-detail-section-title font-ui">Competências</h3>
+                        <div className="competence-list">
+                            {qualitativeMetrics.map((metric) => {
+                                const metricValue = Boolean(
+                                    avaliacao.metricasQualitativas?.[metric.key as keyof typeof avaliacao.metricasQualitativas]
+                                );
+                                return (
+                                    <div key={metric.key} className="competence-card">
+                                        <div className="competence-header" style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                            <span className="competence-label">{metric.label}</span>
+                                            <span className="competence-status">{metricValue ? "SIM" : "NÃO"}</span>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                </div>
+
+                <div className="evaluation-detail-sidebar no-print">
                     <div className="glass-card evaluation-detail-section" style={{ padding: "1.5rem" }}>
                         <h3 className="mobile-data-label font-ui" style={{ marginBottom: "1rem" }}>Avaliação de Competências</h3>
                         <div className="competence-list animate-stagger">
@@ -436,16 +529,21 @@ export default function EvaluationDetailsPage() {
 
             {/* Rodapé e Assinatura para Impressão */}
             <div className="only-print">
-                <div className="signature-box">
-                    <div className="signature-line"></div>
-                    <span style={{ fontSize: "10pt", fontWeight: 600 }}>Dra. Carolina Mendes de Souza</span>
-                    <span style={{ fontSize: "8pt", color: "#666" }}>Avaliação Técnica em Fluência Leitora</span>
+                <div className="signature-box" style={{ display: 'flex', justifyContent: 'space-between', marginTop: '30pt' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                        <div style={{ width: '180pt', borderTop: '0.5pt solid black', marginBottom: '4pt' }}></div>
+                        <span style={{ fontSize: "8pt", fontWeight: 600 }}>Assinatura do Avaliador</span>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                        <div style={{ width: '180pt', borderTop: '0.5pt solid black', marginBottom: '4pt' }}></div>
+                        <span style={{ fontSize: "8pt", fontWeight: 600 }}>Ciente do Responsável</span>
+                    </div>
                 </div>
 
-                <div className="print-footer">
-                    <span>Relatório gerado pela Plataforma Leitura Dinâmica</span>
-                    <span>Página 1 de 1</span>
-                    <span>Verificação: {evaluationId}</span>
+                <div className="print-footer" style={{ marginTop: '15pt', display: 'flex', justifyContent: 'space-between' }}>
+                    <span>Plataforma Leitura Dinâmica</span>
+                    <span>Documento de Uso Pedagógico</span>
+                    <span>REF: {evaluationId.substring(0, 8).toUpperCase()}</span>
                 </div>
             </div>
         </div>
