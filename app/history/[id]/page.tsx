@@ -184,7 +184,7 @@ export default function EvaluationDetailsPage() {
                     .only-print { display: block !important; }
                     
                     @page {
-                        margin: 1cm;
+                        margin: 0.8cm;
                         size: A4;
                     }
 
@@ -192,7 +192,7 @@ export default function EvaluationDetailsPage() {
                         background: white !important;
                         color: black !important;
                         font-family: serif !important;
-                        font-size: 10pt !important;
+                        font-size: 9.5pt !important;
                     }
 
                     .evaluation-page-container {
@@ -206,16 +206,16 @@ export default function EvaluationDetailsPage() {
                         box-shadow: none !important;
                         background: white !important;
                         backdrop-filter: none !important;
-                        margin-bottom: 10pt !important;
-                        padding: 10pt !important;
+                        margin-bottom: 6pt !important;
+                        padding: 6pt !important;
                         border-radius: 0 !important;
                         break-inside: avoid;
                     }
 
                     .print-header {
-                        margin-bottom: 20pt;
-                        border-bottom: 2pt solid black;
-                        padding-bottom: 10pt;
+                        margin-bottom: 12pt;
+                        border-bottom: 1.5pt solid black;
+                        padding-bottom: 6pt;
                     }
 
                     .print-header-top {
@@ -230,72 +230,72 @@ export default function EvaluationDetailsPage() {
                         gap: 8px;
                     }
 
-                    .logo-icon { font-size: 24pt; filter: grayscale(1); }
-                    .logo-brand { font-weight: 900; font-size: 16pt; color: black; }
-                    .logo-tag { font-weight: 400; font-size: 12pt; color: black; margin-left: 2px; }
+                    .logo-brand { font-weight: 900; font-size: 13pt; color: black; }
+                    .logo-tag { font-weight: 400; font-size: 11pt; color: black; margin-left: 2px; }
 
                     .print-report-meta { text-align: right; }
-                    .print-report-meta h3 { margin: 0; font-size: 14pt; font-weight: 900; color: black; }
-                    .print-report-meta p { margin: 2pt 0; font-size: 9pt; color: black; font-weight: 600; }
+                    .print-report-meta h3 { margin: 0; font-size: 12pt; font-weight: 900; color: black; }
+                    .print-report-meta p { margin: 1pt 0; font-size: 8pt; color: black; font-weight: 600; }
 
                     .evaluation-detail-section-title {
                         font-family: sans-serif !important;
-                        font-size: 11pt !important;
+                        font-size: 9pt !important;
                         font-weight: 900 !important;
                         color: black !important;
-                        border-bottom: 1pt solid black !important;
-                        padding-bottom: 3pt !important;
-                        margin-bottom: 10pt !important;
+                        border-bottom: 0.5pt solid black !important;
+                        padding-bottom: 2pt !important;
+                        margin-bottom: 8pt !important;
                         text-transform: uppercase;
                     }
 
                     .details-student-grid {
                         display: grid;
                         grid-template-columns: 2fr 1fr 1fr;
-                        gap: 15pt;
+                        gap: 12pt;
                     }
 
                     .details-student-grid p {
                         margin: 0;
-                        font-size: 10pt;
+                        font-size: 9pt;
                         color: black !important;
                     }
 
                     .evaluation-metrics-grid {
                         display: grid !important;
                         grid-template-columns: repeat(3, 1fr) !important;
-                        gap: 10pt !important;
+                        gap: 8pt !important;
                     }
 
                     .pcm-highlight-tile, .evaluation-detail-metric-tile {
                         background: white !important;
-                        border: 1pt solid black !important;
-                        padding: 10pt !important;
+                        border: 0.5pt solid black !important;
+                        padding: 4pt !important;
                         display: flex;
                         flex-direction: column;
                         align-items: center;
                         justify-content: center;
+                        min-height: 50pt;
                     }
 
                     .pcm-large-number {
-                        font-size: 22pt !important;
+                        font-size: 16pt !important;
                         color: black !important;
                         font-weight: 900 !important;
                     }
 
                     .performance-status-pill {
                         background: white !important;
-                        border: 1pt solid black !important;
+                        border: 0.5pt solid black !important;
                         color: black !important;
                         font-weight: 900 !important;
-                        font-size: 9pt !important;
-                        padding: 3pt 6pt !important;
-                        margin-top: 5pt !important;
+                        font-size: 8pt !important;
+                        padding: 1pt 4pt !important;
+                        margin-top: 2pt !important;
                         text-transform: uppercase;
                     }
 
                     .evaluation-detail-metric-value {
-                        font-size: 18pt !important;
+                        font-size: 14pt !important;
                         color: black !important;
                         font-weight: 800 !important;
                     }
@@ -303,44 +303,45 @@ export default function EvaluationDetailsPage() {
                     .competence-list {
                         display: grid !important;
                         grid-template-columns: repeat(3, 1fr) !important;
-                        gap: 8pt !important;
+                        gap: 6pt !important;
                     }
 
                     .competence-card {
                         border: 0.5pt solid black !important;
-                        border-left: 3pt solid black !important;
-                        padding: 6pt !important;
+                        border-left: 2pt solid black !important;
+                        padding: 4pt !important;
                         background: white !important;
                     }
 
                     .competence-label {
-                        font-size: 9pt !important;
+                        font-size: 8.5pt !important;
                         font-weight: 700 !important;
                         color: black !important;
                     }
 
                     .competence-status {
-                        font-size: 9pt !important;
+                        font-size: 8.5pt !important;
                         font-weight: 900 !important;
                         color: black !important;
                     }
 
                     .evaluation-transcription-text {
                         font-family: serif !important;
-                        font-size: 11pt !important;
-                        line-height: 1.5 !important;
+                        font-size: 10pt !important;
+                        line-height: 1.4 !important;
                         color: black !important;
                         text-align: justify;
                     }
 
                     .signature-box {
-                        margin-top: 30pt;
+                        margin-top: 20pt;
                     }
 
                     .print-footer {
-                        border-top: 1pt solid black;
-                        padding-top: 5pt;
+                        border-top: 0.5pt solid black;
+                        padding-top: 4pt;
                         font-weight: 600;
+                        font-size: 7.5pt;
                     }
                 }
             `}</style>
