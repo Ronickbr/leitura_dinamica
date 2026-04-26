@@ -7,6 +7,7 @@ import { useFirebase } from "@/app/components/FirebaseProvider";
 import { getAlunoById, type Aluno } from "@/lib/services";
 import { getTextos, type Texto } from "@/lib/textsService";
 import { processAudio, saveAvaliacao, getAvaliacoesPorAluno, type Avaliacao } from "@/lib/evaluationsService";
+import { getNormaNacional, getPerformanceLevel } from "@/lib/pcmUtils";
 
 const MicIcon = () => <span>🎤</span>;
 const SquareIcon = () => <span>⏹️</span>;
@@ -29,6 +30,8 @@ export default function ReadingPage() {
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [isFinished, setIsFinished] = useState(false);
   const [historico, setHistorico] = useState<Avaliacao[]>([]);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [savedEvaluationId, setSavedEvaluationId] = useState<string | null>(null);
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
@@ -177,7 +180,9 @@ export default function ReadingPage() {
         intervencaoIA: tempResult.analysis.intervencao,
         metricasQualitativas: tempResult.analysis.metricas_qualitativas
       });
-      router.push(`/history/${evaluationId}`);
+      setSavedEvaluationId(evaluationId);
+      setShowSuccessModal(true);
+      setIsReviewing(false);
     } catch (err) {
       console.error('Erro ao salvar:', err);
       alert('Erro ao salvar avaliação.');
@@ -387,6 +392,50 @@ export default function ReadingPage() {
               <button onClick={() => setIsReviewing(false)} className="btn-outline" style={{ flex: 1 }}>Voltar</button>
               <button onClick={confirmAndSave} disabled={processing} className="btn-primary" style={{ flex: 2, background: "var(--success)" }}>
                 {processing ? "Salvando..." : "Salvar Avaliação"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showSuccessModal && (
+        <div className="glass-modal animate-in" style={{ zIndex: 3000 }}>
+          <div className="glass-card" style={{ maxWidth: "480px", width: "100%", textAlign: "center", padding: "2.5rem" }}>
+            <div style={{ fontSize: "4rem", marginBottom: "1.5rem" }}>🎉</div>
+            <h2 className="page-title" style={{ fontSize: "1.75rem", marginBottom: "0.5rem" }}>Avaliação Concluída!</h2>
+            <p className="page-subtitle" style={{ marginBottom: "2rem" }}>
+              Os dados de <strong>{aluno?.nome}</strong> foram processados e salvos com sucesso.
+            </p>
+
+            <div className="glass-panel" style={{ marginBottom: "2rem", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+              <div>
+                <div className="mobile-data-label">PCM</div>
+                <div style={{ fontSize: "2rem", fontWeight: 900, color: "var(--primary)" }}>{tempResult?.pcm}</div>
+              </div>
+              <div>
+                <div className="mobile-data-label">Precisão</div>
+                <div style={{ fontSize: "2rem", fontWeight: 900, color: "var(--success)" }}>{tempResult?.metrics.precisao}%</div>
+              </div>
+              <div style={{ gridColumn: "span 2", paddingTop: "0.5rem", borderTop: "1px solid var(--glass-border-light)" }}>
+                <div className="mobile-data-label">Nível de Desempenho</div>
+                <div style={{ fontWeight: 700, color: "var(--text-primary)" }}>{getPerformanceLevel(tempResult?.pcm || 0)}</div>
+              </div>
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+              <button 
+                onClick={() => router.push(`/history/${savedEvaluationId}`)} 
+                className="btn-primary" 
+                style={{ width: "100%" }}
+              >
+                📊 Ver Relatório Completo
+              </button>
+              <button 
+                onClick={() => router.push('/evaluations/new')} 
+                className="btn-outline" 
+                style={{ width: "100%" }}
+              >
+                🔄 Nova Avaliação
               </button>
             </div>
           </div>
