@@ -49,7 +49,7 @@ export interface Avaliacao {
   professorId: string;
 }
 
-export const processAudio = async (audioBlob: Blob, originalText: string, studentGrade?: string, targetPCM?: number, history?: any[]) => {
+export const processAudio = async (audioBlob: Blob, originalText: string, studentGrade?: string, targetPCM?: number, history?: any[], duration?: number) => {
   const user = cachedAuth?.currentUser;
   const token = user ? await user.getIdToken() : null;
 
@@ -63,6 +63,7 @@ export const processAudio = async (audioBlob: Blob, originalText: string, studen
   if (studentGrade) formData.append('student_grade', studentGrade);
   if (targetPCM) formData.append('target_pcm', targetPCM.toString());
   if (history) formData.append('history', JSON.stringify(history));
+  if (duration) formData.append('duration', duration.toString());
 
   const response = await fetch('/api/process-audio', {
     method: 'POST',

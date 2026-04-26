@@ -32,6 +32,8 @@ export default function ReadingPage() {
   const [historico, setHistorico] = useState<Avaliacao[]>([]);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [savedEvaluationId, setSavedEvaluationId] = useState<string | null>(null);
+  const [recordingDuration, setRecordingDuration] = useState(0);
+  const recordingStartTimeRef = useRef<number | null>(null);
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
@@ -127,12 +129,20 @@ export default function ReadingPage() {
         const finalMime = mediaRecorder.mimeType || 'audio/webm';
         const audioBlob = new Blob(audioChunksRef.current, { type: finalMime });
         setAudioUrl(URL.createObjectURL(audioBlob));
+
+        // Calcula a duração real em segundos
+        if (recordingStartTimeRef.current) {
+          const duration = (Date.now() - recordingStartTimeRef.current) / 1000;
+          setRecordingDuration(Math.min(duration, 60)); // Máximo de 60s
+        }
+
         setIsFinished(true);
       };
 
       mediaRecorder.start();
       setIsRecording(true);
       setTimeLeft(60);
+      recordingStartTimeRef.current = Date.now();
     } catch (err) {
       console.error('Erro ao acessar o microfone:', err);
       alert('Erro ao acessar o microfone. Verifique as permissões.');
@@ -153,7 +163,8 @@ export default function ReadingPage() {
         texto.conteudo,
         aluno?.serie,
         aluno?.metaPCM,
-        historico.slice(0, 3) // Enviamos as últimas 3 avaliações para contexto
+        historico.slice(0, 3), // Enviamos as últimas 3 avaliações para contexto
+        recordingDuration
       );
       setTempResult(result);
       setIsReviewing(true);
@@ -423,16 +434,16 @@ export default function ReadingPage() {
             </div>
 
             <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-              <button 
-                onClick={() => router.push(`/history/${savedEvaluationId}`)} 
-                className="btn-primary" 
+              <button
+                onClick={() => router.push(`/history/${savedEvaluationId}`)}
+                className="btn-primary"
                 style={{ width: "100%" }}
               >
                 📊 Ver Relatório Completo
               </button>
-              <button 
-                onClick={() => router.push('/evaluations/new')} 
-                className="btn-outline" 
+              <button
+                onClick={() => router.push('/evaluations/new')}
+                className="btn-outline"
                 style={{ width: "100%" }}
               >
                 🔄 Nova Avaliação

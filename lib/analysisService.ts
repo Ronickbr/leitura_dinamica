@@ -91,7 +91,8 @@ async function getPedagogicalDiagnosis(
   transcription: string,
   studentGrade?: string,
   targetPCM?: number,
-  history?: any[]
+  history?: any[],
+  alignmentDetails?: any[]
 ) {
   const gradeNorm = studentGrade ? getNormaNacional(studentGrade) : 80;
   const gradeContext = studentGrade ? `O aluno é do ${studentGrade}. A norma nacional esperada para esta série é de ${gradeNorm} PCM.` : "O aluno é do 3º ano (contexto padrão).";
@@ -101,6 +102,15 @@ async function getPedagogicalDiagnosis(
     ? `HISTÓRICO DE EVOLUÇÃO (Últimas ${history.length} avaliações):
 ${history.map((h, i) => `  ${i + 1}. Data: ${new Date(h.data?.seconds * 1000).toLocaleDateString()}, PCM: ${h.pcm}, Diagnóstico: ${h.diagnosticoIA}`).join("\n")}`
     : "Não há histórico de avaliações anteriores para este aluno.";
+
+  const omissions = alignmentDetails?.filter(d => d.tipo === 'deletion').map(d => d.original) || [];
+  const substitutions = alignmentDetails?.filter(d => d.tipo === 'substitution').map(d => `${d.original} -> ${d.lido}`) || [];
+
+  const alignmentContext = alignmentDetails
+    ? `DETALHES DO ALINHAMENTO AUTOMÁTICO:
+    - Palavras Omitidas: ${omissions.length > 0 ? omissions.join(", ") : "Nenhuma"}
+    - Substituições Detectadas: ${substitutions.length > 0 ? substitutions.join(", ") : "Nenhuma"}`
+    : "";
 
   const prompt = `
   Aja como uma Psicopedagoga Clínica especialista em alfabetização, neurociência da leitura e fluência leitora.
@@ -118,8 +128,10 @@ ${history.map((h, i) => `  ${i + 1}. Data: ${new Date(h.data?.seconds * 1000).to
   - Texto Base: "${originalText}"
   - Transcrição da Leitura: "${transcription}"
 
+  ${alignmentContext}
+
   SUA TAREFA DE ANÁLISE DETALHADA:
-  1. Comparação Fonológica e Lexical: Identifique se as discrepâncias entre o Texto Base e a Transcrição são:
+  1. Comparação Fonológica e Lexical: Use os 'DETALHES DO ALINHAMENTO' e a 'Transcrição' para identificar:
      - Substituições Fonológicas: Troca por sons parecidos (ex: p/b, t/d, f/v). Indica dificuldade de processamento fonológico.
      - Substituições Visuais/Gráficas: Troca por letras visualmente similares (ex: m/n, p/q). Indica dificuldade de processamento visual.
      - Substituições Lexicais/Semânticas: Troca por palavras de sentido similar (ex: "casa" por "lar"). Indica uso de contexto para compensar decodificação falha.
@@ -157,7 +169,7 @@ ${history.map((h, i) => `  ${i + 1}. Data: ${new Date(h.data?.seconds * 1000).to
     "transcricao_marcada": "O texto da transcrição formatado da seguinte forma: palavras substituídas/erradas em **negrito**, palavras do texto original que foram omitidas entre [colchetes] e palavras adicionadas que não estavam no original entre (parênteses)."
   }
 
-  ATENÇÃO: Requer-se ALTA PRECISÃO. Se a precisão original estiver abaixo de 80%, 'leitura_precisa' DEVE ser false. Se houver muitas vírgulas ignoradas na transcrição, 'pontuacao' DEVE ser false. Use as justificativas para mostrar que você analisou detalhadamente a transcrição.
+  ATENÇÃO: Requer-se ALTA PRECISÃO. Se o PCM estiver muito abaixo da norma, 'leitura_precisa' DEVE ser false. Se houver muitas vírgulas ignoradas na transcrição, 'pontuacao' DEVE ser false. Use as justificativas para mostrar que você analisou detalhadamente os erros fonéticos.
   `;
 
   try {
@@ -193,16 +205,19 @@ interface ProcessAudioParams {
   studentGrade?: string;
   targetPCM?: number;
   history?: any[];
+  duration?: number;
 }
 
 interface ProcessAudioResult {
   filename: string;
   pcm: number;
+  duration: number;
   metrics: {
     corretas: number;
     total_original: number;
     total_lido: number;
     precisao: number;
+    detalhes: any[];
   };
   level: string;
   transcription: string;
@@ -235,6 +250,7 @@ export async function processReadingAudio({
   studentGrade,
   targetPCM,
   history,
+  duration = 60,
 }: ProcessAudioParams): Promise<ProcessAudioResult> {
   const sanitizedOriginalText = sanitizeInput(originalText);
 
@@ -255,10 +271,15 @@ export async function processReadingAudio({
   console.log(`Transcrição concluída: "${transcription.substring(0, 50)}..."`);
 
   const metrics = calculatePCM(sanitizedOriginalText, transcription);
-  const pcm = metrics.corretas;
+
+  // Cálculo preciso de PCM: (palavras_corretas / duracao_em_segundos) * 60
+  // Usamos Math.max(duration, 5) para evitar divisão por zero ou tempos irreais
+  const effectiveDuration = Math.max(duration, 1);
+  const pcm = Math.round((metrics.corretas / effectiveDuration) * 60);
+
   const level = getPerformanceLevel(pcm);
 
-  console.log(`Métricas: PCM=${pcm}, Nível=${level}`);
+  console.log(`Métricas: PCM=${pcm} (baseado em ${effectiveDuration.toFixed(1)}s), Nível=${level}`);
   console.log("Iniciando diagnóstico OpenRouter...");
 
   const analysis = await getPedagogicalDiagnosis(
@@ -269,7 +290,8 @@ export async function processReadingAudio({
     transcription,
     studentGrade,
     targetPCM,
-    history
+    history,
+    metrics.detalhes
   );
 
   console.log("Diagnóstico OpenRouter finalizado");
@@ -277,6 +299,7 @@ export async function processReadingAudio({
   return {
     filename: filename || "audio.webm",
     pcm,
+    duration: effectiveDuration,
     metrics,
     level,
     transcription,
