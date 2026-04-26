@@ -163,10 +163,8 @@ export default function EvaluationDetailsPage() {
             <div className="print-header only-print">
                 <div className="print-header-top">
                     <div className="print-logo">
-                        <span className="logo-icon">📖</span>
-                        <div className="logo-text">
-                            <span className="logo-brand">Leitura</span>
-                            <span className="logo-tag">Dinâmica</span>
+                        <div className="print-logo">
+                            <span className="logo-brand">RELATÓRIO DE FLUÊNCIA <span className="logo-tag">LEITORA</span></span>
                         </div>
                     </div>
                     <div className="print-report-meta">
@@ -200,23 +198,24 @@ export default function EvaluationDetailsPage() {
                     .evaluation-page-container {
                         padding: 0 !important;
                         max-width: 100% !important;
+                        margin: 0 !important;
                     }
 
                     .glass-card {
-                        border: 1px solid #ccc !important;
+                        border: 0.5pt solid black !important;
                         box-shadow: none !important;
-                        background: transparent !important;
+                        background: white !important;
                         backdrop-filter: none !important;
-                        margin-bottom: 8pt !important;
-                        padding: 8pt !important;
+                        margin-bottom: 10pt !important;
+                        padding: 10pt !important;
                         border-radius: 0 !important;
                         break-inside: avoid;
                     }
 
                     .print-header {
-                        margin-bottom: 1rem;
-                        border-bottom: 1.5pt solid black;
-                        padding-bottom: 0.5rem;
+                        margin-bottom: 20pt;
+                        border-bottom: 2pt solid black;
+                        padding-bottom: 10pt;
                     }
 
                     .print-header-top {
@@ -231,158 +230,117 @@ export default function EvaluationDetailsPage() {
                         gap: 8px;
                     }
 
-                    .logo-icon { font-size: 18pt; filter: grayscale(1); }
-                    .logo-brand { font-weight: 900; font-size: 14pt; color: black; }
-                    .logo-tag { font-weight: 400; font-size: 11pt; color: #444; margin-left: 2px; }
+                    .logo-icon { font-size: 24pt; filter: grayscale(1); }
+                    .logo-brand { font-weight: 900; font-size: 16pt; color: black; }
+                    .logo-tag { font-weight: 400; font-size: 12pt; color: black; margin-left: 2px; }
 
                     .print-report-meta { text-align: right; }
-                    .print-report-meta h3 { margin: 0; font-size: 12pt; font-weight: 700; color: black; }
-                    .print-report-meta p { margin: 1pt 0; font-size: 8pt; color: #444; }
-
-                    .print-divider { display: none; }
+                    .print-report-meta h3 { margin: 0; font-size: 14pt; font-weight: 900; color: black; }
+                    .print-report-meta p { margin: 2pt 0; font-size: 9pt; color: black; font-weight: 600; }
 
                     .evaluation-detail-section-title {
                         font-family: sans-serif !important;
-                        font-size: 10pt !important;
-                        font-weight: 700 !important;
+                        font-size: 11pt !important;
+                        font-weight: 900 !important;
                         color: black !important;
-                        border-bottom: 0.5pt solid #ddd !important;
-                        padding-bottom: 2pt !important;
-                        margin-bottom: 6pt !important;
+                        border-bottom: 1pt solid black !important;
+                        padding-bottom: 3pt !important;
+                        margin-bottom: 10pt !important;
                         text-transform: uppercase;
                     }
 
                     .details-student-grid {
                         display: grid;
                         grid-template-columns: 2fr 1fr 1fr;
-                        gap: 10pt;
+                        gap: 15pt;
                     }
 
                     .details-student-grid p {
                         margin: 0;
-                        font-size: 9pt;
-                    }
-
-                    .evaluation-detail-layout {
-                        display: block !important;
-                    }
-
-                    .evaluation-detail-main, .evaluation-detail-sidebar {
-                        width: 100% !important;
-                        display: block !important;
+                        font-size: 10pt;
+                        color: black !important;
                     }
 
                     .evaluation-metrics-grid {
                         display: grid !important;
                         grid-template-columns: repeat(3, 1fr) !important;
-                        gap: 8pt !important;
+                        gap: 10pt !important;
                     }
 
-                    .pcm-highlight-tile {
-                        background: #f9f9f9 !important;
-                        border: 0.5pt solid #ddd !important;
-                        padding: 6pt !important;
+                    .pcm-highlight-tile, .evaluation-detail-metric-tile {
+                        background: white !important;
+                        border: 1pt solid black !important;
+                        padding: 10pt !important;
                         display: flex;
                         flex-direction: column;
                         align-items: center;
                         justify-content: center;
                     }
 
-                    .pcm-metric-visual-bg { display: none !important; }
-
                     .pcm-large-number {
+                        font-size: 22pt !important;
+                        color: black !important;
+                        font-weight: 900 !important;
+                    }
+
+                    .performance-status-pill {
+                        background: white !important;
+                        border: 1pt solid black !important;
+                        color: black !important;
+                        font-weight: 900 !important;
+                        font-size: 9pt !important;
+                        padding: 3pt 6pt !important;
+                        margin-top: 5pt !important;
+                        text-transform: uppercase;
+                    }
+
+                    .evaluation-detail-metric-value {
                         font-size: 18pt !important;
                         color: black !important;
                         font-weight: 800 !important;
                     }
 
-                    .performance-status-pill {
-                        background: white !important;
-                        border: 0.5pt solid #bbb !important;
-                        color: black !important;
-                        font-weight: 700 !important;
-                        font-size: 8pt !important;
-                        padding: 2pt 4pt !important;
-                        margin-top: 4pt !important;
-                    }
-
-                    .evaluation-detail-metric-tile {
-                        background: #f9f9f9 !important;
-                        border: 0.5pt solid #ddd !important;
-                        padding: 6pt !important;
-                        display: flex;
-                        flex-direction: column;
-                        justify-content: center;
-                        align-items: center;
-                    }
-
-                    .evaluation-detail-metric-value {
-                        font-size: 14pt !important;
-                        color: black !important;
-                        font-weight: 700 !important;
-                    }
-
                     .competence-list {
                         display: grid !important;
                         grid-template-columns: repeat(3, 1fr) !important;
-                        gap: 5pt !important;
+                        gap: 8pt !important;
                     }
 
                     .competence-card {
-                        border: 0.5pt solid #eee !important;
-                        border-left: 2pt solid black !important;
-                        padding: 4pt !important;
-                        margin: 0 !important;
-                    }
-
-                    .competence-header {
-                        margin-bottom: 1pt !important;
+                        border: 0.5pt solid black !important;
+                        border-left: 3pt solid black !important;
+                        padding: 6pt !important;
+                        background: white !important;
                     }
 
                     .competence-label {
-                        font-size: 8pt !important;
+                        font-size: 9pt !important;
                         font-weight: 700 !important;
+                        color: black !important;
                     }
 
                     .competence-status {
-                        font-size: 8pt !important;
-                        font-weight: 900 !important;
-                    }
-
-                    .competence-justification {
-                        font-size: 7.5pt !important;
-                        margin-top: 1pt !important;
-                        line-height: 1.2 !important;
-                    }
-
-                    .evaluation-detail-body {
                         font-size: 9pt !important;
-                        line-height: 1.3 !important;
+                        font-weight: 900 !important;
+                        color: black !important;
                     }
 
                     .evaluation-transcription-text {
                         font-family: serif !important;
-                        font-size: 10pt !important;
-                        line-height: 1.4 !important;
+                        font-size: 11pt !important;
+                        line-height: 1.5 !important;
                         color: black !important;
-                    }
-
-                    .reading-reference-box {
-                        padding: 4pt !important;
-                        background: #fdfdfd !important;
-                        border: 0.5pt dashed #ccc !important;
+                        text-align: justify;
                     }
 
                     .signature-box {
-                        margin-top: 1.5rem;
-                        display: flex;
-                        justify-content: space-around !important;
+                        margin-top: 30pt;
                     }
 
                     .print-footer {
-                        font-size: 6.5pt;
-                        border-top: 0.5pt solid #ddd;
-                        padding-top: 4pt;
+                        border-top: 1pt solid black;
+                        padding-top: 5pt;
+                        font-weight: 600;
                     }
                 }
             `}</style>
@@ -417,7 +375,7 @@ export default function EvaluationDetailsPage() {
                                 </span>
                                 <div className="pcm-value-display">
                                     <span className="pcm-large-number">{avaliacao.pcm}</span>
-                                    <span style={{ fontSize: "0.8rem", opacity: 0.7 }}> ppm</span>
+                                    <span style={{ fontSize: "1rem", fontWeight: 700 }}> ppm</span>
                                 </div>
                                 <div className="performance-status-pill font-ui">
                                     {getPerformanceLevel(avaliacao.pcm)}
@@ -431,7 +389,7 @@ export default function EvaluationDetailsPage() {
 
                             <div className="evaluation-detail-metric-tile">
                                 <span className="evaluation-detail-metric-label font-ui">Objetivo</span>
-                                <span className="evaluation-detail-metric-value" style={{ fontSize: "1.1rem" }}>{avaliacao.pcm >= normaNacional ? "Alcançado" : "Em Evolução"}</span>
+                                <span className="evaluation-detail-metric-value" style={{ fontSize: "1.4rem", fontWeight: 900 }}>{avaliacao.pcm >= normaNacional ? "ALCANÇADO" : "EM EVOLUÇÃO"}</span>
                             </div>
                         </div>
                     </div>

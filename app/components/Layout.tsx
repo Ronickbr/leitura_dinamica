@@ -117,7 +117,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="app-shell">
-      <header className="app-header-fixed glass-panel">
+      <header className="app-header-fixed glass-panel no-print">
         <div className="container app-header-content">
           <Link href="/" className="app-title">
             <span className="logo-emoji">📖</span>
