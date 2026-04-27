@@ -1,4 +1,4 @@
-# 📖 Plataforma Leitura (v3.11.0)
+# 📖 Plataforma Leitura (v3.12.0)
 
 Plataforma de avaliação de fluência leitora com Next.js (App Router), persistência em Firebase e processamento de áudio via IA. O projeto foi refatorado para um monorepo Next.js unificado com API routes serverless.
 
@@ -40,7 +40,9 @@ O sistema permite que professores:
 - **[NOVO]** Importação Lote de Histórico via Excel (permite migrar avaliações antigas);
 - **[NOVO]** Análise de Evolução Comparativa via IA baseada em registros anteriores;
 - **[NOVO]** Diagnóstico de leitura dinâmico calibrado por série e meta de PCM;
-- **[NOVO]** Fluxo de login unificado diretamente na página inicial com renderização condicional;
+- **[NOVO]** Filtros dinâmicos por Série e Turma na página de histórico para segmentação de avaliações.
+- **[NOVO]** Modal de Revisão de Avaliação com efeito glassmorphism para uma experiência de usuário mais interativa.
+- **v3.11.0**: Migração AI Unificada. Refatoração do `analysisService.ts` para utilizar exclusivamente OpenAI (Whisper-1 e GPT-4o), simplificando a infraestrutura e removendo dependências obsoletas como Groq e OpenRouter.
 - **v3.9.1**: **Modal de Resultado e Refinamento de Diagnóstico**. Implementação do modal de feedback imediato após a avaliação, exibindo PCM e Precisão de forma destacada. Refinamento do prompt de IA para utilizar os dados de alinhamento global (Levenshtein) em diagnósticos pedagógicos mais técnicos e precisos.
 - **v3.9.0**: **Motor de Avaliação de Alta Precisão**. Implementação de algoritmo de alinhamento global de palavras (Levenshtein) para detecção milimétrica de omissões e substituições fonológicas. Inclusão de captura de duração real do áudio para cálculo exato de PCM, eliminando subestimativas em leituras rápidas.
 - **v3.8.6**: Modal de Resultado Pós-Avaliação. Implementação de um feedback visual imediato após o salvamento dos dados, exibindo um resumo quantitativo (PCM e Precisão) e o nível de desempenho, facilitando a navegação entre o relatório completo e novas avaliações.

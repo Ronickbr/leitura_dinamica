@@ -19,6 +19,8 @@ export default function HistoryPage() {
   const [loading, setLoading] = useState(true);
   const [expandedStudentId, setExpandedStudentId] = useState<string | null>(null);
   const [filterAnoLetivo, setFilterAnoLetivo] = useState(new Date().getFullYear().toString());
+  const [filterSerie, setFilterSerie] = useState('');
+  const [filterTurma, setFilterTurma] = useState('');
 
   useEffect(() => {
     if (!firebaseInitialized) return;
@@ -287,26 +289,65 @@ export default function HistoryPage() {
       )}
 
       {/* Barra de Filtros */}
-      <div className="history-filter-bar" style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem', flexWrap: 'nowrap' }}>
-        <div className="history-filter-heading" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0 }}>
-          <span style={{ fontSize: '1.2rem' }}>📅</span>
-          <span className="history-filter-label" style={{ fontWeight: 700, fontSize: '0.95rem', whiteSpace: 'nowrap' }}>Ano Letivo:</span>
+      <div className="history-filter-bar" style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <div className="history-filter-heading" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0 }}>
+            <span style={{ fontSize: '1.2rem' }}>📅</span>
+            <span className="history-filter-label" style={{ fontWeight: 700, fontSize: '0.95rem', whiteSpace: 'nowrap' }}>Ano:</span>
+          </div>
+          <input
+            type="number"
+            placeholder="2026"
+            value={filterAnoLetivo}
+            onChange={e => setFilterAnoLetivo(e.target.value)}
+            className="filter-search-input"
+            style={{ width: '100px', flexShrink: 0 }}
+          />
         </div>
-        <input
-          type="number"
-          placeholder="2026"
-          value={filterAnoLetivo}
-          onChange={e => setFilterAnoLetivo(e.target.value)}
-          className="filter-search-input"
-          style={{ width: '120px', flexShrink: 0 }}
-        />
-        {filterAnoLetivo && (
-          <button
-            onClick={() => setFilterAnoLetivo('')}
-            className="btn-icon"
-            style={{ flexShrink: 0 }}
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <div className="history-filter-heading" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0 }}>
+            <span style={{ fontSize: '1.2rem' }}>🏫</span>
+            <span className="history-filter-label" style={{ fontWeight: 700, fontSize: '0.95rem', whiteSpace: 'nowrap' }}>Série:</span>
+          </div>
+          <select
+            value={filterSerie}
+            onChange={e => setFilterSerie(e.target.value)}
+            className="filter-select"
+            style={{ minWidth: '140px' }}
           >
-            ✕
+            <option value="">Todas as Séries</option>
+            {Array.from(new Set(studentGroups.map(g => g.aluno?.serie).filter(Boolean))).sort().map(s => (
+              <option key={s} value={s}>{s}</option>
+            ))}
+          </select>
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <div className="history-filter-heading" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0 }}>
+            <span style={{ fontSize: '1.2rem' }}>👥</span>
+            <span className="history-filter-label" style={{ fontWeight: 700, fontSize: '0.95rem', whiteSpace: 'nowrap' }}>Turma:</span>
+          </div>
+          <select
+            value={filterTurma}
+            onChange={e => setFilterTurma(e.target.value)}
+            className="filter-select"
+            style={{ minWidth: '120px' }}
+          >
+            <option value="">Todas</option>
+            {Array.from(new Set(studentGroups.map(g => g.aluno?.turma).filter(Boolean))).sort().map(t => (
+              <option key={t} value={t}>{t}</option>
+            ))}
+          </select>
+        </div>
+
+        {(filterAnoLetivo || filterSerie || filterTurma) && (
+          <button
+            onClick={() => { setFilterAnoLetivo(''); setFilterSerie(''); setFilterTurma(''); }}
+            className="btn-outline"
+            style={{ padding: '0.5rem 1rem', fontSize: '0.8rem' }}
+          >
+            Limpar Filtros
           </button>
         )}
       </div>
@@ -319,7 +360,11 @@ export default function HistoryPage() {
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
           {studentGroups
-            .filter(group => !filterAnoLetivo || group.aluno?.anoLetivo === filterAnoLetivo)
+            .filter(group =>
+              (!filterAnoLetivo || group.aluno?.anoLetivo === filterAnoLetivo) &&
+              (!filterSerie || group.aluno?.serie === filterSerie) &&
+              (!filterTurma || group.aluno?.turma === filterTurma)
+            )
             .map((group, index) => {
               const isExpanded = expandedStudentId === group.alunoId;
               const latestEv = group.evaluations[0];

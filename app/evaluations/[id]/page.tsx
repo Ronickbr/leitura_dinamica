@@ -330,7 +330,7 @@ export default function ReadingPage() {
       </div>
 
       {isReviewing && (
-        <div className="evaluation-review-overlay">
+        <div className="glass-modal">
           <div className="glass-card animate-in evaluation-review-sheet" style={{ maxWidth: "600px", width: "100%", boxShadow: "var(--glass-shadow)" }}>
             <h2 style={{ marginBottom: "1.5rem", display: "flex", alignItems: "center", gap: "0.75rem" }}>
               <span style={{ fontSize: "1.5rem" }}>📝</span> Revisar Avaliação
