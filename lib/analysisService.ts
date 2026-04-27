@@ -12,25 +12,6 @@ function sanitizeInput(text: string): string {
     .slice(0, MAX_ORIGINAL_TEXT_LENGTH);
 }
 
-function getPublicAppUrl() {
-  if (process.env.OPENROUTER_SITE_URL) {
-    return process.env.OPENROUTER_SITE_URL;
-  }
-
-  if (process.env.APP_URL) {
-    return process.env.APP_URL;
-  }
-
-  if (process.env.VERCEL_PROJECT_PRODUCTION_URL) {
-    return `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`;
-  }
-
-  if (process.env.VERCEL_URL) {
-    return `https://${process.env.VERCEL_URL}`;
-  }
-
-  return "http://localhost:3000";
-}
 
 function getRequiredEnv(name: string) {
   const value = process.env[name];
@@ -44,17 +25,8 @@ function getRequiredEnv(name: string) {
 
 function createAIClients() {
   return {
-    groq: new OpenAI({
-      apiKey: getRequiredEnv("GROQ_API_KEY"),
-      baseURL: "https://api.groq.com/openai/v1",
-    }),
-    openRouter: new OpenAI({
-      apiKey: getRequiredEnv("OPENROUTER_API_KEY"),
-      baseURL: "https://openrouter.ai/api/v1",
-      defaultHeaders: {
-        "HTTP-Referer": getPublicAppUrl(),
-        "X-Title": process.env.OPENROUTER_APP_NAME || "Fluência Leitora",
-      },
+    openai: new OpenAI({
+      apiKey: getRequiredEnv("OPENAI_API_KEY"),
     }),
   };
 }
@@ -84,7 +56,7 @@ function parseAnalysisPayload(content: string) {
 }
 
 async function getPedagogicalDiagnosis(
-  openRouter: OpenAI,
+  openai: OpenAI,
   pcm: number,
   level: string,
   originalText: string,
@@ -173,8 +145,8 @@ ${history.map((h, i) => `  ${i + 1}. Data: ${new Date(h.data?.seconds * 1000).to
   `;
 
   try {
-    const response = await openRouter.chat.completions.create({
-      model: "openai/gpt-4o-mini",
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o",
       messages: [
         {
           role: "system",
@@ -193,7 +165,7 @@ ${history.map((h, i) => `  ${i + 1}. Data: ${new Date(h.data?.seconds * 1000).to
 
     return parseAnalysisPayload(content);
   } catch (error) {
-    console.error("Erro no OpenRouter:", error);
+    console.error("Erro na OpenAI:", error);
     return getFallbackAnalysis();
   }
 }
@@ -258,11 +230,11 @@ export async function processReadingAudio({
     throw new Error("O texto original é obrigatório ou inválido.");
   }
 
-  const { groq, openRouter } = createAIClients();
-  console.log(`Iniciando transcrição Groq para arquivo: ${filename}`);
-  const transcriptionResponse = await groq.audio.transcriptions.create({
-    file: fs.createReadStream(filePath) as unknown as File,
-    model: "whisper-large-v3",
+  const { openai } = createAIClients();
+  console.log(`Iniciando transcrição OpenAI para arquivo: ${filename}`);
+  const transcriptionResponse = await openai.audio.transcriptions.create({
+    file: fs.createReadStream(filePath) as any,
+    model: "whisper-1",
     language: "pt",
     response_format: "json",
   });
@@ -280,10 +252,10 @@ export async function processReadingAudio({
   const level = getPerformanceLevel(pcm);
 
   console.log(`Métricas: PCM=${pcm} (baseado em ${effectiveDuration.toFixed(1)}s), Nível=${level}`);
-  console.log("Iniciando diagnóstico OpenRouter...");
+  console.log("Iniciando diagnóstico OpenAI...");
 
   const analysis = await getPedagogicalDiagnosis(
-    openRouter,
+    openai,
     pcm,
     level,
     sanitizedOriginalText,
@@ -294,7 +266,7 @@ export async function processReadingAudio({
     metrics.detalhes
   );
 
-  console.log("Diagnóstico OpenRouter finalizado");
+  console.log("Diagnóstico OpenAI finalizado");
 
   return {
     filename: filename || "audio.webm",

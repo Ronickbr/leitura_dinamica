@@ -6,8 +6,7 @@ export async function GET() {
     runtime: "nextjs",
     message: "API de leitura ativa",
     env: {
-      groqConfigured: Boolean(process.env.GROQ_API_KEY),
-      openRouterConfigured: Boolean(process.env.OPENROUTER_API_KEY),
+      openAIConfigured: Boolean(process.env.OPENAI_API_KEY),
     },
   });
 }

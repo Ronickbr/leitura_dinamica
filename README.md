@@ -1,4 +1,4 @@
-# 📖 Plataforma Leitura (v3.9.1)
+# 📖 Plataforma Leitura (v3.11.0)
 
 Plataforma de avaliação de fluência leitora com Next.js (App Router), persistência em Firebase e processamento de áudio via IA. O projeto foi refatorado para um monorepo Next.js unificado com API routes serverless.
 
@@ -83,7 +83,7 @@ O sistema permite que professores:
 - **Frontend**: React 19, TypeScript
 - **Persistência**: Firebase Auth, Firestore e Storage
 - **API**: Next.js API Routes (serverless)
-- **IA**: Groq Whisper Large V3 + OpenRouter GPT-4o Mini
+- **IA**: OpenAI Total (Whisper-1 + GPT-4o)
 - **Deploy**: Vercel
 
 ## Banco de Dados
@@ -118,7 +118,7 @@ leitura/
 │   ├── services.ts           # CRUD alunos
 │   ├── textsService.ts       # CRUD textos
 │   ├── evaluationsService.ts # Avaliações + processAudio
-│   ├── analysisService.ts    # IA (Groq + OpenRouter) + Sanitização
+│   ├── analysisService.ts    # IA (OpenAI Total: Transcrição + Diagnóstico)
 │   ├── pcmUtils.ts           # Utilitários PCM
 │   └── statsUtils.ts         # Estatísticas Acadêmicas (Média, Desvio Padrão, IC 95%)
 ├── docs/                     # Documentação
@@ -155,10 +155,7 @@ Copy-Item .env.example .env
 
 | Variável | Obrigatória | Descrição |
 | --- | --- | --- |
-| `GROQ_API_KEY` | Sim | Chave para transcrição de áudio |
-| `OPENROUTER_API_KEY` | Sim | Chave para análise pedagógica |
-| `OPENROUTER_SITE_URL` | Não | URL pública enviada no header da OpenRouter |
-| `OPENROUTER_APP_NAME` | Não | Nome da aplicação enviado no header da OpenRouter |
+| `OPENAI_API_KEY` | Sim | Chave para transcrição e análise pedagógica |
 
 ## Scripts Disponíveis
 
@@ -189,8 +186,7 @@ Copy-Item .env.example .env
 
 Preencha o `.env` com:
 - credenciais do Firebase (prefixo `NEXT_PUBLIC_*`);
-- `GROQ_API_KEY`;
-- `OPENROUTER_API_KEY`.
+- `OPENAI_API_KEY`.
 
 ### 3. Rodar o projeto
 
@@ -242,10 +238,7 @@ NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=
 NEXT_PUBLIC_FIREBASE_APP_ID=
 
 # Backend
-GROQ_API_KEY=
-OPENROUTER_API_KEY=
-OPENROUTER_SITE_URL=https://seu-dominio.vercel.app
-OPENROUTER_APP_NAME=Fluência Leitora
+OPENAI_API_KEY=
 ```
 
 ### Deploy via CLI
@@ -295,8 +288,7 @@ Verifique se todas as variáveis do Firebase estão cadastradas na Vercel e no `
 ### `/api/process-audio` retorna erro 500
 
 Confirme:
-- `GROQ_API_KEY` configurada;
-- `OPENROUTER_API_KEY` configurada;
+- `OPENAI_API_KEY` configurada;
 - formato do áudio suportado;
 - tamanho do arquivo abaixo de 25 MB.
 
