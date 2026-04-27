@@ -87,11 +87,11 @@ export default function HistoryPage() {
 
 
   const handleExportExcel = () => {
-    if (studentGroups.length === 0) return;
+    if (filteredGroups.length === 0) return;
 
     const monthNames = ["JANEIRO", "FEVEREIRO", "MARÇO", "ABRIL", "MAIO", "JUNHO", "JULHO", "AGOSTO", "SETEMBRO", "OUTUBRO", "NOVEMBRO", "DEZEMBRO"];
     const uniqueMonthsSet = new Set<string>();
-    studentGroups.forEach(group => {
+    filteredGroups.forEach(group => {
       group.evaluations.forEach(ev => {
         if (ev.data && typeof (ev.data as any).toDate === 'function') {
           const date = (ev.data as any).toDate();
@@ -128,7 +128,7 @@ export default function HistoryPage() {
     ]);
 
     // Data Rows
-    studentGroups.forEach((group, index) => {
+    filteredGroups.forEach((group, index) => {
       const row = [
         (index + 1).toString().padStart(2, '0'),
         anonymizeName(group.alunoId, group.aluno?.nome || 'Aluno Desconhecido'),
@@ -199,9 +199,9 @@ export default function HistoryPage() {
   };
 
   const handleExportJSON = () => {
-    if (studentGroups.length === 0) return;
+    if (filteredGroups.length === 0) return;
 
-    const exportData = studentGroups.map(group => ({
+    const exportData = filteredGroups.map(group => ({
       estudante_id: group.alunoId.substring(0, 8),
       serie: group.aluno?.serie || "",
       turma: group.aluno?.turma || "",
@@ -228,14 +228,24 @@ export default function HistoryPage() {
     return <div style={{ textAlign: 'center', padding: '5rem', color: 'var(--text-muted)' }} className="animate-pulse">Carregando histórico...</div>;
   }
 
-  // Calcular estatísticas globais
-  const totalAvaliacoes = studentGroups.reduce((sum, g) => sum + g.evaluations.length, 0);
-  const ultimasAvaliacoes = studentGroups.map(g => g.evaluations[0]).filter(Boolean);
-  const mediaPCM = ultimasAvaliacoes.length > 0
-    ? Math.round(ultimasAvaliacoes.reduce((sum, ev) => sum + (ev.pcm || 0), 0) / ultimasAvaliacoes.length)
+  // Aplicar filtros nos grupos para cálculos e exibição
+  const filteredGroups = studentGroups.filter(group =>
+    (!filterAnoLetivo || group.aluno?.anoLetivo === filterAnoLetivo) &&
+    (!filterSerie || group.aluno?.serie === filterSerie) &&
+    (!filterTurma || group.aluno?.turma === filterTurma)
+  );
+
+  // Calcular estatísticas com base nos grupos filtrados
+  const totalAlunosFiltrados = filteredGroups.length;
+  const totalAvaliacoesFiltradas = filteredGroups.reduce((sum, g) => sum + g.evaluations.length, 0);
+  const ultimasAvaliacoesFiltradas = filteredGroups.map(g => g.evaluations[0]).filter(Boolean);
+
+  const mediaPCMFiltrada = ultimasAvaliacoesFiltradas.length > 0
+    ? Math.round(ultimasAvaliacoesFiltradas.reduce((sum, ev) => sum + (ev.pcm || 0), 0) / ultimasAvaliacoesFiltradas.length)
     : 0;
-  const mediaPrecisao = ultimasAvaliacoes.length > 0
-    ? Math.round(ultimasAvaliacoes.reduce((sum, ev) => sum + (ev.precisao || 0), 0) / ultimasAvaliacoes.length)
+
+  const mediaPrecisaoFiltrada = ultimasAvaliacoesFiltradas.length > 0
+    ? Math.round(ultimasAvaliacoesFiltradas.reduce((sum, ev) => sum + (ev.precisao || 0), 0) / ultimasAvaliacoesFiltradas.length)
     : 0;
 
   return (
@@ -271,19 +281,19 @@ export default function HistoryPage() {
         <div className="grid-cards" style={{ marginBottom: 'var(--space-8)' }}>
           <div className="metric-card" style={{ borderLeft: '4px solid var(--primary)' }}>
             <div className="mobile-data-label">Total de Alunos</div>
-            <div className="metric-card-value">{studentGroups.length}</div>
+            <div className="metric-card-value">{totalAlunosFiltrados}</div>
           </div>
           <div className="metric-card" style={{ borderLeft: '4px solid var(--accent)' }}>
             <div className="mobile-data-label">Avaliações Realizadas</div>
-            <div className="metric-card-value">{totalAvaliacoes}</div>
+            <div className="metric-card-value">{totalAvaliacoesFiltradas}</div>
           </div>
           <div className="metric-card" style={{ borderLeft: '4px solid var(--success)' }}>
             <div className="mobile-data-label">Média PCM</div>
-            <div className="metric-card-value">{mediaPCM}</div>
+            <div className="metric-card-value">{mediaPCMFiltrada}</div>
           </div>
           <div className="metric-card" style={{ borderLeft: '4px solid var(--warning)' }}>
             <div className="mobile-data-label">Média Precisão</div>
-            <div className="metric-card-value">{mediaPrecisao}%</div>
+            <div className="metric-card-value">{mediaPrecisaoFiltrada}%</div>
           </div>
         </div>
       )}
@@ -359,188 +369,182 @@ export default function HistoryPage() {
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-          {studentGroups
-            .filter(group =>
-              (!filterAnoLetivo || group.aluno?.anoLetivo === filterAnoLetivo) &&
-              (!filterSerie || group.aluno?.serie === filterSerie) &&
-              (!filterTurma || group.aluno?.turma === filterTurma)
-            )
-            .map((group, index) => {
-              const isExpanded = expandedStudentId === group.alunoId;
-              const latestEv = group.evaluations[0];
+          {filteredGroups.map((group, index) => {
+            const isExpanded = expandedStudentId === group.alunoId;
+            const latestEv = group.evaluations[0];
 
-              // Para o gráfico de evolução, cronológico (antigo -> novo)
-              const chartData = [...group.evaluations].sort((a, b) => {
-                const dateA = a.data?.toDate ? a.data.toDate().getTime() : 0;
-                const dateB = b.data?.toDate ? b.data.toDate().getTime() : 0;
-                return dateA - dateB;
-              });
+            // Para o gráfico de evolução, cronológico (antigo -> novo)
+            const chartData = [...group.evaluations].sort((a, b) => {
+              const dateA = a.data?.toDate ? a.data.toDate().getTime() : 0;
+              const dateB = b.data?.toDate ? b.data.toDate().getTime() : 0;
+              return dateA - dateB;
+            });
 
-              return (
-                <div key={group.alunoId} className={`history-group-card animate-float-in stagger-${(index % 8) + 1}`} style={{ marginBottom: '1.5rem' }}>
-                  <div
-                    className="history-group-summary"
-                    onClick={() => setExpandedStudentId(isExpanded ? null : group.alunoId)}
-                  >
-                    <div className="history-group-meta">
-                      <h3 className="history-group-title">
-                        {anonymizeName(group.alunoId, group.aluno?.nome || 'Aluno')}
-                      </h3>
-                      <p className="history-group-subtitle">
-                        {group.aluno?.serie} - Turma {group.aluno?.turma} • {group.evaluations.length} avaliação{group.evaluations.length !== 1 ? 'ções' : ''}
-                      </p>
-                    </div>
-
-                    {/* Gráfico em barras e resumos numéricos */}
-                    <div className="history-group-insights">
-                      {chartData.length >= 1 && (
-                        <div className="history-chart-block">
-                          <div className="mobile-data-label" style={{ marginBottom: "0.4rem" }}>
-                            Evolução PCM
-                          </div>
-                          <div className="history-chart-canvas">
-                            <svg width="100" height="36" viewBox="0 0 100 36" style={{ overflow: 'visible' }}>
-                              {(() => {
-                                const maxPcm = Math.max(1, ...chartData.map(c => c.pcm || 0));
-                                const points = chartData.map((ev, i) => {
-                                  const x = chartData.length === 1 ? 50 : (i / (chartData.length - 1)) * 100;
-                                  const y = 32 - ((ev.pcm || 0) / maxPcm) * 28;
-                                  return { x, y, pcm: ev.pcm, date: ev.data, color: getLevelColor(ev.pcm) };
-                                });
-
-                                return (
-                                  <>
-                                    {points.length > 1 && (
-                                      <polyline
-                                        fill="none"
-                                        stroke="var(--glass-border)"
-                                        strokeWidth="2"
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        points={points.map(p => `${p.x},${p.y}`).join(' ')}
-                                      />
-                                    )}
-                                    {points.map((p, i) => (
-                                      <circle
-                                        key={i}
-                                        cx={p.x}
-                                        cy={p.y}
-                                        r="3.5"
-                                        fill={p.color}
-                                        stroke="var(--glass-border)"
-                                        strokeWidth="1"
-                                        style={{ cursor: 'pointer', transition: 'all 0.2s ease', opacity: 0.9 }}
-                                        onMouseOver={(e) => {
-                                          e.currentTarget.setAttribute('r', '5');
-                                          e.currentTarget.style.opacity = '1';
-                                        }}
-                                        onMouseOut={(e) => {
-                                          e.currentTarget.setAttribute('r', '3.5');
-                                          e.currentTarget.style.opacity = '0.9';
-                                        }}
-                                      >
-                                        <title>{`${p.pcm} PCM em ${formatDate(p.date)}`}</title>
-                                      </circle>
-                                    ))}
-                                  </>
-                                );
-                              })()}
-                            </svg>
-                          </div>
-                        </div>
-                      )}
-
-                      <div className="history-summary-stat">
-                        <div className="mobile-data-label">Último PCM</div>
-                        <div className="latest-pcm-value" style={{ color: getLevelColor(latestEv.pcm) }}>
-                          {latestEv.pcm}
-                        </div>
-                      </div>
-
-                      <div className={`history-expand-indicator ${isExpanded ? 'is-expanded' : ''}`}>
-                        ▼
-                      </div>
-                    </div>
+            return (
+              <div key={group.alunoId} className={`history-group-card animate-float-in stagger-${(index % 8) + 1}`} style={{ marginBottom: '1.5rem' }}>
+                <div
+                  className="history-group-summary"
+                  onClick={() => setExpandedStudentId(isExpanded ? null : group.alunoId)}
+                >
+                  <div className="history-group-meta">
+                    <h3 className="history-group-title">
+                      {anonymizeName(group.alunoId, group.aluno?.nome || 'Aluno')}
+                    </h3>
+                    <p className="history-group-subtitle">
+                      {group.aluno?.serie} - Turma {group.aluno?.turma} • {group.evaluations.length} avaliação{group.evaluations.length !== 1 ? 'ções' : ''}
+                    </p>
                   </div>
 
-                  {/*Lista aninhada de avaliações*/}
-                  {isExpanded && (
-                    <div className="history-details-expanded">
-                      <div className="desktop-only-view table-scroll">
-                        <div className="history-evaluations-list">
-                          <div className="history-eval-header">
-                            <span>DATA</span>
-                            <span>PCM</span>
-                            <span>PREC.</span>
-                            <span>DIAGNÓSTICO</span>
-                            <span>ANÁLISE IA</span>
-                          </div>
-                          {group.evaluations.map((ev, idx) => (
-                            <div
-                              key={ev.id}
-                              className="history-eval-row"
-                              onClick={() => router.push(`/history/${ev.id}`)}
-                            >
-                              <span className="history-eval-date">{formatDate(ev.data)}</span>
-                              <span className="history-eval-pcm" style={{ color: getLevelColor(ev.pcm) }}>{ev.pcm}</span>
-                              <span className="history-eval-prec">{ev.precisao}%</span>
-                              <span className="history-eval-diag">
-                                {group.aluno?.diagnostico ? (
-                                  <span className="diagnosis-badge" style={{
-                                    color: getDiagnosisStyle(group.aluno.diagnostico).text,
-                                    background: getDiagnosisStyle(group.aluno.diagnostico).bg,
-                                    borderColor: getDiagnosisStyle(group.aluno.diagnostico).text
-                                  }}>
-                                    {group.aluno.diagnostico.toUpperCase()}
-                                  </span>
-                                ) : <span style={{ color: 'var(--text-tertiary)', fontSize: '0.75rem' }}>—</span>}
-                              </span>
-                              <span className="history-eval-ia">{anonymizeText(ev.diagnosticoIA)}</span>
-                            </div>
-                          ))}
+                  {/* Gráfico em barras e resumos numéricos */}
+                  <div className="history-group-insights">
+                    {chartData.length >= 1 && (
+                      <div className="history-chart-block">
+                        <div className="mobile-data-label" style={{ marginBottom: "0.4rem" }}>
+                          Evolução PCM
+                        </div>
+                        <div className="history-chart-canvas">
+                          <svg width="100" height="36" viewBox="0 0 100 36" style={{ overflow: 'visible' }}>
+                            {(() => {
+                              const maxPcm = Math.max(1, ...chartData.map(c => c.pcm || 0));
+                              const points = chartData.map((ev, i) => {
+                                const x = chartData.length === 1 ? 50 : (i / (chartData.length - 1)) * 100;
+                                const y = 32 - ((ev.pcm || 0) / maxPcm) * 28;
+                                return { x, y, pcm: ev.pcm, date: ev.data, color: getLevelColor(ev.pcm) };
+                              });
+
+                              return (
+                                <>
+                                  {points.length > 1 && (
+                                    <polyline
+                                      fill="none"
+                                      stroke="var(--glass-border)"
+                                      strokeWidth="2"
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      points={points.map(p => `${p.x},${p.y}`).join(' ')}
+                                    />
+                                  )}
+                                  {points.map((p, i) => (
+                                    <circle
+                                      key={i}
+                                      cx={p.x}
+                                      cy={p.y}
+                                      r="3.5"
+                                      fill={p.color}
+                                      stroke="var(--glass-border)"
+                                      strokeWidth="1"
+                                      style={{ cursor: 'pointer', transition: 'all 0.2s ease', opacity: 0.9 }}
+                                      onMouseOver={(e) => {
+                                        e.currentTarget.setAttribute('r', '5');
+                                        e.currentTarget.style.opacity = '1';
+                                      }}
+                                      onMouseOut={(e) => {
+                                        e.currentTarget.setAttribute('r', '3.5');
+                                        e.currentTarget.style.opacity = '0.9';
+                                      }}
+                                    >
+                                      <title>{`${p.pcm} PCM em ${formatDate(p.date)}`}</title>
+                                    </circle>
+                                  ))}
+                                </>
+                              );
+                            })()}
+                          </svg>
                         </div>
                       </div>
-                      <div className="mobile-only-view">
-                        <MobileCardList testId="history-mobile-cards">
-                          {group.evaluations.map((ev, idx) => (
-                            <MobileCard
-                              key={ev.id}
-                              className={`animate-float-in stagger-${(idx % 5) + 1}`}
-                              testId="history-mobile-card"
-                              title={`${ev.pcm} PCM`}
-                              subtitle={formatDate(ev.data)}
-                              badge={<span style={{ color: getLevelColor(ev.pcm), fontWeight: 800 }}>{ev.precisao}%</span>}
-                              collapsible={true}
-                              defaultExpanded={false}
-                              footer={
-                                <button
-                                  onClick={(e) => { e.stopPropagation(); router.push(`/history/${ev.id}`); }}
-                                  className="btn-primary"
-                                  style={{ width: '100%', padding: '0.5rem', marginTop: '0.5rem' }}
-                                >
-                                  Ver Detalhes Completos
-                                </button>
-                              }
-                            >
-                              <MobileDataGrid>
-                                <MobileDataPoint label="PCM" value={ev.pcm} accent />
-                                <MobileDataPoint label="Precisão" value={`${ev.precisao}%`} />
-                                <MobileDataPoint
-                                  label="Diag Aluno"
-                                  value={group.aluno?.diagnostico || 'Nenhum'}
-                                  color={getDiagnosisStyle(group.aluno?.diagnostico).text}
-                                />
-                                <MobileDataPoint label="Análise IA" value={anonymizeText(ev.diagnosticoIA || '-')} />
-                              </MobileDataGrid>
-                            </MobileCard>
-                          ))}
-                        </MobileCardList>
+                    )}
+
+                    <div className="history-summary-stat">
+                      <div className="mobile-data-label">Último PCM</div>
+                      <div className="latest-pcm-value" style={{ color: getLevelColor(latestEv.pcm) }}>
+                        {latestEv.pcm}
                       </div>
                     </div>
-                  )}
+
+                    <div className={`history-expand-indicator ${isExpanded ? 'is-expanded' : ''}`}>
+                      ▼
+                    </div>
+                  </div>
                 </div>
-              );
-            })}
+
+                {/*Lista aninhada de avaliações*/}
+                {isExpanded && (
+                  <div className="history-details-expanded">
+                    <div className="desktop-only-view table-scroll">
+                      <div className="history-evaluations-list">
+                        <div className="history-eval-header">
+                          <span>DATA</span>
+                          <span>PCM</span>
+                          <span>PREC.</span>
+                          <span>DIAGNÓSTICO</span>
+                          <span>ANÁLISE IA</span>
+                        </div>
+                        {group.evaluations.map((ev, idx) => (
+                          <div
+                            key={ev.id}
+                            className="history-eval-row"
+                            onClick={() => router.push(`/history/${ev.id}`)}
+                          >
+                            <span className="history-eval-date">{formatDate(ev.data)}</span>
+                            <span className="history-eval-pcm" style={{ color: getLevelColor(ev.pcm) }}>{ev.pcm}</span>
+                            <span className="history-eval-prec">{ev.precisao}%</span>
+                            <span className="history-eval-diag">
+                              {group.aluno?.diagnostico ? (
+                                <span className="diagnosis-badge" style={{
+                                  color: getDiagnosisStyle(group.aluno.diagnostico).text,
+                                  background: getDiagnosisStyle(group.aluno.diagnostico).bg,
+                                  borderColor: getDiagnosisStyle(group.aluno.diagnostico).text
+                                }}>
+                                  {group.aluno.diagnostico.toUpperCase()}
+                                </span>
+                              ) : <span style={{ color: 'var(--text-tertiary)', fontSize: '0.75rem' }}>—</span>}
+                            </span>
+                            <span className="history-eval-ia">{anonymizeText(ev.diagnosticoIA)}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="mobile-only-view">
+                      <MobileCardList testId="history-mobile-cards">
+                        {group.evaluations.map((ev, idx) => (
+                          <MobileCard
+                            key={ev.id}
+                            className={`animate-float-in stagger-${(idx % 5) + 1}`}
+                            testId="history-mobile-card"
+                            title={`${ev.pcm} PCM`}
+                            subtitle={formatDate(ev.data)}
+                            badge={<span style={{ color: getLevelColor(ev.pcm), fontWeight: 800 }}>{ev.precisao}%</span>}
+                            collapsible={true}
+                            defaultExpanded={false}
+                            footer={
+                              <button
+                                onClick={(e) => { e.stopPropagation(); router.push(`/history/${ev.id}`); }}
+                                className="btn-primary"
+                                style={{ width: '100%', padding: '0.5rem', marginTop: '0.5rem' }}
+                              >
+                                Ver Detalhes Completos
+                              </button>
+                            }
+                          >
+                            <MobileDataGrid>
+                              <MobileDataPoint label="PCM" value={ev.pcm} accent />
+                              <MobileDataPoint label="Precisão" value={`${ev.precisao}%`} />
+                              <MobileDataPoint
+                                label="Diag Aluno"
+                                value={group.aluno?.diagnostico || 'Nenhum'}
+                                color={getDiagnosisStyle(group.aluno?.diagnostico).text}
+                              />
+                              <MobileDataPoint label="Análise IA" value={anonymizeText(ev.diagnosticoIA || '-')} />
+                            </MobileDataGrid>
+                          </MobileCard>
+                        ))}
+                      </MobileCardList>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
     </div>
