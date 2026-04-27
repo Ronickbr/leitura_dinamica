@@ -367,8 +367,8 @@ export default function ReadingPage() {
                       dangerouslySetInnerHTML={{
                         __html: tempResult.analysis.transcricao_marcada
                           .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                          .replace(/\[(.*?)\]/g, '<span style="color: var(--error); text-decoration: line-through;">[$1]</span>')
-                          .replace(/\((.*?)\)/g, '<span style="color: var(--primary); font-style: italic;">($1)</span>')
+                          .replace(/\[(.*?)\]/g, '<span class="marking-omission">[$1]</span>')
+                          .replace(/\((.*?)\)/g, '<span class="marking-addition">($1)</span>')
                       }}
                     />
                   </div>

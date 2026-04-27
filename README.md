@@ -1,4 +1,4 @@
-# 📖 Plataforma Leitura (v3.12.0)
+# 📖 Plataforma Leitura (v3.12.1)
 
 Plataforma de avaliação de fluência leitora com Next.js (App Router), persistência em Firebase e processamento de áudio via IA. O projeto foi refatorado para um monorepo Next.js unificado com API routes serverless.
 
@@ -40,6 +40,7 @@ O sistema permite que professores:
 - **[NOVO]** Importação Lote de Histórico via Excel (permite migrar avaliações antigas);
 - **[NOVO]** Análise de Evolução Comparativa via IA baseada em registros anteriores;
 - **[NOVO]** Diagnóstico de leitura dinâmico calibrado por série e meta de PCM;
+- **[FIX]** Correção robusta na marcação de texto pedagógico (omissões/adições) usando classes CSS para evitar conflitos de estilo.
 - **[NOVO]** Filtros dinâmicos por Série e Turma na página de histórico para segmentação de avaliações.
 - **[NOVO]** Modal de Revisão de Avaliação com efeito glassmorphism para uma experiência de usuário mais interativa.
 - **v3.11.0**: Migração AI Unificada. Refatoração do `analysisService.ts` para utilizar exclusivamente OpenAI (Whisper-1 e GPT-4o), simplificando a infraestrutura e removendo dependências obsoletas como Groq e OpenRouter.

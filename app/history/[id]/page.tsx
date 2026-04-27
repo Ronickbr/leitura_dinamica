@@ -421,8 +421,8 @@ export default function EvaluationDetailsPage() {
                                     dangerouslySetInnerHTML={{
                                         __html: avaliacao.transcricaoMarcada
                                             .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                                            .replace(/\[(.*?)\]/g, '<span style="text-decoration: line-through;">[$1]</span>')
-                                            .replace(/\((.*?)\)/g, '<span style="font-style: italic; font-weight: 600;">($1)</span>')
+                                            .replace(/\[(.*?)\]/g, '<span class="marking-omission">[$1]</span>')
+                                            .replace(/\((.*?)\)/g, '<span class="marking-addition">($1)</span>')
                                     }}
                                 />
                             ) : (

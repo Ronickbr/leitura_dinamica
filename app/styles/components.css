@@ -2715,3 +2715,16 @@
 .evaluation-transcription-text {
   color: var(--text-primary);
 }
+
+/* Pedagogical Marking Classes */
+.marking-omission {
+  color: var(--error) !important;
+  text-decoration: line-through !important;
+  font-weight: 600;
+}
+
+.marking-addition {
+  color: var(--primary) !important;
+  font-style: italic !important;
+  font-weight: 600;
+}
