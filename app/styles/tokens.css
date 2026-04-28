@@ -206,7 +206,7 @@ html[data-touch="true"] {
 /* Mobile breakpoints for tokens */
 @media (max-width: 768px) {
   :root {
-    --header-height: 64px;
+    --header-height: 80px;
     --space-8: 1.5rem;
     --space-10: 2rem;
     --space-12: 2.5rem;
@@ -218,7 +218,7 @@ html[data-touch="true"] {
 
 @media (max-width: 480px) {
   :root {
-    --header-height: 64px;
+    --header-height: 80px;
     --mobile-nav-height: 60px;
     --space-6: 1.25rem;
     --space-8: 1.25rem;
