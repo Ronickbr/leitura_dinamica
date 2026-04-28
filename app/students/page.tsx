@@ -22,6 +22,50 @@ const CalendarIcon = () => (
   </svg>
 );
 
+const UserIcon = () => (
+  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+    <circle cx="12" cy="7" r="4" />
+  </svg>
+);
+
+const CloseIcon = () => (
+  <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="18" y1="6" x2="6" y2="18" />
+    <line x1="6" y1="6" x2="18" y2="18" />
+  </svg>
+);
+
+const BookIcon = () => (
+  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+  </svg>
+);
+
+const ClockIcon = () => (
+  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="10" />
+    <polyline points="12 6 12 12 16 14" />
+  </svg>
+);
+
+const TargetIcon = () => (
+  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="10" />
+    <circle cx="12" cy="12" r="6" />
+    <circle cx="12" cy="12" r="2" />
+  </svg>
+);
+
+const InfoIcon = () => (
+  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="10" />
+    <line x1="12" y1="16" x2="12" y2="12" />
+    <line x1="12" y1="8" x2="12.01" y2="8" />
+  </svg>
+);
+
 const EMPTY_FILTER_OPTIONS: AlunoFilterOptions = {
   turmas: [],
   series: [],
@@ -565,43 +609,168 @@ export default function StudentsPage() {
         </div>
       )}
 
-      {/* Modal de Visualização (Sheet) */}
+      {/* Modal de Visualização (Sheet Premium) */}
       {viewingAluno && (
-        <div className="app-overlay">
-          <div className="glass-card app-sheet" style={{ maxWidth: "450px", width: "100%", background: "var(--bg-surface)", boxShadow: "var(--shadow-xl)", border: "1px solid var(--glass-border)" }}>
-            <h2 style={{ marginBottom: "1.5rem", fontSize: "1.3rem", fontWeight: 800, color: "var(--primary)", display: "flex", alignItems: "center", gap: "0.5rem" }}>
-              <span>👤</span> Visualizar Aluno
-            </h2>
-            <div style={{ display: "flex", flexDirection: "column", gap: "1rem", marginBottom: "2rem" }}>
-              {[
-                { label: "Nome", value: anonymizeName(viewingAluno.id, viewingAluno.nome) },
-                { label: "Turma", value: viewingAluno.turma },
-                { label: "Série", value: viewingAluno.serie },
-                { label: "Turno", value: viewingAluno.turno || '-' },
-                { label: "Diagnóstico", value: viewingAluno.diagnostico ? anonymizeText(viewingAluno.diagnostico) : '-', color: getDiagnosisStyle(viewingAluno.diagnostico).text },
-                { label: "Observações", value: viewingAluno.observacoes ? anonymizeText(viewingAluno.observacoes) : '-' },
-                { label: "Meta PCM", value: viewingAluno.metaPCM || 'Não definida' },
-              ].map((item, idx) => (
-                <div key={idx} style={{ display: "flex", alignItems: "flex-start", borderBottom: "1px solid var(--glass-border-light)", paddingBottom: "0.5rem" }}>
-                  <span style={{ color: "var(--text-secondary)", fontSize: "0.75rem", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.05em", width: "120px", flexShrink: 0 }}>
-                    {item.label}
-                  </span>
-                  <span style={{ fontSize: "1rem", fontWeight: 600, color: item.color || "var(--text-primary)" }}>
-                    {item.value}
-                  </span>
+        <div className="glass-modal animate-in" onClick={() => setViewingAluno(null)}>
+          <div 
+            className="glass-card animate-float-in" 
+            style={{ maxWidth: "500px", width: "95%", padding: 0, overflow: 'hidden' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header do Modal */}
+            <div style={{ 
+              padding: "1.5rem 2rem", 
+              borderBottom: "1px solid var(--glass-border-light)", 
+              display: "flex", 
+              justifyContent: "space-between", 
+              alignItems: "center",
+              background: "rgba(255, 255, 255, 0.02)"
+            }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                <div style={{ 
+                  width: "40px", 
+                  height: "40px", 
+                  borderRadius: "12px", 
+                  background: "var(--primary-soft)", 
+                  display: "flex", 
+                  alignItems: "center", 
+                  justifyContent: "center",
+                  color: "var(--primary)"
+                }}>
+                  <UserIcon />
                 </div>
-              ))}
+                <div>
+                  <h2 style={{ margin: 0, fontSize: "1.25rem", fontWeight: 800, color: "var(--text-primary)" }}>
+                    Detalhes do Aluno
+                  </h2>
+                  <p style={{ margin: 0, fontSize: "0.8rem", color: "var(--text-tertiary)" }}>
+                    Informações cadastrais e acadêmicas
+                  </p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setViewingAluno(null)} 
+                className="btn-icon" 
+                style={{ width: "32px", height: "32px", borderRadius: "8px" }}
+              >
+                <CloseIcon />
+              </button>
             </div>
 
-            <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+            {/* Conteúdo do Modal */}
+            <div style={{ padding: "2rem" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "1.5rem" }}>
+                
+                {/* Nome do Aluno */}
+                <div style={{ display: "flex", gap: "1rem" }}>
+                  <div style={{ color: "var(--primary)", marginTop: "2px" }}><UserIcon /></div>
+                  <div style={{ flex: 1 }}>
+                    <p className="mobile-data-label" style={{ marginBottom: "0.25rem" }}>NOME COMPLETO</p>
+                    <p style={{ fontSize: "1.1rem", fontWeight: 700, color: "var(--text-primary)", margin: 0 }}>
+                      {anonymizeName(viewingAluno.id, viewingAluno.nome)}
+                    </p>
+                  </div>
+                </div>
+
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.5rem" }}>
+                  {/* Série e Turma */}
+                  <div style={{ display: "flex", gap: "1rem" }}>
+                    <div style={{ color: "var(--primary)", marginTop: "2px" }}><BookIcon /></div>
+                    <div>
+                      <p className="mobile-data-label" style={{ marginBottom: "0.25rem" }}>SÉRIE / TURMA</p>
+                      <p style={{ fontSize: "1rem", fontWeight: 600, color: "var(--text-primary)", margin: 0 }}>
+                        {viewingAluno.serie} - {viewingAluno.turma}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Turno */}
+                  <div style={{ display: "flex", gap: "1rem" }}>
+                    <div style={{ color: "var(--primary)", marginTop: "2px" }}><ClockIcon /></div>
+                    <div>
+                      <p className="mobile-data-label" style={{ marginBottom: "0.25rem" }}>TURNO</p>
+                      <p style={{ fontSize: "1rem", fontWeight: 600, color: "var(--text-primary)", margin: 0 }}>
+                        {viewingAluno.turno || 'Não informado'}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.5rem" }}>
+                  {/* Meta PCM */}
+                  <div style={{ display: "flex", gap: "1rem" }}>
+                    <div style={{ color: "var(--primary)", marginTop: "2px" }}><TargetIcon /></div>
+                    <div>
+                      <p className="mobile-data-label" style={{ marginBottom: "0.25rem" }}>META PCM</p>
+                      <p style={{ fontSize: "1rem", fontWeight: 800, color: "var(--primary)", margin: 0 }}>
+                        {viewingAluno.metaPCM || '---'}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Diagnóstico */}
+                  <div style={{ display: "flex", gap: "1rem" }}>
+                    <div style={{ color: "var(--primary)", marginTop: "2px" }}><InfoIcon /></div>
+                    <div>
+                      <p className="mobile-data-label" style={{ marginBottom: "0.25rem" }}>DIAGNÓSTICO</p>
+                      <span 
+                        className="diagnosis-badge"
+                        style={{ 
+                          background: getDiagnosisStyle(viewingAluno.diagnostico).bg,
+                          color: getDiagnosisStyle(viewingAluno.diagnostico).text,
+                          borderColor: "transparent",
+                          fontSize: "0.8rem",
+                          padding: "0.2rem 0.6rem",
+                          margin: 0
+                        }}
+                      >
+                        {viewingAluno.diagnostico ? anonymizeText(viewingAluno.diagnostico) : 'Sem diagnóstico'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Observações */}
+                {viewingAluno.observacoes && (
+                  <div style={{ 
+                    marginTop: "0.5rem", 
+                    padding: "1rem", 
+                    background: "rgba(0,0,0,0.02)", 
+                    borderRadius: "12px", 
+                    border: "1px solid var(--glass-border-light)" 
+                  }}>
+                    <p className="mobile-data-label" style={{ marginBottom: "0.5rem" }}>OBSERVAÇÕES</p>
+                    <p style={{ fontSize: "0.9rem", color: "var(--text-secondary)", lineHeight: 1.5, margin: 0 }}>
+                      {anonymizeText(viewingAluno.observacoes)}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Footer com Ações */}
+            <div style={{ 
+              padding: "1.5rem 2rem", 
+              background: "rgba(0,0,0,0.01)", 
+              borderTop: "1px solid var(--glass-border-light)",
+              display: "flex",
+              flexDirection: "column",
+              gap: "0.75rem"
+            }}>
               <button
                 onClick={() => router.push(`/students/${viewingAluno.id}/performance`)}
                 className="btn-primary"
-                style={{ width: "100%", padding: "0.75rem", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem" }}
+                style={{ width: "100%", padding: "0.85rem", gap: "0.5rem" }}
               >
-                📈 Ver Painel de Evolução
+                <span>📈</span> Ver Painel de Evolução Completo
               </button>
-              <button onClick={() => setViewingAluno(null)} className="btn-outline" style={{ width: "100%", padding: "0.75rem" }}>Fechar</button>
+              <button 
+                onClick={() => setViewingAluno(null)} 
+                className="btn-outline" 
+                style={{ width: "100%", padding: "0.85rem" }}
+              >
+                Fechar
+              </button>
             </div>
           </div>
         </div>

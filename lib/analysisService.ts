@@ -56,6 +56,18 @@ function parseAnalysisPayload(content: string) {
   }
 }
 
+function generateMarkedTranscription(alignment: any[]): string {
+  if (!alignment) return "";
+  
+  return alignment.map(d => {
+    if (d.tipo === 'match') return d.lido;
+    if (d.tipo === 'substitution') return `**${d.lido}**`;
+    if (d.tipo === 'deletion') return `[${d.original}]`;
+    if (d.tipo === 'insertion') return `(${d.lido})`;
+    return '';
+  }).join(' ');
+}
+
 async function getPedagogicalDiagnosis(
   openai: OpenAI,
   pcm: number,
@@ -148,7 +160,6 @@ ${history.map((h, i) => `  ${i + 1}. Data: ${new Date(h.data?.seconds * 1000).to
     "padrao_de_erro_detectado": "Categoria principal: fonológico, estrangeiro, visual, lexical, omissão ou adivinhação.",
     "nivel_de_confianca": number (1 a 100, baseado na clareza da transcrição vs texto base),
     "analise_evolucao": "Breve comentário (1 linha) sobre o progresso do aluno comparado ao histórico.",
-    "transcricao_marcada": "O texto da transcrição formatado da seguinte forma: palavras substituídas/erradas em **negrito**, palavras do texto original que foram omitidas entre [colchetes] e palavras adicionadas que não estavam no original entre (parênteses).",
     "perguntas_compreensao": [
       { "pergunta": "string", "resposta_esperada": "string" },
       { "pergunta": "string", "resposta_esperada": "string" },
@@ -284,6 +295,15 @@ export async function processReadingAudio({
 
   console.log("Diagnóstico OpenAI finalizado");
 
+  // Geramos a transcrição marcada programaticamente para garantir precisão técnica
+  // e evitar alucinações da IA em casos de grandes discrepâncias.
+  const programmaticMarkedTranscription = generateMarkedTranscription(metrics.detalhes);
+  
+  // Se a precisão for muito baixa, adicionamos um aviso no diagnóstico
+  if (metrics.precisao < 20 && !isForeigner) {
+    analysis.diagnostico = "⚠️ ALERTA DE QUALIDADE: A transcrição parece muito diferente do texto original. Verifique se o áudio está claro ou se o texto correto foi selecionado. " + analysis.diagnostico;
+  }
+
   return {
     filename: filename || "audio.webm",
     pcm,
@@ -291,7 +311,10 @@ export async function processReadingAudio({
     metrics,
     level,
     transcription,
-    analysis,
+    analysis: {
+      ...analysis,
+      transcricao_marcada: programmaticMarkedTranscription
+    },
   };
 }
 
