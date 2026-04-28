@@ -494,42 +494,47 @@ export default function StudentsPage() {
                       {aluno.turno}
                     </span>
                   ) : undefined}
-                  footer={
-                    <div style={{ display: 'flex', gap: '0.5rem', width: '100%' }}>
-                      <button onClick={() => setViewingAluno(aluno)} className="btn-outline" style={{ flex: 1, padding: '0.75rem', fontSize: '1.1rem' }} title="Visualizar">
-                        👁️
-                      </button>
-                      <button 
-                        onClick={() => { 
-                          setEditingId(aluno.id!); 
-                          setFormData({ nome: aluno.nome, turma: aluno.turma, serie: aluno.serie, turno: aluno.turno || '', diagnostico: aluno.diagnostico || '', observacoes: aluno.observacoes || '', anoLetivo: aluno.anoLetivo, metaPCM: aluno.metaPCM || 0 }); 
-                          setShowForm(true); 
-                          window.scrollTo({ top: 0, behavior: 'smooth' }); 
-                        }} 
-                        className="btn-outline" 
-                        style={{ flex: 1, padding: '0.75rem', fontSize: '1.1rem' }}
-                        title="Editar"
-                      >
-                        ✏️
-                      </button>
-                      <button 
-                        onClick={() => handleDelete(aluno.id)} 
-                        className="btn-outline" 
-                        style={{ flex: 1, padding: '0.75rem', fontSize: '1.1rem', color: 'var(--error)', borderColor: 'rgba(239, 68, 68, 0.2)' }}
-                        title="Excluir"
-                      >
-                        🗑️
-                      </button>
-                    </div>
-                  }
                 >
-                  <MobileDataGrid>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem', width: '100%', marginTop: '0.25rem' }}>
                     <MobileDataPoint
                       label="Diagnóstico"
                       value={aluno.diagnostico && aluno.diagnostico !== "Nenhum diagnóstico" && aluno.diagnostico !== "Nenhum" ? anonymizeText(aluno.diagnostico) : '-'}
                       color={getDiagnosisStyle(aluno.diagnostico).text}
                     />
-                  </MobileDataGrid>
+                    
+                    <div style={{ display: 'flex', gap: '0.5rem', flexShrink: 0 }}>
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); setViewingAluno(aluno); }} 
+                        className="btn-outline-round" 
+                        style={{ width: '38px', height: '38px', fontSize: '1.1rem' }} 
+                        title="Visualizar"
+                      >
+                        👁️
+                      </button>
+                      <button 
+                        onClick={(e) => { 
+                          e.stopPropagation();
+                          setEditingId(aluno.id!); 
+                          setFormData({ nome: aluno.nome, turma: aluno.turma, serie: aluno.serie, turno: aluno.turno || '', diagnostico: aluno.diagnostico || '', observacoes: aluno.observacoes || '', anoLetivo: aluno.anoLetivo, metaPCM: aluno.metaPCM || 0 }); 
+                          setShowForm(true); 
+                          window.scrollTo({ top: 0, behavior: 'smooth' }); 
+                        }} 
+                        className="btn-outline-round" 
+                        style={{ width: '38px', height: '38px', fontSize: '1.1rem' }}
+                        title="Editar"
+                      >
+                        ✏️
+                      </button>
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); handleDelete(aluno.id); }} 
+                        className="btn-outline-round" 
+                        style={{ width: '38px', height: '38px', fontSize: '1.1rem', color: 'var(--error)', borderColor: 'rgba(239, 68, 68, 0.15)' }}
+                        title="Excluir"
+                      >
+                        🗑️
+                      </button>
+                    </div>
+                  </div>
                 </MobileCard>
               ))}
             </MobileCardList>
