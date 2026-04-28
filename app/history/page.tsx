@@ -299,11 +299,11 @@ export default function HistoryPage() {
       )}
 
       {/* Barra de Filtros */}
-      <div className="history-filter-bar" style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem', flexWrap: 'wrap' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          <div className="history-filter-heading" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0 }}>
+      <div className="history-filter-bar">
+        <div className="history-filter-item">
+          <div className="history-filter-heading">
             <span style={{ fontSize: '1.2rem' }}>📅</span>
-            <span className="history-filter-label" style={{ fontWeight: 700, fontSize: '0.95rem', whiteSpace: 'nowrap' }}>Ano:</span>
+            <span className="history-filter-label">Ano:</span>
           </div>
           <input
             type="number"
@@ -311,20 +311,19 @@ export default function HistoryPage() {
             value={filterAnoLetivo}
             onChange={e => setFilterAnoLetivo(e.target.value)}
             className="filter-search-input"
-            style={{ width: '100px', flexShrink: 0 }}
+            style={{ width: '90px' }}
           />
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          <div className="history-filter-heading" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0 }}>
+        <div className="history-filter-item">
+          <div className="history-filter-heading">
             <span style={{ fontSize: '1.2rem' }}>🏫</span>
-            <span className="history-filter-label" style={{ fontWeight: 700, fontSize: '0.95rem', whiteSpace: 'nowrap' }}>Série:</span>
+            <span className="history-filter-label">Série:</span>
           </div>
           <select
             value={filterSerie}
             onChange={e => setFilterSerie(e.target.value)}
             className="filter-select"
-            style={{ minWidth: '140px' }}
           >
             <option value="">Todas as Séries</option>
             {Array.from(new Set(studentGroups.map(g => g.aluno?.serie).filter(Boolean))).sort().map(s => (
@@ -333,16 +332,15 @@ export default function HistoryPage() {
           </select>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          <div className="history-filter-heading" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0 }}>
+        <div className="history-filter-item">
+          <div className="history-filter-heading">
             <span style={{ fontSize: '1.2rem' }}>👥</span>
-            <span className="history-filter-label" style={{ fontWeight: 700, fontSize: '0.95rem', whiteSpace: 'nowrap' }}>Turma:</span>
+            <span className="history-filter-label">Turma:</span>
           </div>
           <select
             value={filterTurma}
             onChange={e => setFilterTurma(e.target.value)}
             className="filter-select"
-            style={{ minWidth: '120px' }}
           >
             <option value="">Todas</option>
             {Array.from(new Set(studentGroups.map(g => g.aluno?.turma).filter(Boolean))).sort().map(t => (
@@ -355,7 +353,7 @@ export default function HistoryPage() {
           <button
             onClick={() => { setFilterAnoLetivo(''); setFilterSerie(''); setFilterTurma(''); }}
             className="btn-outline"
-            style={{ padding: '0.5rem 1rem', fontSize: '0.8rem' }}
+            style={{ padding: '0.5rem 1rem', fontSize: '0.8rem', marginLeft: 'auto' }}
           >
             Limpar Filtros
           </button>

@@ -1234,19 +1234,21 @@
 }
 
 .filter-select {
-  padding: var(--space-2) var(--space-4);
+  padding: var(--space-2) var(--space-3);
   padding-right: var(--space-8) !important;
   font-size: 0.9rem;
+  font-weight: 500;
   color: var(--text-primary);
   background-color: var(--glass-bg) !important;
   background: var(--glass-bg) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") no-repeat right var(--space-2) center;
   border: 1px solid var(--glass-border);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
   outline: none;
   cursor: pointer;
   transition: all 0.2s ease;
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
+  min-width: max-content;
 }
 
 .filter-select:focus {
@@ -1370,8 +1372,7 @@
 /* Filter Search Input */
 .filter-search-input {
   width: 100%;
-  padding: var(--space-3) var(--space-4);
-  padding-left: var(--space-10) !important;
+  padding: var(--space-2) var(--space-4);
   font-size: 0.95rem;
   color: var(--text-primary);
   background: var(--glass-bg);
@@ -1522,8 +1523,29 @@
 .history-filter-bar {
   display: flex;
   align-items: center;
-  gap: var(--space-4);
+  gap: var(--space-6);
   margin-bottom: var(--space-8);
+  flex-wrap: wrap;
+  padding: var(--space-4) var(--space-5);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+}
+
+.history-filter-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-shrink: 0;
+}
+
+.history-filter-label {
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
 }
 
 .history-filter-heading {
