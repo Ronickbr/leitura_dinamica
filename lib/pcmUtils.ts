@@ -13,6 +13,7 @@ export interface AlignmentResult {
     corretas: number;
     total_original: number;
     total_lido: number;
+    erros: number;
     precisao: number;
     detalhes: {
         tipo: 'match' | 'substitution' | 'deletion' | 'insertion';

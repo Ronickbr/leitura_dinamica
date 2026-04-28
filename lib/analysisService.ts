@@ -1,6 +1,6 @@
 import fs from "fs";
 import OpenAI from "openai";
-import { calculatePCM, getPerformanceLevel, getNormaNacional } from "./pcmUtils";
+import { calculatePCM, getPerformanceLevel, getNormaNacional, type AlignmentResult } from "./pcmUtils";
 
 const MAX_ORIGINAL_TEXT_LENGTH = 10000;
 
@@ -200,14 +200,7 @@ interface ProcessAudioResult {
   filename: string;
   pcm: number;
   duration: number;
-  metrics: {
-    corretas: number;
-    total_original: number;
-    total_lido: number;
-    erros: number;
-    precisao: number;
-    detalhes: any[];
-  };
+  metrics: AlignmentResult;
   level: string;
   transcription: string;
   analysis: {

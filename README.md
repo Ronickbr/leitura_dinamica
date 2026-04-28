@@ -1,4 +1,4 @@
-# 📖 Plataforma Leitura (v3.15.1)
+# 📖 Plataforma Leitura (v3.16.0)
 
 Plataforma de avaliação de fluência leitora com Next.js (App Router), persistência em Firebase e processamento de áudio via IA. O projeto foi refatorado para um monorepo Next.js unificado com API routes serverless.
 
@@ -42,7 +42,8 @@ O sistema permite que professores:
 - **[NOVO]** Suporte a **Alunos Estrangeiros**: Identificação de padrões fonológicos específicos (ex: crianças sul-americanas) para diagnósticos mais precisos;
 - **[NOVO]** Geração de **Perguntas de Compreensão**: A IA agora gera automaticamente 3 perguntas de interpretação baseadas no texto lido;
 - **[FIX]** Correção robusta na marcação de texto pedagógico (omissões/adições) usando classes CSS para evitar conflitos de estilo.
-- **v3.15.1**: **Correção de Sobreposição Mobile**. Ajuste na variável `--header-height` e no `padding-top` do container principal para garantir que o cabeçalho fixo não cubra o conteúdo das páginas em dispositivos móveis.
+- **v3.16.0**: **Sistema de Paginação de Alunos**. Implementação de paginação na gestão de alunos para otimizar a performance e usabilidade. Inclui controles responsivos, reset automático de filtros e correção de posicionamento de modais em listas extensas.
+- **v3.15.2**: **Correção de Sobreposição Mobile**. Ajuste na variável `--header-height` e no `padding-top` do container principal para garantir que o cabeçalho fixo não cubra o conteúdo das páginas em dispositivos móveis.
 - **v3.15.0**: **Padronização do Sistema de Design**. Migração completa do token legado `--text-main` para `--text-primary` em toda a aplicação. Limpeza de cores indigo hardcoded em favor da paleta "Deep Institutional Blue" em gradientes, botões e badges. Adição de tokens auxiliares `--primary-soft` e `--primary-border` para maior consistência.
 - **v3.14.1**: **Exibição de Erros em Relatórios**. Adicionada a exibição explícita do total de erros cometidos pelo aluno nos modais de revisão, sucesso e no relatório detalhado do histórico, melhorando o feedback pedagógico quantitativo.
 - **v3.14.0**: **Suporte a Alunos Estrangeiros e Perguntas de Compreensão**. Implementada a detecção de padrões fonológicos para estrangeiros e geração automática de 3 perguntas de interpretação de texto integradas ao relatório e histórico.

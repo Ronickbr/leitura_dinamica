@@ -43,6 +43,8 @@ export default function StudentsPage() {
   const [viewingAluno, setViewingAluno] = useState<Aluno | null>(null);
   const [formData, setFormData] = useState({ nome: '', turma: '', serie: '', turno: '', diagnostico: '', observacoes: '', anoLetivo: new Date().getFullYear().toString(), metaPCM: 0 });
   const [saving, setSaving] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 15;
 
   // Estados dos filtros
   const [searchTerm, setSearchTerm] = useState('');
@@ -54,6 +56,18 @@ export default function StudentsPage() {
   const [filterOptions, setFilterOptions] = useState<AlunoFilterOptions>(EMPTY_FILTER_OPTIONS);
   const [filtersLoading, setFiltersLoading] = useState(true);
   const [filtersError, setFiltersError] = useState<string | null>(null);
+
+  // Resetar para a página 1 se os filtros mudarem
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, filterTurma, filterSerie, filterTurno, filterDiagnostico, filterAnoLetivo]);
+
+  // Ajustar página atual se ela ficar vazia após uma exclusão
+  useEffect(() => {
+    if (currentPage > totalPages && totalPages > 0) {
+      setCurrentPage(totalPages);
+    }
+  }, [totalPages, currentPage]);
 
   useEffect(() => {
     if (firebaseInitialized) {
@@ -133,7 +147,14 @@ export default function StudentsPage() {
     return matchesName && matchesTurma && matchesSerie && matchesTurno && matchesDiagnostico && matchesAno;
   });
 
+  // Lógica de Paginação
   const totalAlunos = filteredAlunos.length;
+  const totalPages = Math.ceil(totalAlunos / ITEMS_PER_PAGE);
+  const paginatedAlunos = filteredAlunos.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
+
   const totalComDiagnostico = filteredAlunos.filter(aluno =>
     aluno.diagnostico && aluno.diagnostico !== "Nenhum diagnóstico" && aluno.diagnostico !== "Nenhum"
   ).length;
@@ -145,6 +166,62 @@ export default function StudentsPage() {
     filterDiagnostico ||
     filterAnoLetivo !== defaultAnoLetivo
   );
+
+  // Componente de Controles de Paginação
+  const PaginationControls = () => {
+    if (totalPages <= 1) return null;
+
+    const startIdx = (currentPage - 1) * ITEMS_PER_PAGE + 1;
+    const endIdx = Math.min(currentPage * ITEMS_PER_PAGE, totalAlunos);
+
+    return (
+      <div className="pagination-container">
+        <div className="pagination-info">
+          Mostrando <strong>{startIdx}-{endIdx}</strong> de <strong>{totalAlunos}</strong> alunos
+        </div>
+        <div className="pagination-controls">
+          <button
+            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+            disabled={currentPage === 1}
+            className="pagination-btn"
+            aria-label="Página anterior"
+          >
+            Anterior
+          </button>
+          
+          {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+            // Lógica simples para mostrar páginas próximas à atual
+            let pageNum = i + 1;
+            if (totalPages > 5 && currentPage > 3) {
+              pageNum = currentPage - 3 + i + 1;
+              if (pageNum > totalPages) pageNum = totalPages - (4 - i);
+            }
+            if (pageNum <= 0) return null;
+            if (pageNum > totalPages) return null;
+
+            return (
+              <button
+                key={pageNum}
+                onClick={() => setCurrentPage(pageNum)}
+                className={`pagination-btn ${currentPage === pageNum ? 'active' : ''}`}
+              >
+                {pageNum}
+              </button>
+            );
+          })}
+
+          <button
+            onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+            disabled={currentPage === totalPages}
+            className="pagination-btn"
+            aria-label="Próxima página"
+          >
+            Próximo
+          </button>
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className="animate-in" style={{ paddingBottom: '4rem' }}>
@@ -342,7 +419,7 @@ export default function StudentsPage() {
                 <div className="students-grid-cell">AÇÕES</div>
               </div>
               <div className="students-grid-body">
-                {filteredAlunos.map(aluno => (
+                {paginatedAlunos.map(aluno => (
                   <div key={aluno.id} className="students-grid-row">
                     <div className="students-grid-cell">
                       <span style={{ fontWeight: 600 }}>{anonymizeName(aluno.id, aluno.nome)}</span>
@@ -381,6 +458,7 @@ export default function StudentsPage() {
                   </div>
                 ))}
               </div>
+              <PaginationControls />
               {filteredAlunos.length > 0 && (
                 <div className="students-grid-footer">
                   <div className="students-grid-cell">
@@ -401,7 +479,7 @@ export default function StudentsPage() {
 
           <div className="mobile-only-view">
             <MobileCardList testId="students-mobile-cards">
-              {filteredAlunos.map((aluno, index) => (
+              {paginatedAlunos.map((aluno, index) => (
                 <MobileCard
                   key={aluno.id}
                   testId="student-mobile-card"
@@ -436,6 +514,7 @@ export default function StudentsPage() {
                 </MobileCard>
               ))}
             </MobileCardList>
+            <PaginationControls />
 
             {filteredAlunos.length > 0 && (
               <div className="glass-card animate-in fade-in slide-in-from-bottom-4 duration-700" style={{ marginTop: '1.5rem', padding: '1.5rem', background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', boxShadow: 'var(--glass-shadow)' }}>

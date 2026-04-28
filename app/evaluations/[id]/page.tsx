@@ -340,11 +340,10 @@ export default function ReadingPage() {
                 🌎 Aluno Estrangeiro?
               </label>
             </div>
-          </div>
-        </div>
       </div>
+    </div>
 
-      {isReviewing && (
+    {isReviewing && (
         <div className="glass-modal">
           <div className="glass-card animate-in evaluation-review-sheet" style={{ maxWidth: "600px", width: "100%", boxShadow: "var(--glass-shadow)" }}>
             <h2 style={{ marginBottom: "1.5rem", display: "flex", alignItems: "center", gap: "0.75rem" }}>
@@ -384,7 +383,7 @@ export default function ReadingPage() {
                     <p
                       style={{ fontSize: "0.95rem", lineHeight: 1.6 }}
                       dangerouslySetInnerHTML={{
-                        __html: tempResult.analysis.transcricao_marcada
+                        __html: (tempResult.analysis.transcricao_marcada || "")
                           .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
                           .replace(/\[(.*?)\]/g, '<span class="marking-omission">[$1]</span>')
                           .replace(/\((.*?)\)/g, '<span class="marking-addition">($1)</span>')
