@@ -33,6 +33,7 @@ export default function ReadingPage() {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [savedEvaluationId, setSavedEvaluationId] = useState<string | null>(null);
   const [recordingDuration, setRecordingDuration] = useState(0);
+  const [isForeigner, setIsForeigner] = useState(false);
   const recordingStartTimeRef = useRef<number | null>(null);
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -164,7 +165,8 @@ export default function ReadingPage() {
         aluno?.serie,
         aluno?.metaPCM,
         historico.slice(0, 3), // Enviamos as últimas 3 avaliações para contexto
-        recordingDuration
+        recordingDuration,
+        isForeigner
       );
       setTempResult(result);
       setIsReviewing(true);
@@ -189,7 +191,8 @@ export default function ReadingPage() {
         transcricaoMarcada: tempResult.analysis.transcricao_marcada,
         diagnosticoIA: tempResult.analysis.diagnostico,
         intervencaoIA: tempResult.analysis.intervencao,
-        metricasQualitativas: tempResult.analysis.metricas_qualitativas
+        metricasQualitativas: tempResult.analysis.metricas_qualitativas,
+        perguntasCompreensao: tempResult.analysis.perguntas_compreensao
       });
       setSavedEvaluationId(evaluationId);
       setShowSuccessModal(true);
@@ -320,11 +323,22 @@ export default function ReadingPage() {
             )}
           </div>
 
-          <div className="glass-card evaluation-tip-card">
-            <h4 style={{ marginBottom: '0.5rem', fontWeight: 800 }}>Dica Pedagógica</h4>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', lineHeight: 1.5 }}>
+            <h4 style={{ marginBottom: "0.5rem", fontWeight: 800 }}>Dica Pedagógica</h4>
+            <p style={{ color: "var(--text-muted)", fontSize: "0.85rem", lineHeight: 1.5, marginBottom: "1rem" }}>
               Garanta que o aluno esteja em postura confortável e o microfone posicionado corretamente.
             </p>
+            <div className="glass-panel" style={{ padding: "0.75rem", background: "rgba(99, 102, 241, 0.05)", display: "flex", alignItems: "center", gap: "0.75rem" }}>
+              <input
+                type="checkbox"
+                id="is-foreigner"
+                checked={isForeigner}
+                onChange={(e) => setIsForeigner(e.target.checked)}
+                style={{ width: "1.2rem", height: "1.2rem", cursor: "pointer" }}
+              />
+              <label htmlFor="is-foreigner" style={{ fontSize: "0.85rem", fontWeight: 700, cursor: "pointer", color: "var(--primary)" }}>
+                🌎 Aluno Estrangeiro?
+              </label>
+            </div>
           </div>
         </div>
       </div>
@@ -371,6 +385,22 @@ export default function ReadingPage() {
                           .replace(/\((.*?)\)/g, '<span class="marking-addition">($1)</span>')
                       }}
                     />
+                  </div>
+                </div>
+              )}
+
+              {tempResult.analysis.perguntas_compreensao && tempResult.analysis.perguntas_compreensao.length > 0 && (
+                <div>
+                  <p className="mobile-data-label" style={{ marginBottom: "1rem" }}>💡 PERGUNTAS DE COMPREENSÃO (IA)</p>
+                  <div className="glass-panel" style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+                    {tempResult.analysis.perguntas_compreensao.map((p: any, idx: number) => (
+                      <div key={idx} style={{ padding: "0.75rem", borderLeft: "3px solid var(--primary)", background: "rgba(0,0,0,0.01)" }}>
+                        <p style={{ fontWeight: 700, fontSize: "0.9rem", marginBottom: "0.4rem" }}>{p.pergunta}</p>
+                        <p style={{ fontSize: "0.85rem", color: "var(--text-muted)", fontStyle: "italic" }}>
+                          Resposta esperada: {p.resposta_esperada}
+                        </p>
+                      </div>
+                    ))}
                   </div>
                 </div>
               )}

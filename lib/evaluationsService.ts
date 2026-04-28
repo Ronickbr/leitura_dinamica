@@ -45,11 +45,15 @@ export interface Avaliacao {
   intervencaoIA: string;
   transcricaoMarcada?: string;
   metricasQualitativas?: MetricasQualitativas;
+  perguntasCompreensao?: Array<{
+    pergunta: string;
+    resposta_esperada: string;
+  }>;
   data?: Timestamp | { seconds?: number; toDate?: () => Date } | null;
   professorId: string;
 }
 
-export const processAudio = async (audioBlob: Blob, originalText: string, studentGrade?: string, targetPCM?: number, history?: any[], duration?: number) => {
+export const processAudio = async (audioBlob: Blob, originalText: string, studentGrade?: string, targetPCM?: number, history?: any[], duration?: number, isForeigner?: boolean) => {
   const user = cachedAuth?.currentUser;
   const token = user ? await user.getIdToken() : null;
 
@@ -64,6 +68,7 @@ export const processAudio = async (audioBlob: Blob, originalText: string, studen
   if (targetPCM) formData.append('target_pcm', targetPCM.toString());
   if (history) formData.append('history', JSON.stringify(history));
   if (duration) formData.append('duration', duration.toString());
+  if (isForeigner) formData.append('is_foreigner', 'true');
 
   const response = await fetch('/api/process-audio', {
     method: 'POST',

@@ -431,6 +431,26 @@ export default function EvaluationDetailsPage() {
                         </div>
                     </div>
 
+                    {avaliacao.perguntasCompreensao && avaliacao.perguntasCompreensao.length > 0 && (
+                        <div className="glass-card evaluation-detail-section">
+                            <h3 className="evaluation-detail-section-title font-ui">Perguntas de Compreensão</h3>
+                            <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem", padding: "0.5rem" }}>
+                                {avaliacao.perguntasCompreensao.map((p, idx) => (
+                                    <div key={idx} style={{ paddingBottom: idx < (avaliacao.perguntasCompreensao?.length || 0) - 1 ? "1rem" : 0, borderBottom: idx < (avaliacao.perguntasCompreensao?.length || 0) - 1 ? "1px dashed var(--glass-border-light)" : "none" }}>
+                                        <p style={{ fontWeight: 800, fontSize: "0.95rem", marginBottom: "0.4rem", color: "var(--text-main)" }}>
+                                            {idx + 1}. {p.pergunta}
+                                        </p>
+                                        <div className="glass-panel" style={{ background: "rgba(0,0,0,0.02)", padding: "0.75rem", borderLeft: "3px solid var(--primary)" }}>
+                                            <p style={{ fontSize: "0.85rem", color: "var(--text-muted)", fontStyle: "italic" }}>
+                                                <strong>Resposta esperada:</strong> {p.resposta_esperada}
+                                            </p>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
                     <div className="glass-card evaluation-detail-section only-print">
                         <h3 className="evaluation-detail-section-title font-ui">Competências</h3>
                         <div className="competence-list">

@@ -43,7 +43,8 @@ function getFallbackAnalysis() {
       pontuacao: false,
     },
     padrao_de_erro_detectado: "Análise indisponível",
-    nivel_de_confianca: 0
+    nivel_de_confianca: 0,
+    perguntas_compreensao: []
   };
 }
 
@@ -64,11 +65,14 @@ async function getPedagogicalDiagnosis(
   studentGrade?: string,
   targetPCM?: number,
   history?: any[],
-  alignmentDetails?: any[]
+  alignmentDetails?: any[],
+  isForeigner?: boolean
 ) {
   const gradeNorm = studentGrade ? getNormaNacional(studentGrade) : 80;
   const gradeContext = studentGrade ? `O aluno é do ${studentGrade}. A norma nacional esperada para esta série é de ${gradeNorm} PCM.` : "O aluno é do 3º ano (contexto padrão).";
   const targetContext = targetPCM ? `A meta individual definida para este aluno é de ${targetPCM} PCM.` : "";
+  const foreignerContext = isForeigner ? "O aluno é estrangeiro (ex: falante de espanhol estudando no Brasil), considere que padrões fonológicos específicos podem ocorrer devido ao sotaque ou interferência da língua nativa." : "";
+
 
   const historyContext = history && history.length > 0
     ? `HISTÓRICO DE EVOLUÇÃO (Últimas ${history.length} avaliações):
@@ -91,6 +95,7 @@ ${history.map((h, i) => `  ${i + 1}. Data: ${new Date(h.data?.seconds * 1000).to
   CONTEXTO DO ALUNO:
   - ${gradeContext}
   - ${targetContext}
+  ${foreignerContext}
   
   ${historyContext}
   
@@ -105,6 +110,7 @@ ${history.map((h, i) => `  ${i + 1}. Data: ${new Date(h.data?.seconds * 1000).to
   SUA TAREFA DE ANÁLISE DETALHADA:
   1. Comparação Fonológica e Lexical: Use os 'DETALHES DO ALINHAMENTO' e a 'Transcrição' para identificar:
      - Substituições Fonológicas: Troca por sons parecidos (ex: p/b, t/d, f/v). Indica dificuldade de processamento fonológico.
+     - Diferenças Fonológicas (Estrangeiros): Identifique se as trocas sugerem que o aluno é estrangeiro (ex: crianças sul-americanas estudando no Brasil que trazem fonemas do espanhol para a leitura do português). Se detectar esse padrão, mencione explicitamente no diagnóstico.
      - Substituições Visuais/Gráficas: Troca por letras visualmente similares (ex: m/n, p/q). Indica dificuldade de processamento visual.
      - Substituições Lexicais/Semânticas: Troca por palavras de sentido similar (ex: "casa" por "lar"). Indica uso de contexto para compensar decodificação falha.
      - Omissões ou Invenções: Pular palavras ou inventar finais. Indica falta de monitoramento ou tentativa de adivinhação.
@@ -114,14 +120,18 @@ ${history.map((h, i) => `  ${i + 1}. Data: ${new Date(h.data?.seconds * 1000).to
      - Verifique se a pontuação foi respeitada (pausas nos lugares certos).
   
   3. Diagnóstico, Evolução e Intervenção:
-     - O diagnóstico deve ser técnico e preciso, focando na "Fase de Leitura" (Logográfica, Alfabética ou Ortográfica).
+     - O diagnóstico deve ser técnico e preciso, focando na "Fase de Leitura" (Logográfica, Alfabética ou Ortográfica). 
+     - No diagnóstico, considere a fonologia diferente se o aluno demonstrar padrões de estrangeiro.
      - Compare os dados atuais com o HISTÓRICO fornecido (se houver) para identificar se houve evolução, estagnação ou regressão.
      - A intervenção deve ser uma técnica baseada em evidências (ex: Leitura Repetida, Leitura Compartilhada, Treino de Consciência Fonológica).
 
+  4. Interpretação e Compreensão:
+     - Com base no Texto Base, crie 3 perguntas objetivas ou de resposta curta para definir se o aluno interpretou o que leu.
+  
   REGRAS DE RESPOSTA (JSON):
   Retorne APENAS um objeto JSON no seguinte formato:
   {
-    "diagnostico": "Máximo 3 linhas. Use termos técnicos. Cite a evolução em relação ao histórico se aplicável.",
+    "diagnostico": "Máximo 3 linhas. Use termos técnicos. Mencione se houver padrões de fonologia estrangeira e cite a evolução em relação ao histórico se aplicável.",
     "intervencao": "Máximo 2 linhas. Atividade prática baseada em evidências.",
     "metricas_qualitativas": {
       "leitura_precisa": boolean,
@@ -135,10 +145,15 @@ ${history.map((h, i) => `  ${i + 1}. Data: ${new Date(h.data?.seconds * 1000).to
       "pontuacao": boolean,
       "pontuacao_justificativa": "Indicar se as pausas transcrevem a estrutura sintática."
     },
-    "padrao_de_erro_detectado": "Categoria principal: fonológico, visual, lexical, omissão ou adivinhação.",
+    "padrao_de_erro_detectado": "Categoria principal: fonológico, estrangeiro, visual, lexical, omissão ou adivinhação.",
     "nivel_de_confianca": number (1 a 100, baseado na clareza da transcrição vs texto base),
     "analise_evolucao": "Breve comentário (1 linha) sobre o progresso do aluno comparado ao histórico.",
-    "transcricao_marcada": "O texto da transcrição formatado da seguinte forma: palavras substituídas/erradas em **negrito**, palavras do texto original que foram omitidas entre [colchetes] e palavras adicionadas que não estavam no original entre (parênteses)."
+    "transcricao_marcada": "O texto da transcrição formatado da seguinte forma: palavras substituídas/erradas em **negrito**, palavras do texto original que foram omitidas entre [colchetes] e palavras adicionadas que não estavam no original entre (parênteses).",
+    "perguntas_compreensao": [
+      { "pergunta": "string", "resposta_esperada": "string" },
+      { "pergunta": "string", "resposta_esperada": "string" },
+      { "pergunta": "string", "resposta_esperada": "string" }
+    ]
   }
 
   ATENÇÃO: Requer-se ALTA PRECISÃO. Se o PCM estiver muito abaixo da norma, 'leitura_precisa' DEVE ser false. Se houver muitas vírgulas ignoradas na transcrição, 'pontuacao' DEVE ser false. Use as justificativas para mostrar que você analisou detalhadamente os erros fonéticos.
@@ -178,6 +193,7 @@ interface ProcessAudioParams {
   targetPCM?: number;
   history?: any[];
   duration?: number;
+  isForeigner?: boolean;
 }
 
 interface ProcessAudioResult {
@@ -212,6 +228,10 @@ interface ProcessAudioResult {
     nivel_de_confianca: number;
     analise_evolucao?: string;
     transcricao_marcada?: string;
+    perguntas_compreensao: Array<{
+      pergunta: string;
+      resposta_esperada: string;
+    }>;
   };
 }
 
@@ -223,6 +243,7 @@ export async function processReadingAudio({
   targetPCM,
   history,
   duration = 60,
+  isForeigner,
 }: ProcessAudioParams): Promise<ProcessAudioResult> {
   const sanitizedOriginalText = sanitizeInput(originalText);
 
@@ -263,7 +284,8 @@ export async function processReadingAudio({
     studentGrade,
     targetPCM,
     history,
-    metrics.detalhes
+    metrics.detalhes,
+    isForeigner
   );
 
   console.log("Diagnóstico OpenAI finalizado");

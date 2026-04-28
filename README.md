@@ -1,4 +1,4 @@
-# 📖 Plataforma Leitura (v3.13.5)
+# 📖 Plataforma Leitura (v3.14.0)
 
 Plataforma de avaliação de fluência leitora com Next.js (App Router), persistência em Firebase e processamento de áudio via IA. O projeto foi refatorado para um monorepo Next.js unificado com API routes serverless.
 
@@ -39,8 +39,10 @@ O sistema permite que professores:
 - **[NOVO-ACADÊMICO]** Cálculo automático de estatísticas acadêmicas (Desvio Padrão, IC 95%) e exportação de datasets JSON para pesquisa.
 - **[NOVO]** Importação Lote de Histórico via Excel (permite migrar avaliações antigas);
 - **[NOVO]** Análise de Evolução Comparativa via IA baseada em registros anteriores;
-- **[NOVO]** Diagnóstico de leitura dinâmico calibrado por série e meta de PCM;
+- **[NOVO]** Suporte a **Alunos Estrangeiros**: Identificação de padrões fonológicos específicos (ex: crianças sul-americanas) para diagnósticos mais precisos;
+- **[NOVO]** Geração de **Perguntas de Compreensão**: A IA agora gera automaticamente 3 perguntas de interpretação baseadas no texto lido;
 - **[FIX]** Correção robusta na marcação de texto pedagógico (omissões/adições) usando classes CSS para evitar conflitos de estilo.
+- **v3.14.0**: **Suporte a Alunos Estrangeiros e Perguntas de Compreensão**. Implementada a detecção de padrões fonológicos para estrangeiros e geração automática de 3 perguntas de interpretação de texto integradas ao relatório e histórico.
 - **v3.13.5**: **Refinamento de Espaçamento Mobile**. Aumentado o recuo superior do conteúdo principal para 100px no mobile (Header 80px + Respiro), garantindo que títulos de página e botões de navegação nunca fiquem sob o cabeçalho fixo.
 - **v3.13.4**: **Correção de Sobreposição Mobile**. Ajuste global no sistema de design para evitar que o cabeçalho fixo sobreponha o conteúdo principal em dispositivos móveis. Aumentada a altura do cabeçalho para 64px em telas pequenas e recalibrado o padding superior das páginas para garantir visibilidade total dos títulos e elementos de navegação.
 - **v3.13.3**: **Persistência de Filtros na Avaliação**. Implementação de persistência automática dos filtros de "Série" e "Turma" na página de seleção de estudantes via `localStorage`, facilitando o fluxo de trabalho de professores que realizam múltiplas avaliações consecutivas para a mesma turma.

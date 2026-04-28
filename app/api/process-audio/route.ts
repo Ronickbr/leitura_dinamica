@@ -20,6 +20,7 @@ const uploadSchema = z.object({
   studentGrade: z.string().optional(),
   targetPCM: z.string().optional().transform(v => v ? parseInt(v) : undefined),
   history: z.string().optional().transform(v => v ? JSON.parse(v) : undefined),
+  isForeigner: z.string().optional().transform(v => v === "true"),
 });
 
 export async function POST(req: NextRequest) {
@@ -39,6 +40,7 @@ export async function POST(req: NextRequest) {
     const studentGrade = formData.get("student_grade");
     const targetPCM = formData.get("target_pcm");
     const history = formData.get("history");
+    const isForeigner = formData.get("is_foreigner");
 
     // Validação com Zod
     const validation = uploadSchema.safeParse({
@@ -46,7 +48,8 @@ export async function POST(req: NextRequest) {
       originalText,
       studentGrade: studentGrade || undefined,
       targetPCM: targetPCM || undefined,
-      history: history || undefined
+      history: history || undefined,
+      isForeigner: isForeigner || undefined
     });
 
     if (!validation.success) {
@@ -88,6 +91,7 @@ export async function POST(req: NextRequest) {
       studentGrade: validatedGrade,
       targetPCM: validatedTarget,
       history: validatedHistory,
+      isForeigner: validation.data.isForeigner
     });
 
     console.log(JSON.stringify({
