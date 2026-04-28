@@ -495,17 +495,35 @@ export default function StudentsPage() {
                     </span>
                   ) : undefined}
                   footer={
-                    <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', width: '100%' }}>
-                      <button onClick={() => setViewingAluno(aluno)} className="btn-outline" style={{ flex: 1 }}>Visualizar</button>
-                      <button onClick={() => { setEditingId(aluno.id!); setFormData({ nome: aluno.nome, turma: aluno.turma, serie: aluno.serie, turno: aluno.turno || '', diagnostico: aluno.diagnostico || '', observacoes: aluno.observacoes || '', anoLetivo: aluno.anoLetivo, metaPCM: aluno.metaPCM || 0 }); setShowForm(true); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="btn-outline-round" style={{ padding: '0.4rem 0.8rem' }}>✏️</button>
-                      <button onClick={() => handleDelete(aluno.id)} className="btn-outline" style={{ flexBasis: '100%', color: 'var(--error)' }}>Excluir</button>
+                    <div style={{ display: 'flex', gap: '0.5rem', width: '100%' }}>
+                      <button onClick={() => setViewingAluno(aluno)} className="btn-outline" style={{ flex: 1, padding: '0.75rem', fontSize: '1.1rem' }} title="Visualizar">
+                        👁️
+                      </button>
+                      <button 
+                        onClick={() => { 
+                          setEditingId(aluno.id!); 
+                          setFormData({ nome: aluno.nome, turma: aluno.turma, serie: aluno.serie, turno: aluno.turno || '', diagnostico: aluno.diagnostico || '', observacoes: aluno.observacoes || '', anoLetivo: aluno.anoLetivo, metaPCM: aluno.metaPCM || 0 }); 
+                          setShowForm(true); 
+                          window.scrollTo({ top: 0, behavior: 'smooth' }); 
+                        }} 
+                        className="btn-outline" 
+                        style={{ flex: 1, padding: '0.75rem', fontSize: '1.1rem' }}
+                        title="Editar"
+                      >
+                        ✏️
+                      </button>
+                      <button 
+                        onClick={() => handleDelete(aluno.id)} 
+                        className="btn-outline" 
+                        style={{ flex: 1, padding: '0.75rem', fontSize: '1.1rem', color: 'var(--error)', borderColor: 'rgba(239, 68, 68, 0.2)' }}
+                        title="Excluir"
+                      >
+                        🗑️
+                      </button>
                     </div>
                   }
                 >
                   <MobileDataGrid>
-                    <MobileDataPoint label="Série" value={aluno.serie} />
-                    <MobileDataPoint label="Turma" value={aluno.turma} accent />
-                    <MobileDataPoint label="Turno" value={aluno.turno || '-'} />
                     <MobileDataPoint
                       label="Diagnóstico"
                       value={aluno.diagnostico && aluno.diagnostico !== "Nenhum diagnóstico" && aluno.diagnostico !== "Nenhum" ? anonymizeText(aluno.diagnostico) : '-'}

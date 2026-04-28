@@ -249,7 +249,7 @@ export default function HistoryPage() {
     : 0;
 
   return (
-    <div className="animate-in" style={{ paddingBottom: '4rem' }}>
+    <div className="animate-in history-container">
       <header className="page-header">
         <div className="page-header-content">
           <button
@@ -352,8 +352,8 @@ export default function HistoryPage() {
         {(filterAnoLetivo || filterSerie || filterTurma) && (
           <button
             onClick={() => { setFilterAnoLetivo(''); setFilterSerie(''); setFilterTurma(''); }}
-            className="btn-outline"
-            style={{ padding: '0.5rem 1rem', fontSize: '0.8rem', marginLeft: 'auto' }}
+            className="btn-outline history-filter-clear-btn"
+            style={{ padding: '0.5rem 1rem', fontSize: '0.8rem' }}
           >
             Limpar Filtros
           </button>
@@ -389,7 +389,7 @@ export default function HistoryPage() {
                       {anonymizeName(group.alunoId, group.aluno?.nome || 'Aluno')}
                     </h3>
                     <p className="history-group-subtitle">
-                      {group.aluno?.serie} - Turma {group.aluno?.turma} • {group.evaluations.length} avaliação{group.evaluations.length !== 1 ? 'ções' : ''}
+                      {group.aluno?.serie} - Turma {group.aluno?.turma} • {group.evaluations.length} {group.evaluations.length === 1 ? 'avaliação' : 'avaliações'}
                     </p>
                   </div>
 
