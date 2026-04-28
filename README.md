@@ -41,6 +41,7 @@ O sistema permite que professores:
 - **[NOVO]** Análise de Evolução Comparativa via IA baseada em registros anteriores;
 - **[NOVO]** Diagnóstico de leitura dinâmico calibrado por série e meta de PCM;
 - **[FIX]** Correção robusta na marcação de texto pedagógico (omissões/adições) usando classes CSS para evitar conflitos de estilo.
+- **[NOVO]** Melhoria no espaçamento e visibilidade dos filtros na página de alunos (Gerenciar Alunos), garantindo exibição inline e sem cortes.
 - **[NOVO]** Filtros dinâmicos por Série e Turma na página de histórico para segmentação de avaliações.
 - **[NOVO]** Cards de estatísticas (Total Alunos, Média PCM, etc.) e exportações (Excel/JSON) no histórico agora são reativos aos filtros aplicados.
 - **[NOVO]** Melhoria no espaçamento e visibilidade dos filtros no histórico, garantindo exibição inline e adaptável.

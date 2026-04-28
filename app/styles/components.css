@@ -495,18 +495,18 @@
 }
 
 .students-filters-top-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 2fr) minmax(180px, 1fr);
+  display: flex;
+  flex-wrap: wrap;
   gap: var(--space-4);
-  align-items: end;
+  align-items: flex-end;
   padding-inline: var(--space-1);
 }
 
 .students-filters-grid {
-  display: grid;
-  grid-template-columns: repeat(12, minmax(0, 1fr));
+  display: flex;
+  flex-wrap: wrap;
   gap: var(--space-4);
-  align-items: end;
+  align-items: flex-end;
   padding-inline: var(--space-1);
 }
 
@@ -515,30 +515,7 @@
   flex-direction: column;
   gap: var(--space-2);
   min-width: 0;
-}
-
-.students-filter-field-name {
-  grid-column: span 3;
-}
-
-.students-filter-field-turma {
-  grid-column: span 2;
-}
-
-.students-filter-field-serie {
-  grid-column: span 3;
-}
-
-.students-filter-field-turno {
-  grid-column: span 3;
-}
-
-.students-filter-field-diagnostico {
-  grid-column: span 3;
-}
-
-.students-filter-field-ano {
-  grid-column: span 2;
+  flex: 1 1 auto;
 }
 
 .students-filter-label {
@@ -573,7 +550,7 @@
 .students-filter-input,
 .students-filter-select {
   width: 100%;
-  min-width: 0;
+  min-width: max-content;
   min-height: 56px;
   padding: 0 var(--space-4) 0 calc(var(--space-4) + 28px);
   font-family: inherit;

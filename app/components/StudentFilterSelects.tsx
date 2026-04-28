@@ -81,7 +81,7 @@ export function StudentFilterSelects({
   return (
     <>
       <div className="students-filters-grid" role="group" aria-describedby={helperId}>
-        <label className="students-filter-field students-filter-field-turma" htmlFor="students-filter-turma">
+        <label className="students-filter-field" htmlFor="students-filter-turma">
           <span className="students-filter-label">Turma</span>
           <span className="students-filter-control">
             <span className="students-filter-icon">
@@ -102,7 +102,7 @@ export function StudentFilterSelects({
           </span>
         </label>
 
-        <label className="students-filter-field students-filter-field-serie" htmlFor="students-filter-serie">
+        <label className="students-filter-field" htmlFor="students-filter-serie">
           <span className="students-filter-label">Serie</span>
           <span className="students-filter-control">
             <span className="students-filter-icon">
@@ -123,7 +123,7 @@ export function StudentFilterSelects({
           </span>
         </label>
 
-        <label className="students-filter-field students-filter-field-turno" htmlFor="students-filter-turno">
+        <label className="students-filter-field" htmlFor="students-filter-turno">
           <span className="students-filter-label">Turno</span>
           <span className="students-filter-control">
             <span className="students-filter-icon">
@@ -144,7 +144,7 @@ export function StudentFilterSelects({
           </span>
         </label>
 
-        <label className="students-filter-field students-filter-field-diagnostico" htmlFor="students-filter-diagnostico">
+        <label className="students-filter-field" htmlFor="students-filter-diagnostico">
           <span className="students-filter-label">Diagnostico</span>
           <span className="students-filter-control">
             <span className="students-filter-icon">
