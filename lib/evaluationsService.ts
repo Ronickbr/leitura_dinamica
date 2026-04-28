@@ -40,6 +40,7 @@ export interface Avaliacao {
   textoId: string;
   pcm: number;
   precisao: number;
+  erros?: number;
   transcricao: string;
   diagnosticoIA: string;
   intervencaoIA: string;

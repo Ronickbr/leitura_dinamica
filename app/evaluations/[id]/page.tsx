@@ -187,6 +187,7 @@ export default function ReadingPage() {
         textoId: texto.id,
         pcm: tempResult.pcm,
         precisao: tempResult.metrics.precisao,
+        erros: tempResult.metrics.erros,
         transcricao: tempResult.transcription,
         transcricaoMarcada: tempResult.analysis.transcricao_marcada,
         diagnosticoIA: tempResult.analysis.diagnostico,
@@ -362,6 +363,10 @@ export default function ReadingPage() {
                     <div style={{ fontSize: "1.75rem", fontWeight: 900, color: "var(--success)" }}>{tempResult.metrics.precisao}%</div>
                     <div className="mobile-data-label">PRECISÃO</div>
                   </div>
+                  <div>
+                    <div style={{ fontSize: "1.75rem", fontWeight: 900, color: "var(--error)" }}>{tempResult.metrics.erros}</div>
+                    <div className="mobile-data-label">ERROS</div>
+                  </div>
                 </div>
               </div>
 
@@ -457,9 +462,15 @@ export default function ReadingPage() {
                 <div className="mobile-data-label">Precisão</div>
                 <div style={{ fontSize: "2rem", fontWeight: 900, color: "var(--success)" }}>{tempResult?.metrics.precisao}%</div>
               </div>
-              <div style={{ gridColumn: "span 2", paddingTop: "0.5rem", borderTop: "1px solid var(--glass-border-light)" }}>
-                <div className="mobile-data-label">Nível de Desempenho</div>
-                <div style={{ fontWeight: 700, color: "var(--text-primary)" }}>{getPerformanceLevel(tempResult?.pcm || 0)}</div>
+              <div style={{ gridColumn: "span 2", paddingTop: "0.5rem", borderTop: "1px solid var(--glass-border-light)", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+                <div>
+                  <div className="mobile-data-label">Erros</div>
+                  <div style={{ fontSize: "1.25rem", fontWeight: 900, color: "var(--error)" }}>{tempResult?.metrics.erros}</div>
+                </div>
+                <div>
+                  <div className="mobile-data-label">Nível de Desempenho</div>
+                  <div style={{ fontWeight: 700, color: "var(--text-primary)", fontSize: "0.9rem" }}>{getPerformanceLevel(tempResult?.pcm || 0)}</div>
+                </div>
               </div>
             </div>
 

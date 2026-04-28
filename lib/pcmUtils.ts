@@ -74,6 +74,7 @@ export const calculatePCM = (originalText: string, transcribedText: string): Ali
         corretas: correctCount,
         total_original: n,
         total_lido: m,
+        erros: n - correctCount,
         precisao: n > 0 ? Number(((correctCount / n) * 100).toFixed(2)) : 0,
         detalhes
     };

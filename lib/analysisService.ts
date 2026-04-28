@@ -204,6 +204,7 @@ interface ProcessAudioResult {
     corretas: number;
     total_original: number;
     total_lido: number;
+    erros: number;
     precisao: number;
     detalhes: any[];
   };

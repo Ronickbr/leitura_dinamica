@@ -262,7 +262,7 @@ export default function EvaluationDetailsPage() {
 
                     .evaluation-metrics-grid {
                         display: grid !important;
-                        grid-template-columns: repeat(3, 1fr) !important;
+                        grid-template-columns: repeat(2, 1fr) !important;
                         gap: 8pt !important;
                     }
 
@@ -389,8 +389,13 @@ export default function EvaluationDetailsPage() {
                             </div>
 
                             <div className="evaluation-detail-metric-tile">
+                                <span className="evaluation-detail-metric-label font-ui">Erros</span>
+                                <span className="evaluation-detail-metric-value" style={{ color: "var(--error)" }}>{avaliacao.erros ?? 0}</span>
+                            </div>
+
+                            <div className="evaluation-detail-metric-tile">
                                 <span className="evaluation-detail-metric-label font-ui">Objetivo</span>
-                                <span className="evaluation-detail-metric-value" style={{ fontSize: "1.4rem", fontWeight: 900 }}>{avaliacao.pcm >= normaNacional ? "ALCANÇADO" : "EM EVOLUÇÃO"}</span>
+                                <span className="evaluation-detail-metric-value" style={{ fontSize: "1.1rem", fontWeight: 900 }}>{avaliacao.pcm >= normaNacional ? "ALCANÇADO" : "EM EVOLUÇÃO"}</span>
                             </div>
                         </div>
                     </div>
