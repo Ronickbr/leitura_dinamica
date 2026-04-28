@@ -73,7 +73,7 @@ export default function StudentPerformancePage() {
                     <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
                         <div style={{ background: "var(--bg-deep)", padding: "1.25rem", borderRadius: "12px", border: "1px solid var(--glass-border)" }}>
                             <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", textTransform: "uppercase", fontWeight: 800, marginBottom: "0.5rem" }}>Norma Nacional (SAEB)</div>
-                            <div style={{ fontSize: "2rem", fontWeight: 900, color: "var(--text-main)" }}>{norma} <small style={{ fontSize: "0.9rem", fontWeight: 400 }}>PCM</small></div>
+                            <div style={{ fontSize: "2rem", fontWeight: 900, color: "var(--text-primary)" }}>{norma} <small style={{ fontSize: "0.9rem", fontWeight: 400 }}>PCM</small></div>
                         </div>
 
                         {aluno.metaPCM ? (
@@ -139,7 +139,7 @@ export default function StudentPerformancePage() {
                                 <span style={{ fontWeight: 700, fontSize: "0.9rem" }}>{formatDate(ev.data)}</span>
                                 <span style={{ fontSize: "0.8rem", color: "var(--primary)", fontWeight: 800 }}>{ev.pcm} PCM</span>
                             </div>
-                            <p style={{ fontSize: "0.9rem", color: "var(--text-main)", fontStyle: "italic" }}>"{evaluations.length - i}. {anonymizeText(ev.intervencaoIA)}"</p>
+                            <p style={{ fontSize: "0.9rem", color: "var(--text-primary)", fontStyle: "italic" }}>"{evaluations.length - i}. {anonymizeText(ev.intervencaoIA)}"</p>
                         </div>
                     )) : (
                         <p style={{ color: "var(--text-muted)" }}>Nenhuma intervenção registrada.</p>

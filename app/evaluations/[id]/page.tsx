@@ -289,7 +289,7 @@ export default function ReadingPage() {
               <span className="perf-chip">{isRecording ? 'Gravando' : isFinished ? 'Pronto para revisar' : 'Aguardando'}</span>
               <span className="perf-chip">{isMobile ? 'Modo mobile' : 'Modo desktop'}</span>
             </div>
-            <div className="evaluation-timer" style={{ color: timeLeft <= 10 ? 'var(--error)' : 'var(--text-main)' }}>
+            <div className="evaluation-timer" style={{ color: timeLeft <= 10 ? 'var(--error)' : 'var(--text-primary)' }}>
               00:{timeLeft < 10 ? `0${timeLeft}` : timeLeft}
             </div>
             <p className="mobile-data-label" style={{ marginBottom: '1.5rem' }}>

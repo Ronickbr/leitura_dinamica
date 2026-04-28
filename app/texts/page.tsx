@@ -190,7 +190,7 @@ export default function TextsPage() {
             placeholder="Pesquisar textos por título ou série..."
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
-            style={{ background: 'transparent', border: 'none', color: 'var(--text-main)', width: '100%', outline: 'none', fontSize: '0.95rem' }}
+            style={{ background: 'transparent', border: 'none', color: 'var(--text-primary)', width: '100%', outline: 'none', fontSize: '0.95rem' }}
           />
         </div>
       </div>

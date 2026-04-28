@@ -442,7 +442,7 @@ export default function EvaluationDetailsPage() {
                             <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem", padding: "0.5rem" }}>
                                 {avaliacao.perguntasCompreensao.map((p, idx) => (
                                     <div key={idx} style={{ paddingBottom: idx < (avaliacao.perguntasCompreensao?.length || 0) - 1 ? "1rem" : 0, borderBottom: idx < (avaliacao.perguntasCompreensao?.length || 0) - 1 ? "1px dashed var(--glass-border-light)" : "none" }}>
-                                        <p style={{ fontWeight: 800, fontSize: "0.95rem", marginBottom: "0.4rem", color: "var(--text-main)" }}>
+                                        <p style={{ fontWeight: 800, fontSize: "0.95rem", marginBottom: "0.4rem", color: "var(--text-primary)" }}>
                                             {idx + 1}. {p.pergunta}
                                         </p>
                                         <div className="glass-panel" style={{ background: "rgba(0,0,0,0.02)", padding: "0.75rem", borderLeft: "3px solid var(--primary)" }}>

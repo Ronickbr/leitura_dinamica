@@ -446,7 +446,7 @@ export default function StudentsPage() {
                   </div>
                   <div style={{ textAlign: 'right' }}>
                     <p style={{ color: 'var(--text-muted)', fontSize: '0.7rem', fontWeight: 800, marginBottom: '0.2rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Total Alunos</p>
-                    <p style={{ fontSize: '1.4rem', fontWeight: 900, color: 'var(--text-main)' }}>{totalAlunos}</p>
+                    <p style={{ fontSize: '1.4rem', fontWeight: 900, color: 'var(--text-primary)' }}>{totalAlunos}</p>
                   </div>
                 </div>
               </div>
@@ -465,18 +465,29 @@ export default function StudentsPage() {
       {/* Modal de Visualização (Sheet) */}
       {viewingAluno && (
         <div className="app-overlay">
-          <div className="glass-card app-sheet" style={{ maxWidth: "450px", width: "100%", background: "var(--bg-dark)", boxShadow: "var(--glass-shadow)" }}>
+          <div className="glass-card app-sheet" style={{ maxWidth: "450px", width: "100%", background: "var(--bg-surface)", boxShadow: "var(--shadow-xl)", border: "1px solid var(--glass-border)" }}>
             <h2 style={{ marginBottom: "1.5rem", fontSize: "1.3rem", fontWeight: 800, color: "var(--primary)", display: "flex", alignItems: "center", gap: "0.5rem" }}>
               <span>👤</span> Visualizar Aluno
             </h2>
-            <div style={{ display: "flex", flexDirection: "column", gap: "0.8rem", marginBottom: "2rem" }}>
-              <p style={{ fontSize: "1.05rem" }}><strong style={{ color: "var(--text-muted)", marginRight: "0.5rem", display: "inline-block", width: "100px" }}>Nome:</strong> {anonymizeName(viewingAluno.id, viewingAluno.nome)}</p>
-              <p style={{ fontSize: "1.05rem" }}><strong style={{ color: "var(--text-muted)", marginRight: "0.5rem", display: "inline-block", width: "100px" }}>Turma:</strong> {viewingAluno.turma}</p>
-              <p style={{ fontSize: "1.05rem" }}><strong style={{ color: "var(--text-muted)", marginRight: "0.5rem", display: "inline-block", width: "100px" }}>Série:</strong> {viewingAluno.serie}</p>
-              <p style={{ fontSize: "1.05rem" }}><strong style={{ color: "var(--text-muted)", marginRight: "0.5rem", display: "inline-block", width: "100px" }}>Turno:</strong> {viewingAluno.turno || '-'}</p>
-              <p style={{ fontSize: "1.05rem" }}><strong style={{ color: "var(--text-muted)", marginRight: "0.5rem", display: "inline-block", width: "100px" }}>Diagnóstico:</strong> {viewingAluno.diagnostico ? anonymizeText(viewingAluno.diagnostico) : '-'}</p>
-              <p style={{ fontSize: "1.05rem" }}><strong style={{ color: "var(--text-muted)", marginRight: "0.5rem", display: "inline-block", width: "100px" }}>Observações:</strong> {viewingAluno.observacoes ? anonymizeText(viewingAluno.observacoes) : '-'}</p>
-              <p style={{ fontSize: "1.05rem" }}><strong style={{ color: "var(--text-muted)", marginRight: "0.5rem", display: "inline-block", width: "100px" }}>Meta PCM:</strong> {viewingAluno.metaPCM || 'Não definida'}</p>
+            <div style={{ display: "flex", flexDirection: "column", gap: "1rem", marginBottom: "2rem" }}>
+              {[
+                { label: "Nome", value: anonymizeName(viewingAluno.id, viewingAluno.nome) },
+                { label: "Turma", value: viewingAluno.turma },
+                { label: "Série", value: viewingAluno.serie },
+                { label: "Turno", value: viewingAluno.turno || '-' },
+                { label: "Diagnóstico", value: viewingAluno.diagnostico ? anonymizeText(viewingAluno.diagnostico) : '-', color: getDiagnosisStyle(viewingAluno.diagnostico).text },
+                { label: "Observações", value: viewingAluno.observacoes ? anonymizeText(viewingAluno.observacoes) : '-' },
+                { label: "Meta PCM", value: viewingAluno.metaPCM || 'Não definida' },
+              ].map((item, idx) => (
+                <div key={idx} style={{ display: "flex", alignItems: "flex-start", borderBottom: "1px solid var(--glass-border-light)", paddingBottom: "0.5rem" }}>
+                  <span style={{ color: "var(--text-secondary)", fontSize: "0.75rem", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.05em", width: "120px", flexShrink: 0 }}>
+                    {item.label}
+                  </span>
+                  <span style={{ fontSize: "1rem", fontWeight: 600, color: item.color || "var(--text-primary)" }}>
+                    {item.value}
+                  </span>
+                </div>
+              ))}
             </div>
 
             <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>

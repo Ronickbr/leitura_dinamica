@@ -179,7 +179,7 @@ export default function Dashboard() {
               <div style={{ color: 'var(--primary)', fontSize: '1.75rem' }}><LightbulbIcon /></div>
               <h4 style={{ color: 'var(--primary)', fontWeight: 800, fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Dica Pedagógica</h4>
             </div>
-            <p style={{ fontSize: '1.05rem', lineHeight: 1.8, color: 'var(--text-main)', fontWeight: 500 }}>
+            <p style={{ fontSize: '1.05rem', lineHeight: 1.8, color: 'var(--text-primary)', fontWeight: 500 }}>
               "A fluência não é apenas velocidade, mas a integração de precisão, prosódia e compreensão. Foque em alunos com PCM abaixo de 40 para intervenções intensivas."
             </p>
           </div>
@@ -229,7 +229,7 @@ function QuickLink({ href, label, icon }: { href: string; label: string; icon: R
       alignItems: 'center',
       gap: '0.75rem',
       textDecoration: 'none',
-      color: 'var(--text-main)',
+      color: 'var(--text-primary)',
       padding: '1rem',
       borderRadius: '16px',
       background: 'var(--glass-bg)',

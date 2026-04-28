@@ -172,7 +172,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                     <strong style={{ fontSize: "0.9rem", wordBreak: "break-all" }}>{user.email}</strong>
                   </div>
 
-                  <Link href="/settings" onClick={() => setShowUserDropdown(false)} className="hover-row" style={{ padding: "0.5rem", borderRadius: "8px", textDecoration: "none", color: "var(--text-main)", display: "flex", gap: "0.5rem", alignItems: "center" }}>
+                  <Link href="/settings" onClick={() => setShowUserDropdown(false)} className="hover-row" style={{ padding: "0.5rem", borderRadius: "8px", textDecoration: "none", color: "var(--text-primary)", display: "flex", gap: "0.5rem", alignItems: "center" }}>
                     <span style={{ fontSize: "1.2rem" }}>⚙️</span> Configurações
                   </Link>
 
@@ -189,7 +189,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                   <button
                     onClick={handleLogout}
                     className="hover-row"
-                    style={{ padding: "0.5rem", borderRadius: "8px", background: "transparent", border: "none", color: "var(--text-main)", cursor: "pointer", textAlign: "left", display: "flex", gap: "0.5rem", width: "100%", alignItems: "center", fontSize: "1rem", marginTop: "0.25rem" }}
+                    style={{ padding: "0.5rem", borderRadius: "8px", background: "transparent", border: "none", color: "var(--text-primary)", cursor: "pointer", textAlign: "left", display: "flex", gap: "0.5rem", width: "100%", alignItems: "center", fontSize: "1rem", marginTop: "0.25rem" }}
                   >
                     <span style={{ fontSize: "1.2rem" }}>🚪</span> Sair
                   </button>
@@ -206,19 +206,31 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
       {showResetModal && (
         <div className="app-overlay">
-          <div className="glass-card app-sheet" style={{ maxWidth: "450px", width: "100%", background: "var(--bg-dark)" }}>
-            <h2 style={{ marginBottom: "1rem", color: "var(--error)" }}>⚠️ Resetar Banco de Dados</h2>
-            <p style={{ marginBottom: "1.5rem", fontSize: "0.95rem", color: "var(--text-muted)" }}>
-              Selecione quais coleções deseja <strong>apagar permanentemente</strong>.
+          <div className="glass-card app-sheet" style={{ maxWidth: "450px", width: "100%", background: "var(--bg-surface)", boxShadow: "var(--shadow-xl)", border: "1px solid var(--glass-border)" }}>
+            <h2 style={{ marginBottom: "1rem", color: "var(--error)", fontSize: "1.4rem", fontWeight: 800 }}>⚠️ Resetar Banco de Dados</h2>
+            <p style={{ marginBottom: "1.5rem", fontSize: "0.95rem", color: "var(--text-secondary)", lineHeight: "1.5" }}>
+              Selecione quais coleções deseja <strong style={{ color: "var(--text-primary)" }}>apagar permanentemente</strong>. Esta ação não pode ser desfeita.
             </p>
 
-            <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", marginBottom: "1.5rem" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "1rem", marginBottom: "2rem" }}>
               {[
-                { id: 'alunos', label: 'Alunos' },
-                { id: 'textos', label: 'Textos' },
-                { id: 'avaliacoes', label: 'Histórico (Avaliações)' }
+                { id: 'alunos', label: 'Alunos', icon: '👥' },
+                { id: 'textos', label: 'Textos', icon: '📚' },
+                { id: 'avaliacoes', label: 'Histórico (Avaliações)', icon: '📊' }
               ].map((col) => (
-                <label key={col.id} style={{ display: "flex", alignItems: "center", gap: "0.5rem", cursor: "pointer", fontSize: "1.1rem" }}>
+                <label key={col.id} style={{ 
+                  display: "flex", 
+                  alignItems: "center", 
+                  gap: "0.75rem", 
+                  cursor: "pointer", 
+                  fontSize: "1rem",
+                  color: "var(--text-primary)",
+                  background: "rgba(255,255,255,0.03)",
+                  padding: "0.75rem",
+                  borderRadius: "12px",
+                  border: "1px solid var(--glass-border-light)",
+                  transition: "all 0.2s"
+                }} className="hover-row">
                   <input
                     type="checkbox"
                     checked={selectedCollections.includes(col.id)}
@@ -226,18 +238,19 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                       if (e.target.checked) setSelectedCollections(prev => [...prev, col.id]);
                       else setSelectedCollections(prev => prev.filter(c => c !== col.id));
                     }}
-                    style={{ width: "18px", height: "18px" }}
+                    style={{ width: "20px", height: "20px", accentColor: "var(--primary)" }}
                   />
-                  {col.label}
+                  <span>{col.icon}</span>
+                  <span style={{ fontWeight: 600 }}>{col.label}</span>
                 </label>
               ))}
             </div>
 
-            <div className="evaluation-review-actions">
+            <div className="evaluation-review-actions" style={{ display: "flex", gap: "1rem" }}>
               <button
                 onClick={() => setShowResetModal(false)}
                 className="btn-outline"
-                style={{ flex: 1 }}
+                style={{ flex: 1, padding: "0.8rem" }}
                 disabled={resetting}
               >
                 Cancelar
@@ -245,7 +258,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               <button
                 onClick={handleResetDb}
                 className="btn-primary"
-                style={{ flex: 1, background: "var(--error)", color: "white", border: "none" }}
+                style={{ flex: 1, background: "var(--error)", color: "white", border: "none", padding: "0.8rem", fontWeight: 700 }}
                 disabled={resetting || selectedCollections.length === 0}
               >
                 {resetting ? "⏳ Limpando..." : "Apagar Dados"}

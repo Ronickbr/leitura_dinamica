@@ -4,7 +4,7 @@
 
 /* ----- Gradients ----- */
 .gradient-primary {
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #6366f1 100%);
+  background: linear-gradient(135deg, var(--primary) 0%, #3b82f6 50%, var(--primary) 100%);
 }
 
 .gradient-accent {
@@ -16,7 +16,7 @@
 }
 
 .text-gradient {
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  background: linear-gradient(135deg, var(--primary) 0%, #3b82f6 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -39,14 +39,14 @@
   font-weight: 600;
   letter-spacing: -0.01em;
   color: #ffffff;
-  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+  background: linear-gradient(135deg, var(--primary) 0%, #1e3a8a 100%);
   border: none;
   border-radius: var(--radius-md);
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow:
-    0 2px 8px rgba(99, 102, 241, 0.3),
-    0 4px 16px rgba(99, 102, 241, 0.2);
+    0 2px 8px rgba(var(--primary-rgb), 0.3),
+    0 4px 16px var(--primary-border);
   overflow: hidden;
 }
 
@@ -65,9 +65,9 @@
 .btn-primary:hover:not(:disabled) {
   transform: translateY(-2px);
   box-shadow:
-    0 4px 16px rgba(99, 102, 241, 0.4),
-    0 8px 32px rgba(99, 102, 241, 0.3),
-    0 0 40px rgba(99, 102, 241, 0.2);
+    0 4px 16px rgba(var(--primary-rgb), 0.4),
+    0 8px 32px rgba(var(--primary-rgb), 0.3),
+    0 0 40px var(--primary-border);
 }
 
 .btn-primary:hover::before {
@@ -77,8 +77,8 @@
 .btn-primary:active:not(:disabled) {
   transform: translateY(0);
   box-shadow:
-    0 2px 8px rgba(99, 102, 241, 0.3),
-    0 4px 16px rgba(99, 102, 241, 0.2);
+    0 2px 8px rgba(var(--primary-rgb), 0.3),
+    0 4px 16px var(--primary-border);
 }
 
 .btn-primary:disabled {
@@ -109,7 +109,7 @@
 
 .btn-outline:hover:not(:disabled) {
   background: var(--glass-bg-hover);
-  border-color: rgba(99, 102, 241, 0.4);
+  border-color: rgba(var(--primary-rgb), 0.4);
   color: var(--primary);
   transform: translateY(-1px);
   box-shadow: var(--shadow-sm);
@@ -219,11 +219,11 @@
 
 .glass-card:hover {
   transform: translateY(-4px);
-  border-color: rgba(99, 102, 241, 0.2);
+  border-color: var(--primary-border);
   box-shadow:
     var(--glass-shadow),
-    0 0 0 1px rgba(99, 102, 241, 0.1),
-    0 16px 40px rgba(99, 102, 241, 0.12);
+    0 0 0 1px var(--primary-soft),
+    0 16px 40px rgba(var(--primary-rgb), 0.12);
 }
 
 .glass-panel {
@@ -241,10 +241,10 @@
   position: relative;
   padding: var(--space-10) var(--space-8);
   background: linear-gradient(135deg,
-      rgba(99, 102, 241, 0.08) 0%,
+      rgba(var(--primary-rgb), 0.08) 0%,
       rgba(139, 92, 246, 0.04) 50%,
       rgba(244, 63, 94, 0.04) 100%);
-  border: 1px solid rgba(99, 102, 241, 0.15);
+  border: 1px solid rgba(var(--primary-rgb), 0.15);
   border-radius: var(--radius-xl);
   overflow: hidden;
 }
@@ -257,7 +257,7 @@
   width: 200%;
   height: 200%;
   background: radial-gradient(circle at 30% 30%,
-      rgba(99, 102, 241, 0.1) 0%,
+      var(--primary-soft) 0%,
       transparent 50%);
   animation: float 20s ease-in-out infinite;
 }
@@ -412,7 +412,7 @@
 
 .mobile-card-subtitle {
   font-size: 0.8rem;
-  color: var(--text-tertiary);
+  color: var(--text-secondary);
 }
 
 .mobile-card-expand-icon {
@@ -473,8 +473,8 @@
   width: 40px;
   height: 40px;
   color: var(--primary);
-  background: rgba(99, 102, 241, 0.1);
-  border: 1px solid rgba(99, 102, 241, 0.16);
+  background: var(--primary-soft);
+  border: 1px solid rgba(var(--primary-rgb), 0.16);
   border-radius: var(--radius-md);
   flex-shrink: 0;
 }
@@ -524,7 +524,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: var(--text-tertiary);
+  color: var(--text-secondary);
 }
 
 .students-filter-control {
@@ -610,7 +610,7 @@
 .students-filter-status {
   font-size: 0.82rem;
   line-height: 1.5;
-  color: var(--text-tertiary);
+  color: var(--text-secondary);
   padding-inline: var(--space-1);
   padding-top: var(--space-2);
 }
@@ -774,7 +774,7 @@
 
 .desktop-nav-link.active {
   color: var(--primary);
-  background: rgba(99, 102, 241, 0.1);
+  background: var(--primary-soft);
 }
 
 /* App Shell */
@@ -822,7 +822,7 @@
   font-size: 0.85rem;
   font-weight: 700;
   color: #ffffff;
-  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  background: linear-gradient(135deg, var(--primary), #3b82f6);
   border-radius: var(--radius-full);
 }
 
@@ -872,7 +872,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: var(--text-tertiary);
+  color: var(--text-secondary);
 }
 
 /* Chips & Badges */
@@ -892,8 +892,8 @@
 
 .perf-chip-primary {
   color: var(--primary);
-  background: rgba(99, 102, 241, 0.1);
-  border-color: rgba(99, 102, 241, 0.2);
+  background: var(--primary-soft);
+  border-color: var(--primary-border);
 }
 
 .perf-chip-success {
@@ -1312,7 +1312,7 @@
   font-size: 0.75rem;
   font-weight: 700;
   color: var(--primary);
-  background: rgba(99, 102, 241, 0.1);
+  background: var(--primary-soft);
   border-radius: var(--radius-xs);
 }
 
@@ -1700,7 +1700,7 @@
 .text-card:hover {
   transform: translateY(-3px);
   box-shadow: var(--shadow-md);
-  border-color: rgba(99, 102, 241, 0.25);
+  border-color: rgba(var(--primary-rgb), 0.25);
 }
 
 .text-card-header {
@@ -1722,7 +1722,7 @@
   font-size: 0.65rem;
   font-weight: 700;
   color: var(--primary);
-  background: rgba(99, 102, 241, 0.12);
+  background: rgba(var(--primary-rgb), 0.12);
   border-radius: 4px;
 }
 
@@ -1777,7 +1777,7 @@
 }
 
 .text-btn:hover {
-  background: rgba(99, 102, 241, 0.1);
+  background: var(--primary-soft);
 }
 
 @media (max-width: 1200px) {
@@ -1841,7 +1841,7 @@
   align-items: center;
   justify-content: center;
   padding: var(--space-6);
-  background: rgba(5, 5, 7, 0.7);
+  background: var(--bg-overlay);
   backdrop-filter: blur(8px);
   z-index: 2000;
 }
@@ -1901,9 +1901,9 @@
 }
 
 .evaluation-metric-card.selected {
-  background: rgba(99, 102, 241, 0.08);
+  background: rgba(var(--primary-rgb), 0.08);
   border-color: var(--primary);
-  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+  box-shadow: 0 0 0 2px var(--primary-border);
 }
 
 .evaluation-meta-chips {
@@ -2160,7 +2160,7 @@
   }
 
   .page-content {
-    padding-top: calc(var(--header-height) + var(--space-6));
+    padding-top: calc(var(--header-height) + var(--space-10));
     padding-bottom: calc(var(--mobile-nav-height) + var(--space-8));
   }
 
