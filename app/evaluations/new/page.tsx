@@ -31,6 +31,19 @@ export default function SelectionPage() {
   const [selectedSerie, setSelectedSerie] = useState('Todas');
   const [selectedDiag, setSelectedDiag] = useState('Todos');
 
+  // Persistência de filtros
+  useEffect(() => {
+    const savedTurma = localStorage.getItem("leitura_last_turma");
+    const savedSerie = localStorage.getItem("leitura_last_serie");
+    if (savedTurma) setSelectedTurma(savedTurma);
+    if (savedSerie) setSelectedSerie(savedSerie);
+  }, []);
+
+  useEffect(() => {
+    if (selectedTurma) localStorage.setItem("leitura_last_turma", selectedTurma);
+    if (selectedSerie) localStorage.setItem("leitura_last_serie", selectedSerie);
+  }, [selectedTurma, selectedSerie]);
+
   const [alunos, setAlunos] = useState<Aluno[]>([]);
   const [loading, setLoading] = useState(true);
 
