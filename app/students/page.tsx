@@ -62,12 +62,6 @@ export default function StudentsPage() {
     setCurrentPage(1);
   }, [searchTerm, filterTurma, filterSerie, filterTurno, filterDiagnostico, filterAnoLetivo]);
 
-  // Ajustar página atual se ela ficar vazia após uma exclusão
-  useEffect(() => {
-    if (currentPage > totalPages && totalPages > 0) {
-      setCurrentPage(totalPages);
-    }
-  }, [totalPages, currentPage]);
 
   useEffect(() => {
     if (firebaseInitialized) {
@@ -166,6 +160,13 @@ export default function StudentsPage() {
     filterDiagnostico ||
     filterAnoLetivo !== defaultAnoLetivo
   );
+
+  // Ajustar página atual se ela ficar vazia após uma exclusão
+  useEffect(() => {
+    if (currentPage > totalPages && totalPages > 0) {
+      setCurrentPage(totalPages);
+    }
+  }, [totalPages, currentPage]);
 
   // Componente de Controles de Paginação
   const PaginationControls = () => {
