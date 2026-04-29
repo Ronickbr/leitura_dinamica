@@ -20,6 +20,7 @@ const uploadSchema = z.object({
   studentGrade: z.string().optional(),
   targetPCM: z.string().optional().transform(v => v ? parseInt(v) : undefined),
   history: z.string().optional().transform(v => v ? JSON.parse(v) : undefined),
+  duration: z.string().optional().transform(v => v ? parseFloat(v) : undefined),
   isForeigner: z.string().optional().transform(v => v === "true"),
 });
 
@@ -40,6 +41,7 @@ export async function POST(req: NextRequest) {
     const studentGrade = formData.get("student_grade");
     const targetPCM = formData.get("target_pcm");
     const history = formData.get("history");
+    const duration = formData.get("duration");
     const isForeigner = formData.get("is_foreigner");
 
     // Validação com Zod
@@ -49,6 +51,7 @@ export async function POST(req: NextRequest) {
       studentGrade: studentGrade || undefined,
       targetPCM: targetPCM || undefined,
       history: history || undefined,
+      duration: duration || undefined,
       isForeigner: isForeigner || undefined
     });
 
@@ -62,13 +65,15 @@ export async function POST(req: NextRequest) {
       originalText: validatedText,
       studentGrade: validatedGrade,
       targetPCM: validatedTarget,
-      history: validatedHistory
+      history: validatedHistory,
+      duration: validatedDuration
     } = validation.data as {
       file: File,
       originalText: string,
       studentGrade?: string,
       targetPCM?: number,
-      history?: any[]
+      history?: any[],
+      duration?: number
     };
 
     auditInfo.filename = validatedFile.name;
@@ -91,6 +96,7 @@ export async function POST(req: NextRequest) {
       studentGrade: validatedGrade,
       targetPCM: validatedTarget,
       history: validatedHistory,
+      duration: validatedDuration,
       isForeigner: validation.data.isForeigner
     });
 

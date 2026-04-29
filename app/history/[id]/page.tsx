@@ -413,21 +413,36 @@ export default function EvaluationDetailsPage() {
                     </div>
 
                     <div className="glass-card evaluation-detail-section">
-                        <h3 className="evaluation-detail-section-title font-ui">Registro da Leitura</h3>
+                        <div className="transcription-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                            <h3 className="evaluation-detail-section-title font-ui" style={{ margin: 0 }}>Registro da Leitura</h3>
+                            <div className="transcription-legend-ui no-print" style={{ display: 'flex', gap: '12px', fontSize: '0.7rem', fontWeight: 600 }}>
+                                <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                    <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#ef4444' }}></span> Omissão
+                                </span>
+                                <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                    <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#3b82f6' }}></span> Inserção
+                                </span>
+                                <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                    <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#f59e0b' }}></span> Substituição
+                                </span>
+                            </div>
+                        </div>
                         <div className="evaluation-transcription-box">
                             <div className="transcription-legend only-print" style={{ fontSize: "7pt", marginBottom: "4px", display: "flex", gap: "10px", opacity: 0.6 }}>
                                 <span>[Palavras]: Omissão</span>
-                                <span>(Sugestão): Autocorreção</span>
+                                <span>(Sugestão): Inserção/Extra</span>
                                 <span><strong>Negrito</strong>: Ênfase</span>
                             </div>
                             {avaliacao.transcricaoMarcada ? (
                                 <p
                                     className="evaluation-transcription-text font-reading"
+                                    style={{ lineHeight: '2.2' }}
                                     dangerouslySetInnerHTML={{
                                         __html: avaliacao.transcricaoMarcada
+                                            .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<span class="marking-substitution" title="Substituição"><span class="marking-substitution-original">$1</span><span class="marking-substitution-read">$2</span></span>')
+                                            .replace(/\[([^\]]+)\]/g, '<span class="marking-omission" title="Omissão">$1</span>')
+                                            .replace(/\(([^)]+)\)/g, '<span class="marking-addition" title="Inserção">$1</span>')
                                             .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                                            .replace(/\[(.*?)\]/g, '<span class="marking-omission">[$1]</span>')
-                                            .replace(/\((.*?)\)/g, '<span class="marking-addition">($1)</span>')
                                     }}
                                 />
                             ) : (

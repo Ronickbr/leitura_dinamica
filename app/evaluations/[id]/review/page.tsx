@@ -46,11 +46,16 @@ export default function ReviewPage() {
             }
 
             const parsedResult = JSON.parse(storedResult);
+            console.log("Resultado carregado para revisão:", parsedResult);
             setResult(parsedResult);
             
-            // Inicializa métricas se a IA as forneceu
-            if (parsedResult.metricasQualitativas) {
-                setMetricas(parsedResult.metricasQualitativas);
+            // Inicializa métricas se a IA as forneceu (novo formato: result.analysis.metricas_qualitativas)
+            const aiQualitative = parsedResult.analysis?.metricas_qualitativas || parsedResult.metricasQualitativas;
+            if (aiQualitative) {
+                setMetricas(prev => ({
+                    ...prev,
+                    ...aiQualitative
+                }));
             }
 
             try {
@@ -73,14 +78,14 @@ export default function ReviewPage() {
                 alunoId,
                 textoId: result.textoId,
                 pcm: result.pcm,
-                precisao: result.precisao,
-                erros: result.erros,
-                transcricao: result.transcricao,
-                transcricaoMarcada: result.transcricao_marcada || result.transcricaoMarcada,
-                diagnosticoIA: result.diagnostico_ia || result.diagnosticoIA,
-                intervencaoIA: result.intervencao_ia || result.intervencaoIA,
+                precisao: result.metrics?.precisao || result.precisao || 0,
+                erros: result.metrics?.erros || result.erros || 0,
+                transcricao: result.transcription || result.transcricao || "",
+                transcricaoMarcada: result.analysis?.transcricao_marcada || result.transcricao_marcada || result.transcricaoMarcada,
+                diagnosticoIA: result.analysis?.diagnostico || result.diagnostico_ia || result.diagnosticoIA,
+                intervencaoIA: result.analysis?.intervencao || result.intervencao_ia || result.intervencaoIA,
                 metricasQualitativas: metricas,
-                perguntasCompreensao: result.perguntas_compreensao || result.perguntasCompreensao,
+                perguntasCompreensao: result.analysis?.perguntas_compreensao || result.perguntas_compreensao || result.perguntasCompreensao,
                 data: null // O serviço preencherá com Timestamp.now()
             };
 
@@ -143,12 +148,12 @@ export default function ReviewPage() {
 
                             <div className="evaluation-detail-metric-tile">
                                 <span className="evaluation-detail-metric-label font-ui">Precisão</span>
-                                <span className="evaluation-detail-metric-value">{result.precisao}%</span>
+                                <span className="evaluation-detail-metric-value">{(result.metrics?.precisao ?? result.precisao) ?? 0}%</span>
                             </div>
 
                             <div className="evaluation-detail-metric-tile">
                                 <span className="evaluation-detail-metric-label font-ui">Erros</span>
-                                <span className="evaluation-detail-metric-value" style={{ color: "var(--error)" }}>{result.erros ?? 0}</span>
+                                <span className="evaluation-detail-metric-value" style={{ color: "var(--error)" }}>{(result.metrics?.erros ?? result.erros) ?? 0}</span>
                             </div>
 
                             <div className="evaluation-detail-metric-tile">
@@ -159,20 +164,36 @@ export default function ReviewPage() {
                     </div>
 
                     <div className="glass-card evaluation-detail-section">
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                        <div className="transcription-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
                             <h3 className="evaluation-detail-section-title font-ui" style={{ margin: 0 }}>Registro da Leitura</h3>
-                            {result.audioUrl && (
-                                <audio src={result.audioUrl} controls className="evaluation-audio-player-mini" style={{ height: '32px' }} />
-                            )}
+                            <div className="transcription-legend-ui" style={{ display: 'flex', gap: '12px', fontSize: '0.7rem', fontWeight: 600 }}>
+                                <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                    <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#ef4444' }}></span> Omissão
+                                </span>
+                                <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                    <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#3b82f6' }}></span> Inserção
+                                </span>
+                                <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                    <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#f59e0b' }}></span> Substituição
+                                </span>
+                            </div>
                         </div>
+                        
+                        {result.audioUrl && (
+                            <div style={{ marginBottom: '1rem', background: 'rgba(0,0,0,0.02)', padding: '0.5rem', borderRadius: '8px' }}>
+                                <audio src={result.audioUrl} controls className="evaluation-audio-player-mini" style={{ width: '100%', height: '36px' }} />
+                            </div>
+                        )}
                         <div className="evaluation-transcription-box">
                             <p
                                 className="evaluation-transcription-text font-reading"
+                                style={{ lineHeight: '2.2' }}
                                 dangerouslySetInnerHTML={{
-                                    __html: (result.transcricao_marcada || result.transcricaoMarcada || result.transcricao || "")
+                                    __html: (result.analysis?.transcricao_marcada || result.transcricao_marcada || result.transcricaoMarcada || result.transcription || result.transcricao || "")
+                                        .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<span class="marking-substitution" title="Substituição"><span class="marking-substitution-original">$1</span><span class="marking-substitution-read">$2</span></span>')
+                                        .replace(/\[([^\]]+)\]/g, '<span class="marking-omission" title="Omissão">$1</span>')
+                                        .replace(/\(([^)]+)\)/g, '<span class="marking-addition" title="Inserção">$1</span>')
                                         .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                                        .replace(/\[(.*?)\]/g, '<span class="marking-omission">[$1]</span>')
-                                        .replace(/\((.*?)\)/g, '<span class="marking-addition">($1)</span>')
                                 }}
                             />
                         </div>
@@ -182,19 +203,19 @@ export default function ReviewPage() {
                         <h3 className="evaluation-detail-section-title font-ui">Diagnóstico Pedagógico</h3>
                         <div style={{ marginBottom: "1rem" }}>
                             <p className="mobile-data-label font-ui" style={{ marginBottom: "4px" }}>Análise da IA</p>
-                            <p className="evaluation-detail-body">{result.diagnostico_ia || result.diagnosticoIA}</p>
+                            <p className="evaluation-detail-body">{result.analysis?.diagnostico || result.diagnostico_ia || result.diagnosticoIA}</p>
                         </div>
                         <div>
                             <p className="mobile-data-label font-ui" style={{ marginBottom: "4px" }}>Intervenção Sugerida</p>
-                            <p className="evaluation-detail-body">{result.intervencao_ia || result.intervencaoIA}</p>
+                            <p className="evaluation-detail-body">{result.analysis?.intervencao || result.intervencao_ia || result.intervencaoIA}</p>
                         </div>
                     </div>
 
-                    {result.perguntas_compreensao && result.perguntas_compreensao.length > 0 && (
+                    {(result.analysis?.perguntas_compreensao || result.perguntas_compreensao) && (result.analysis?.perguntas_compreensao || result.perguntas_compreensao).length > 0 && (
                         <div className="glass-card evaluation-detail-section">
                             <h3 className="evaluation-detail-section-title font-ui">Compreensão</h3>
                             <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-                                {result.perguntas_compreensao.map((p: any, idx: number) => (
+                                {(result.analysis?.perguntas_compreensao || result.perguntas_compreensao).map((p: any, idx: number) => (
                                     <div key={idx} className="glass-panel" style={{ padding: "0.75rem" }}>
                                         <p style={{ fontWeight: 800, fontSize: "0.9rem", marginBottom: "0.4rem" }}>{p.pergunta}</p>
                                         <p style={{ fontSize: "0.85rem", color: "var(--text-muted)" }}>
@@ -215,30 +236,55 @@ export default function ReviewPage() {
                         </p>
                         
                         <div className="competence-list">
-                            {qualitativeMetrics.map((metric) => (
-                                <div 
-                                    key={metric.key} 
-                                    className={`competence-card ${metricas[metric.key as keyof MetricasQualitativas] ? 'active' : ''}`} 
-                                    style={{ 
-                                        cursor: 'pointer',
-                                        borderLeft: `4px solid ${metricas[metric.key as keyof MetricasQualitativas] ? 'var(--primary)' : 'var(--glass-border)'}`
-                                    }}
-                                    onClick={() => setMetricas(prev => ({
-                                        ...prev,
-                                        [metric.key]: !prev[metric.key as keyof MetricasQualitativas]
-                                    }))}
-                                >
-                                    <div className="competence-header">
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                            <span>{metric.icon}</span>
-                                            <span className="competence-label font-ui">{metric.label}</span>
+                            {qualitativeMetrics.map((metric) => {
+                                const metricValue = metricas[metric.key as keyof MetricasQualitativas];
+                                const justificationKey = `${metric.key}_justificativa`;
+                                const justification = result.analysis?.metricas_qualitativas?.[justificationKey] || 
+                                                     result.analysis?.[justificationKey];
+
+                                return (
+                                    <div 
+                                        key={metric.key} 
+                                        className={`competence-card ${metricValue ? 'active' : ''}`} 
+                                        style={{ 
+                                            cursor: 'pointer',
+                                            borderLeft: `4px solid ${metricValue ? 'var(--primary)' : 'var(--glass-border)'}`,
+                                            padding: '1rem'
+                                        }}
+                                        onClick={() => setMetricas(prev => ({
+                                            ...prev,
+                                            [metric.key]: !prev[metric.key as keyof MetricasQualitativas]
+                                        }))}
+                                    >
+                                        <div className="competence-header">
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                                <span style={{ fontSize: '1.2rem' }}>{metric.icon}</span>
+                                                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                                    <span className="competence-label font-ui" style={{ fontWeight: 700 }}>{metric.label}</span>
+                                                    <span style={{ fontSize: '0.75rem', opacity: 0.7 }}>{metric.description}</span>
+                                                </div>
+                                            </div>
+                                            <div className={`status-toggle ${metricValue ? 'active' : ''}`}>
+                                                {metricValue ? 'SIM' : 'NÃO'}
+                                            </div>
                                         </div>
-                                        <div className={`status-toggle ${metricas[metric.key as keyof MetricasQualitativas] ? 'active' : ''}`}>
-                                            {metricas[metric.key as keyof MetricasQualitativas] ? 'SIM' : 'NÃO'}
-                                        </div>
+                                        {justification && (
+                                            <div style={{ 
+                                                marginTop: '0.75rem', 
+                                                padding: '0.5rem', 
+                                                background: 'rgba(0,0,0,0.03)', 
+                                                borderRadius: '6px',
+                                                fontSize: '0.8rem',
+                                                fontStyle: 'italic',
+                                                color: 'var(--text-secondary)',
+                                                borderLeft: '2px solid var(--primary-soft)'
+                                            }}>
+                                                {justification}
+                                            </div>
+                                        )}
                                     </div>
-                                </div>
-                            ))}
+                                );
+                            })}
                         </div>
 
                         <div style={{ marginTop: '2rem' }}>

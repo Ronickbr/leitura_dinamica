@@ -2048,6 +2048,30 @@
   font-weight: 700;
 }
 
+.marking-substitution {
+  display: inline-flex;
+  flex-direction: column;
+  vertical-align: middle;
+  line-height: 1;
+  margin: 0 2px;
+  padding: 2px 4px;
+  background: rgba(245, 158, 11, 0.1); /* Warning/Amber light */
+  border-radius: 4px;
+  border-bottom: 2px solid #f59e0b;
+}
+
+.marking-substitution-original {
+  font-size: 0.75em;
+  text-decoration: line-through;
+  color: var(--text-muted);
+  opacity: 0.8;
+}
+
+.marking-substitution-read {
+  font-weight: 800;
+  color: #d97706; /* Darker amber */
+}
+
 /* Review & Success Pages */
 .pcm-highlight-tile {
   background: var(--glass-bg-accent);
@@ -2964,21 +2988,52 @@
 
 /* Pedagogical Marking Classes */
 .marking-omission {
-  color: var(--error) !important;
+  color: #ef4444 !important; /* Vermelho mais forte */
   text-decoration: line-through !important;
   font-weight: 600;
-  background: rgba(239, 68, 68, 0.05);
-  padding: 0 2px;
-  border-radius: 2px;
+  background: rgba(239, 68, 68, 0.1);
+  padding: 0 4px;
+  border-radius: 4px;
+  margin: 0 1px;
 }
 
 .marking-addition {
-  color: var(--primary) !important;
+  color: #3b82f6 !important; /* Azul mais focado */
   font-style: italic !important;
   font-weight: 600;
-  background: rgba(99, 102, 241, 0.05);
-  padding: 0 2px;
-  border-radius: 2px;
+  background: rgba(59, 130, 246, 0.1);
+  padding: 0 4px;
+  border-radius: 4px;
+  margin: 0 1px;
+}
+
+.marking-substitution {
+  position: relative;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  background: rgba(245, 158, 11, 0.1); /* Âmbar suave */
+  border-bottom: 2px solid #f59e0b;
+  border-radius: 4px 4px 0 0;
+  margin: 0 2px;
+  padding: 0 4px;
+  vertical-align: bottom;
+}
+
+.marking-substitution-original {
+  font-size: 0.75em;
+  color: #f59e0b;
+  font-weight: 700;
+  text-decoration: line-through;
+  line-height: 1;
+  margin-bottom: 2px;
+  opacity: 0.8;
+}
+
+.marking-substitution-read {
+  color: var(--text-primary);
+  font-weight: 800;
+  line-height: 1.2;
 }
 
 .evaluation-transcription-box strong {

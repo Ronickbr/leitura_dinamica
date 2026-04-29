@@ -3,11 +3,18 @@ const cleanText = (text: string) => {
     return text
         .toLowerCase()
         .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "")
-        .replace(/[^\w\s]/g, "")
-        .replace(/\s+/g, " ")
+        .replace(/[\u0300-\u036f]/g, "") // Remove acentos
+        .replace(/[^\w\s]/g, "") // Remove pontuação
         .trim();
 };
+
+export interface DetalheAlinhamento {
+    tipo: 'match' | 'substitution' | 'deletion' | 'insertion';
+    original: string | null;         // Palavra limpa para lógica
+    originalTokens?: string | null;  // Palavra com pontuação original
+    lido: string | null;             // Palavra limpa para lógica
+    lidoTokens?: string | null;      // Palavra com pontuação da transcrição
+}
 
 export interface AlignmentResult {
     corretas: number;
@@ -15,21 +22,24 @@ export interface AlignmentResult {
     total_lido: number;
     erros: number;
     precisao: number;
-    detalhes: {
-        tipo: 'match' | 'substitution' | 'deletion' | 'insertion';
-        original: string | null;
-        lido: string | null;
-    }[];
+    detalhes: DetalheAlinhamento[];
 }
 
 export const calculatePCM = (originalText: string, transcribedText: string): AlignmentResult => {
-    const origWords = cleanText(originalText).split(" ").filter(Boolean);
-    const tranWords = cleanText(transcribedText).split(" ").filter(Boolean);
+    // Normalização inicial para garantir que espaços extras não quebrem o split
+    const normOriginal = originalText.replace(/\s+/g, " ").trim();
+    const normTranscribed = transcribedText.replace(/\s+/g, " ").trim();
+
+    const origTokens = normOriginal.split(" ").filter(Boolean);
+    const tranTokens = normTranscribed.split(" ").filter(Boolean);
+    
+    const origWords = origTokens.map(cleanText);
+    const tranWords = tranTokens.map(cleanText);
 
     const n = origWords.length;
     const m = tranWords.length;
 
-    // Tabela de programação dinâmica para distância de edição (nível de palavra)
+    // Tabela de programação dinâmica
     const dp = Array.from({ length: n + 1 }, () => Array(m + 1).fill(0));
 
     for (let i = 0; i <= n; i++) dp[i][0] = i;
@@ -37,7 +47,7 @@ export const calculatePCM = (originalText: string, transcribedText: string): Ali
 
     for (let i = 1; i <= n; i++) {
         for (let j = 1; j <= m; j++) {
-            if (origWords[i - 1] === tranWords[j - 1]) {
+            if (origWords[i - 1] === tranWords[j - 1] && origWords[i-1] !== "") {
                 dp[i][j] = dp[i - 1][j - 1];
             } else {
                 dp[i][j] = 1 + Math.min(
@@ -49,24 +59,45 @@ export const calculatePCM = (originalText: string, transcribedText: string): Ali
         }
     }
 
-    // Backtracking para encontrar o alinhamento
-    const detalhes: AlignmentResult['detalhes'] = [];
+    const detalhes: DetalheAlinhamento[] = [];
     let i = n, j = m;
     let correctCount = 0;
 
     while (i > 0 || j > 0) {
-        if (i > 0 && j > 0 && origWords[i - 1] === tranWords[j - 1]) {
-            detalhes.unshift({ tipo: 'match', original: origWords[i - 1], lido: tranWords[j - 1] });
+        if (i > 0 && j > 0 && origWords[i - 1] === tranWords[j - 1] && origWords[i-1] !== "") {
+            detalhes.unshift({ 
+                tipo: 'match', 
+                original: origWords[i - 1], 
+                originalTokens: origTokens[i - 1],
+                lido: tranWords[j - 1],
+                lidoTokens: tranTokens[j - 1]
+            });
             correctCount++;
             i--; j--;
         } else if (i > 0 && j > 0 && dp[i][j] === dp[i - 1][j - 1] + 1) {
-            detalhes.unshift({ tipo: 'substitution', original: origWords[i - 1], lido: tranWords[j - 1] });
+            detalhes.unshift({ 
+                tipo: 'substitution', 
+                original: origWords[i - 1], 
+                originalTokens: origTokens[i - 1],
+                lido: tranWords[j - 1],
+                lidoTokens: tranTokens[j - 1]
+            });
             i--; j--;
         } else if (i > 0 && (j === 0 || dp[i][j] === dp[i - 1][j] + 1)) {
-            detalhes.unshift({ tipo: 'deletion', original: origWords[i - 1], lido: null });
+            detalhes.unshift({ 
+                tipo: 'deletion', 
+                original: origWords[i - 1], 
+                originalTokens: origTokens[i - 1],
+                lido: null 
+            });
             i--;
         } else {
-            detalhes.unshift({ tipo: 'insertion', original: null, lido: tranWords[j - 1] });
+            detalhes.unshift({ 
+                tipo: 'insertion', 
+                original: null, 
+                lido: tranWords[j - 1],
+                lidoTokens: tranTokens[j - 1]
+            });
             j--;
         }
     }
@@ -80,6 +111,7 @@ export const calculatePCM = (originalText: string, transcribedText: string): Ali
         detalhes
     };
 };
+
 
 export const getPerformanceLevel = (pcm: number) => {
     if (pcm <= 30) return "Fase Inicial I (Pré-silábico)";

@@ -60,12 +60,15 @@ function generateMarkedTranscription(alignment: any[]): string {
   if (!alignment) return "";
   
   return alignment.map(d => {
-    if (d.tipo === 'match') return d.lido;
-    if (d.tipo === 'substitution') return `**${d.lido}**`;
-    if (d.tipo === 'deletion') return `[${d.original}]`;
-    if (d.tipo === 'insertion') return `(${d.lido})`;
+    const original = d.originalTokens || d.original || "";
+    const lido = d.lidoTokens || d.lido || "";
+
+    if (d.tipo === 'match') return original;
+    if (d.tipo === 'substitution') return `[${original}](${lido})`;
+    if (d.tipo === 'deletion') return `[${original}]`;
+    if (d.tipo === 'insertion') return `(${lido})`;
     return '';
-  }).join(' ');
+  }).join(' ').replace(/\s+/g, ' ').trim();
 }
 
 async function getPedagogicalDiagnosis(
@@ -93,84 +96,79 @@ ${history.map((h, i) => `  ${i + 1}. Data: ${new Date(h.data?.seconds * 1000).to
 
   const omissions = alignmentDetails?.filter(d => d.tipo === 'deletion').map(d => d.original) || [];
   const substitutions = alignmentDetails?.filter(d => d.tipo === 'substitution').map(d => `${d.original} -> ${d.lido}`) || [];
+  const insertions = alignmentDetails?.filter(d => d.tipo === 'insertion').map(d => d.lido) || [];
+  const markedTranscription = generateMarkedTranscription(alignmentDetails || []);
 
   const alignmentContext = alignmentDetails
-    ? `DETALHES DO ALINHAMENTO AUTOMÁTICO:
+    ? `DETALHES DO ALINHAMENTO AUTOMÁTICO (ESTRUTURADO):
     - Palavras Omitidas: ${omissions.length > 0 ? omissions.join(", ") : "Nenhuma"}
-    - Substituições Detectadas: ${substitutions.length > 0 ? substitutions.join(", ") : "Nenhuma"}`
+    - Substituições Detectadas: ${substitutions.length > 0 ? substitutions.join(", ") : "Nenhuma"}
+    - Palavras Adicionadas (Extra): ${insertions.length > 0 ? insertions.join(", ") : "Nenhuma"}
+    
+    TRANSCRICÃO MARCADA (LEGENDA: [original](lido)=substituição, [original]=omissão, (lido)=inserção):
+    "${markedTranscription}"`
     : "";
 
   const prompt = `
   Aja como uma Psicopedagoga Clínica especialista em alfabetização, neurociência da leitura e fluência leitora.
-  Analise o desempenho de um aluno com base nos critérios científicos de fluência (Acurácia, Automaticidade e Prosódia).
+  Sua missão é realizar uma análise diagnóstica extremamente precisa do desempenho de leitura do aluno.
 
-  CONTEXTO DO ALUNO:
+  DADOS ESTRUTURADOS (PRIORIDADE MÁXIMA):
+  Use estes dados como EVIDÊNCIA para suas conclusões. Se os dados mostram erros, você DEVE apontá-los.
+  - PCM: ${pcm}
+  - Classificação: ${level}
   - ${gradeContext}
   - ${targetContext}
   ${foreignerContext}
   
-  ${historyContext}
-  
-  DADOS DA AVALIAÇÃO ATUAL:
-  - PCM (Palavras Corretas por Minuto): ${pcm}
-  - Classificação: ${level}
-  - Texto Base: "${originalText}"
-  - Transcrição da Leitura: "${transcription}"
-
+  DETALHES DO ALINHAMENTO (O que foi realmente lido vs original):
   ${alignmentContext}
 
-  SUA TAREFA DE ANÁLISE DETALHADA:
-  1. Comparação Fonológica e Lexical: Use os 'DETALHES DO ALINHAMENTO' e a 'Transcrição' para identificar:
-     - Substituições Fonológicas: Troca por sons parecidos (ex: p/b, t/d, f/v). Indica dificuldade de processamento fonológico.
-     - Diferenças Fonológicas (Estrangeiros): Identifique se as trocas sugerem que o aluno é estrangeiro (ex: crianças sul-americanas estudando no Brasil que trazem fonemas do espanhol para a leitura do português). Se detectar esse padrão, mencione explicitamente no diagnóstico.
-     - Substituições Visuais/Gráficas: Troca por letras visualmente similares (ex: m/n, p/q). Indica dificuldade de processamento visual.
-     - Substituições Lexicais/Semânticas: Troca por palavras de sentido similar (ex: "casa" por "lar"). Indica uso de contexto para compensar decodificação falha.
-     - Omissões ou Invenções: Pular palavras ou inventar finais. Indica falta de monitoramento ou tentativa de adivinhação.
-  
-  2. Avaliação de Prosódia e Ritmo:
-     - Analise a transcrição em busca de sinais de leitura silabada (excesso de pausas ou hesitações).
-     - Verifique se a pontuação foi respeitada (pausas nos lugares certos).
-  
-  3. Diagnóstico, Evolução e Intervenção:
-     - O diagnóstico deve ser técnico e preciso, focando na "Fase de Leitura" (Logográfica, Alfabética ou Ortográfica). 
-     - No diagnóstico, considere a fonologia diferente se o aluno demonstrar padrões de estrangeiro.
-     - Compare os dados atuais com o HISTÓRICO fornecido (se houver) para identificar se houve evolução, estagnação ou regressão.
-     - A intervenção deve ser uma técnica baseada em evidências (ex: Leitura Repetida, Leitura Compartilhada, Treino de Consciência Fonológica).
+  TEXTO ORIGINAL: "${originalText}"
+  TRANSCRICÃO BRUTA (WHISPER): "${transcription}"
 
-  4. Interpretação e Compreensão:
-     - Com base no Texto Base, crie 3 perguntas objetivas ou de resposta curta para definir se o aluno interpretou o que leu.
-  
-  REGRAS DE RESPOSTA (JSON):
-  Retorne APENAS um objeto JSON no seguinte formato:
+  INSTRUÇÕES PARA O DIAGNÓSTICO:
+  1. Análise de Acurácia: Identifique padrões nos erros (ex: troca de letras surdas/sonoras, omissão de finais de palavra, adivinhação pelo contexto).
+  2. Análise de Automaticidade: O PCM reflete uma leitura fluida ou esforçada? O aluno gasta muita energia na decodificação?
+  3. Prosódia e Ritmo: Com base na transcrição (pausas, hesitações), como está a entonação?
+  4. Comparação com Histórico: ${historyContext}
+
+  RESTRIÇÕES DE RIGOR CLÍNICO (MUITO IMPORTANTE):
+  - Se houver palavras em [colchetes] na Transcrição Marcada, a 'leitura_precisa' DEVE ser false.
+  - Se houver muitas substituições [orig](lido), você DEVE citar pelo menos 2 exemplos na justificativa.
+  - NÃO ignore os dados do alinhamento. Se o alinhamento diz que houve erro e você diz que foi perfeito, seu diagnóstico estará errado.
+  - Seja empático com o aluno, mas tecnicamente rigoroso com o professor.
+
+  REQUISITOS DO FORMATO DE RESPOSTA (JSON):
+  Você DEVE retornar EXATAMENTE este formato JSON:
   {
-    "diagnostico": "Máximo 3 linhas. Use termos técnicos. Mencione se houver padrões de fonologia estrangeira e cite a evolução em relação ao histórico se aplicável.",
-    "intervencao": "Máximo 2 linhas. Atividade prática baseada em evidências.",
+    "diagnostico": "Texto detalhado do diagnóstico clínico...",
+    "intervencao": "Sugestão de atividade prática específica...",
     "metricas_qualitativas": {
       "leitura_precisa": boolean,
-      "leitura_precisa_justificativa": "Análise técnica das trocas (ex: 'Houve 3 trocas fonológicas de p por b').",
+      "leitura_precisa_justificativa": "Cite exemplos específicos de trocas ou omissões vistos na Transcrição Marcada.",
       "leitura_silabada": boolean,
-      "leitura_silabada_justificativa": "Descrever se há falta de síntese fonêmica ou automatização.",
+      "leitura_silabada_justificativa": "Justifique com base na fluidez da transcrição.",
       "boa_entonacao": boolean,
-      "boa_entonacao_justificativa": "Análise da melodia e expressividade.",
+      "boa_entonacao_justificativa": "Baseado na pontuação respeitada ou ignorada.",
       "interpretacao": boolean,
-      "interpretacao_justificativa": "Probabilidade de compreensão baseada na fluidez.",
+      "interpretacao_justificativa": "Probabilidade baseada na acurácia lexical.",
       "pontuacao": boolean,
-      "pontuacao_justificativa": "Indicar se as pausas transcrevem a estrutura sintática."
+      "pontuacao_justificativa": "Se parou nos pontos e vírgulas."
     },
-    "padrao_de_erro_detectado": "Categoria principal: fonológico, estrangeiro, visual, lexical, omissão ou adivinhação.",
-    "nivel_de_confianca": number (1 a 100, baseado na clareza da transcrição vs texto base),
-    "analise_evolucao": "Breve comentário (1 linha) sobre o progresso do aluno comparado ao histórico.",
+    "padrao_de_erro_detectado": "fonológico, visual, lexical, omissão, adivinhação ou nenhum.",
+    "nivel_de_confianca": number (1-100),
+    "analise_evolucao": "1 linha comparando com histórico.",
     "perguntas_compreensao": [
-      { "pergunta": "string", "resposta_esperada": "string" },
-      { "pergunta": "string", "resposta_esperada": "string" },
-      { "pergunta": "string", "resposta_esperada": "string" }
+      { "pergunta": "...", "resposta_esperada": "..." },
+      { "pergunta": "...", "resposta_esperada": "..." },
+      { "pergunta": "...", "resposta_esperada": "..." }
     ]
   }
-
-  ATENÇÃO: Requer-se ALTA PRECISÃO. Se o PCM estiver muito abaixo da norma, 'leitura_precisa' DEVE ser false. Se houver muitas vírgulas ignoradas na transcrição, 'pontuacao' DEVE ser false. Use as justificativas para mostrar que você analisou detalhadamente os erros fonéticos.
   `;
 
   try {
+    console.log("PROMPT IA:", prompt);
     const response = await openai.chat.completions.create({
       model: "gpt-4o",
       messages: [
@@ -184,6 +182,7 @@ ${history.map((h, i) => `  ${i + 1}. Data: ${new Date(h.data?.seconds * 1000).to
     });
 
     const content = response.choices?.[0]?.message?.content;
+    console.log("RESPOSTA IA:", content);
 
     if (!content) {
       return getFallbackAnalysis();

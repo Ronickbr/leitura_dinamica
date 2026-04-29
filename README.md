@@ -1,4 +1,4 @@
-# 📖 Plataforma Leitura (v4.0.0)
+# 📖 Plataforma Leitura (v4.1.0)
 
 Plataforma de avaliação de fluência leitora com Next.js (App Router), persistência em Firebase e processamento de áudio via IA. O projeto foi refatorado para um monorepo Next.js unificado com API routes serverless.
 
@@ -42,6 +42,11 @@ O sistema permite que professores:
 - **[NOVO]** Suporte a **Alunos Estrangeiros**: Identificação de padrões fonológicos específicos (ex: crianças sul-americanas) para diagnósticos mais precisos;
 - **[NOVO]** Geração de **Perguntas de Compreensão**: A IA agora gera automaticamente 3 perguntas de interpretação baseadas no texto lido;
 - **[FIX]** Correção robusta na marcação de texto pedagógico (omissões/adições) usando classes CSS para evitar conflitos de estilo.
+- **v4.1.0**: **Fidelidade Visual e Precisão Pedagógica**. Melhoria no motor de alinhamento e renderização de transcrições.
+    - **Fidelidade de Transcrição**: Preservação total da pontuação e capitalização do texto original nas palavras acertadas.
+    - **Visualização de Substituições**: Novo formato `[original](lido)` com estilos CSS dedicados, permitindo que o professor veja exatamente qual palavra foi trocada por qual.
+    - **Prompt IA Otimizado**: Aprimoramento do diagnóstico clínico para identificar padrões fonológicos, visuais e de estrangeiros com maior rigor.
+    - **PCM Real**: Garantia de uso da duração exata do áudio no cálculo de fluência.
 - **v4.0.0**: **Revolução na UX: De Modais para Páginas Dedicadas**. Refatoração completa do fluxo de avaliação e detalhes de alunos.
     - **Nova Jornada de Avaliação**: O fluxo agora é dividido em páginas sequenciais (Leitura -> Revisão -> Sucesso), permitindo foco total em cada etapa.
     - **Página de Revisão**: Interface profissional para ajuste de métricas (PCM, Precisão, Erros) e conferência de áudio antes de salvar.
@@ -294,16 +299,17 @@ Documentação detalhada:
 
 ## Migração Realizada
 
-Esta versão (v3.17.0) trouxe uma refatoração significativa:
+Esta versão (v4.1.0) consolidou a nova arquitetura de fluxo de avaliação:
 
-- **Remoção**: Pastas legadas e arquivos de configuração de migrações anteriores.
-- **🎯 Funcionalidades Finais (Fase 1, 2 e Robustez Acadêmica)**
-- **Painel do Aluno**: Dashboard individual com gráfico de progresso e histórico de intervenções pedágógicas da IA.
-- **Contexto SAEB/ANA**: Comparação automática com normas nacionais brasileiras de fluência leitora por série.
-- **Metas Personalizadas**: Definição de alvos específicos de PCM por estudante.
-- **Segurança de Infra**: Headers HTTP restritivos, Prevenção de XSS e Auditoria de chamadas de IA.
-- **Relatório PDF**: Exportação visual profissional dos diagnósticos diretamente do navegador.
-alizada para fluxo de E-mail e Senha ao invés do login com o Google.
+- **v4.x**: Transição completa para fluxo de avaliação multi-página (`new` -> `[id]` -> `review` -> `success`), garantindo foco e precisão em cada etapa.
+- **Limpeza**: Remoção definitiva de pastas legadas (`frontend/`), artefatos temporários (`scratch/`) e rotas de teste (`mobile-preview/`).
+- **🎯 Funcionalidades Finais (Fase 1, 2 e Robustez Acadêmica)**:
+    - **Painel do Aluno**: Dashboard individual com gráfico de progresso e histórico de intervenções pedagógicas da IA.
+    - **Contexto SAEB/ANA**: Comparação automática com normas nacionais brasileiras de fluência leitora por série.
+    - **Metas Personalizadas**: Definição de alvos específicos de PCM por estudante.
+    - **Segurança de Infra**: Headers HTTP restritivos, Prevenção de XSS, Sanitização de inputs (Zod) e Auditoria de chamadas de IA.
+    - **Relatório PDF**: Exportação visual profissional dos diagnósticos diretamente do navegador.
+    - **Autenticação**: Fluxo seguro de E-mail e Senha.
 
 ## Troubleshooting
 
