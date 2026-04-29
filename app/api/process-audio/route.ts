@@ -22,6 +22,7 @@ const uploadSchema = z.object({
   history: z.string().optional().transform(v => v ? JSON.parse(v) : undefined),
   duration: z.string().optional().transform(v => v ? parseFloat(v) : undefined),
   isForeigner: z.string().optional().transform(v => v === "true"),
+  isGlassesUser: z.string().optional().transform(v => v === "true"),
 });
 
 export async function POST(req: NextRequest) {
@@ -43,6 +44,7 @@ export async function POST(req: NextRequest) {
     const history = formData.get("history");
     const duration = formData.get("duration");
     const isForeigner = formData.get("is_foreigner");
+    const isGlassesUser = formData.get("is_glasses_user");
 
     // Validação com Zod
     const validation = uploadSchema.safeParse({
@@ -52,7 +54,8 @@ export async function POST(req: NextRequest) {
       targetPCM: targetPCM || undefined,
       history: history || undefined,
       duration: duration || undefined,
-      isForeigner: isForeigner || undefined
+      isForeigner: isForeigner || undefined,
+      isGlassesUser: isGlassesUser || undefined
     });
 
     if (!validation.success) {
@@ -73,7 +76,8 @@ export async function POST(req: NextRequest) {
       studentGrade?: string,
       targetPCM?: number,
       history?: any[],
-      duration?: number
+      duration?: number,
+      isGlassesUser?: boolean
     };
 
     auditInfo.filename = validatedFile.name;
@@ -97,7 +101,8 @@ export async function POST(req: NextRequest) {
       targetPCM: validatedTarget,
       history: validatedHistory,
       duration: validatedDuration,
-      isForeigner: validation.data.isForeigner
+      isForeigner: validation.data.isForeigner,
+      isGlassesUser: validation.data.isGlassesUser
     });
 
     console.log(JSON.stringify({

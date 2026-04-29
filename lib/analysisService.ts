@@ -67,6 +67,7 @@ function generateMarkedTranscription(alignment: any[]): string {
     if (d.tipo === 'substitution') return `[${original}](${lido})`;
     if (d.tipo === 'deletion') return `[${original}]`;
     if (d.tipo === 'insertion') return `(${lido})`;
+    if (d.tipo === 'unread') return '';
     return '';
   }).join(' ').replace(/\s+/g, ' ').trim();
 }
@@ -81,13 +82,14 @@ async function getPedagogicalDiagnosis(
   targetPCM?: number,
   history?: any[],
   alignmentDetails?: any[],
-  isForeigner?: boolean
+  isForeigner?: boolean,
+  isGlassesUser?: boolean
 ) {
   const gradeNorm = studentGrade ? getNormaNacional(studentGrade) : 80;
   const gradeContext = studentGrade ? `O aluno é do ${studentGrade}. A norma nacional esperada para esta série é de ${gradeNorm} PCM.` : "O aluno é do 3º ano (contexto padrão).";
   const targetContext = targetPCM ? `A meta individual definida para este aluno é de ${targetPCM} PCM.` : "";
   const foreignerContext = isForeigner ? "O aluno é estrangeiro (ex: falante de espanhol estudando no Brasil), considere que padrões fonológicos específicos podem ocorrer devido ao sotaque ou interferência da língua nativa." : "";
-
+  const glassesContext = isGlassesUser ? "O aluno é usuário de óculos. Considere que dificuldades visuais (ex: pular linhas, trocar letras similares visualmente) podem estar relacionadas à acomodação visual ou necessidade de ajuste das lentes, além de fatores puramente fonológicos." : "";
 
   const historyContext = history && history.length > 0
     ? `HISTÓRICO DE EVOLUÇÃO (Últimas ${history.length} avaliações):
@@ -120,6 +122,7 @@ ${history.map((h, i) => `  ${i + 1}. Data: ${new Date(h.data?.seconds * 1000).to
   - ${gradeContext}
   - ${targetContext}
   ${foreignerContext}
+  ${glassesContext}
   
   DETALHES DO ALINHAMENTO (O que foi realmente lido vs original):
   ${alignmentContext}
@@ -204,6 +207,7 @@ interface ProcessAudioParams {
   history?: any[];
   duration?: number;
   isForeigner?: boolean;
+  isGlassesUser?: boolean;
 }
 
 interface ProcessAudioResult {
@@ -248,6 +252,7 @@ export async function processReadingAudio({
   history,
   duration = 60,
   isForeigner,
+  isGlassesUser,
 }: ProcessAudioParams): Promise<ProcessAudioResult> {
   const sanitizedOriginalText = sanitizeInput(originalText);
 
@@ -289,7 +294,8 @@ export async function processReadingAudio({
     targetPCM,
     history,
     metrics.detalhes,
-    isForeigner
+    isForeigner,
+    isGlassesUser
   );
 
   console.log("Diagnóstico OpenAI finalizado");

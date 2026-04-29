@@ -9,7 +9,7 @@ const cleanText = (text: string) => {
 };
 
 export interface DetalheAlinhamento {
-    tipo: 'match' | 'substitution' | 'deletion' | 'insertion';
+    tipo: 'match' | 'substitution' | 'deletion' | 'insertion' | 'unread';
     original: string | null;         // Palavra limpa para lógica
     originalTokens?: string | null;  // Palavra com pontuação original
     lido: string | null;             // Palavra limpa para lógica
@@ -102,12 +102,22 @@ export const calculatePCM = (originalText: string, transcribedText: string): Ali
         }
     }
 
+    let unreadCount = 0;
+    for (let k = detalhes.length - 1; k >= 0; k--) {
+        if (detalhes[k].tipo === 'deletion') {
+            detalhes[k].tipo = 'unread';
+            unreadCount++;
+        } else {
+            break;
+        }
+    }
+
     return {
         corretas: correctCount,
         total_original: n,
         total_lido: m,
-        erros: n - correctCount,
-        precisao: n > 0 ? Number(((correctCount / n) * 100).toFixed(2)) : 0,
+        erros: n - correctCount - unreadCount,
+        precisao: (n - unreadCount) > 0 ? Number(((correctCount / (n - unreadCount)) * 100).toFixed(2)) : 0,
         detalhes
     };
 };

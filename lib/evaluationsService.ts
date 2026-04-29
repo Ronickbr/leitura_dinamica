@@ -54,7 +54,7 @@ export interface Avaliacao {
   professorId: string;
 }
 
-export const processAudio = async (audioBlob: Blob, originalText: string, studentGrade?: string, targetPCM?: number, history?: any[], duration?: number, isForeigner?: boolean) => {
+export const processAudio = async (audioBlob: Blob, originalText: string, studentGrade?: string, targetPCM?: number, history?: any[], duration?: number, isForeigner?: boolean, isGlassesUser?: boolean) => {
   const user = cachedAuth?.currentUser;
   const token = user ? await user.getIdToken() : null;
 
@@ -70,6 +70,7 @@ export const processAudio = async (audioBlob: Blob, originalText: string, studen
   if (history) formData.append('history', JSON.stringify(history));
   if (duration) formData.append('duration', duration.toString());
   if (isForeigner) formData.append('is_foreigner', 'true');
+  if (isGlassesUser) formData.append('is_glasses_user', 'true');
 
   const response = await fetch('/api/process-audio', {
     method: 'POST',

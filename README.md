@@ -1,4 +1,4 @@
-# 📖 Plataforma Leitura (v4.1.0)
+# 📖 Plataforma Leitura (v4.1.2)
 
 Plataforma de avaliação de fluência leitora com Next.js (App Router), persistência em Firebase e processamento de áudio via IA. O projeto foi refatorado para um monorepo Next.js unificado com API routes serverless.
 
@@ -42,6 +42,7 @@ O sistema permite que professores:
 - **[NOVO]** Suporte a **Alunos Estrangeiros**: Identificação de padrões fonológicos específicos (ex: crianças sul-americanas) para diagnósticos mais precisos;
 - **[NOVO]** Geração de **Perguntas de Compreensão**: A IA agora gera automaticamente 3 perguntas de interpretação baseadas no texto lido;
 - **[FIX]** Correção robusta na marcação de texto pedagógico (omissões/adições) usando classes CSS para evitar conflitos de estilo.
+- **v4.1.2**: **Correção na Contagem de Omissões**. Ajustado o algoritmo de PCM para não classificar palavras não lidas no final do teste de leitura como erros em todos os casos (devido a uma interrupção por tempo esgotado), refletindo precisamente a fluência até o ponto de parada.
 - **v4.1.0**: **Fidelidade Visual e Precisão Pedagógica**. Melhoria no motor de alinhamento e renderização de transcrições.
     - **Fidelidade de Transcrição**: Preservação total da pontuação e capitalização do texto original nas palavras acertadas.
     - **Visualização de Substituições**: Novo formato `[original](lido)` com estilos CSS dedicados, permitindo que o professor veja exatamente qual palavra foi trocada por qual.

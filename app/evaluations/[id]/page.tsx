@@ -32,6 +32,7 @@ export default function ReadingPage() {
   const [historico, setHistorico] = useState<Avaliacao[]>([]);
   const [recordingDuration, setRecordingDuration] = useState(0);
   const [isForeigner, setIsForeigner] = useState(false);
+  const [isGlassesUser, setIsGlassesUser] = useState(false);
   const recordingStartTimeRef = useRef<number | null>(null);
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -162,7 +163,8 @@ export default function ReadingPage() {
         aluno?.metaPCM,
         historico.slice(0, 3),
         recordingDuration,
-        isForeigner
+        isForeigner,
+        isGlassesUser
       );
 
       // Salva dados temporários para a página de revisão
@@ -304,6 +306,18 @@ export default function ReadingPage() {
               />
               <label htmlFor="is-foreigner" style={{ fontSize: "0.85rem", fontWeight: 700, cursor: "pointer", color: "var(--primary)" }}>
                 🌎 Aluno Estrangeiro?
+              </label>
+            </div>
+            <div className="glass-panel" style={{ padding: "0.75rem", background: "rgba(99, 102, 241, 0.05)", display: "flex", alignItems: "center", gap: "0.75rem", marginTop: "0.5rem" }}>
+              <input
+                type="checkbox"
+                id="is-glasses-user"
+                checked={isGlassesUser}
+                onChange={(e) => setIsGlassesUser(e.target.checked)}
+                style={{ width: "1.2rem", height: "1.2rem", cursor: "pointer" }}
+              />
+              <label htmlFor="is-glasses-user" style={{ fontSize: "0.85rem", fontWeight: 700, cursor: "pointer", color: "var(--primary)" }}>
+                👓 Usuário de Óculos?
               </label>
             </div>
       </div>
