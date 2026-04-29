@@ -84,7 +84,6 @@ export default function StudentsPage() {
   const [error, setError] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [viewingAluno, setViewingAluno] = useState<Aluno | null>(null);
   const [formData, setFormData] = useState({ nome: '', turma: '', serie: '', turno: '', diagnostico: '', observacoes: '', anoLetivo: new Date().getFullYear().toString(), metaPCM: 0 });
   const [saving, setSaving] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -113,6 +112,31 @@ export default function StudentsPage() {
       loadAlunos();
     }
   }, [firebaseInitialized, auth]);
+
+  // Lógica para abrir edição via query param
+  useEffect(() => {
+    const searchParams = new URLSearchParams(window.location.search);
+    const editId = searchParams.get('edit');
+    if (editId && alunos.length > 0) {
+      const alunoParaEditar = alunos.find(a => a.id === editId);
+      if (alunoParaEditar) {
+        setFormData({ 
+          nome: alunoParaEditar.nome, 
+          turma: alunoParaEditar.turma, 
+          serie: alunoParaEditar.serie, 
+          turno: alunoParaEditar.turno || '', 
+          diagnostico: alunoParaEditar.diagnostico || '', 
+          observacoes: alunoParaEditar.observacoes || '', 
+          anoLetivo: alunoParaEditar.anoLetivo, 
+          metaPCM: alunoParaEditar.metaPCM || 0 
+        });
+        setEditingId(alunoParaEditar.id);
+        setShowForm(true);
+        // Limpar a URL sem recarregar a página
+        window.history.replaceState({}, '', window.location.pathname);
+      }
+    }
+  }, [alunos]);
 
   async function loadAlunos() {
     setLoading(true);
@@ -496,7 +520,7 @@ export default function StudentsPage() {
                       )}
                     </div>
                     <div className="students-grid-cell students-grid-cell-actions">
-                      <button onClick={() => setViewingAluno(aluno)} className="btn-icon" title="Visualizar">👁️</button>
+                      <button onClick={() => router.push(`/students/${aluno.id}`)} className="btn-icon" title="Visualizar">👁️</button>
                       <button onClick={() => { setFormData({ nome: aluno.nome, turma: aluno.turma, serie: aluno.serie, turno: aluno.turno || '', diagnostico: aluno.diagnostico || '', observacoes: aluno.observacoes || '', anoLetivo: aluno.anoLetivo, metaPCM: aluno.metaPCM || 0 }); setEditingId(aluno.id); setShowForm(true); window.scrollTo(0, 0); }} className="btn-icon" title="Editar">✏️</button>
                       <button onClick={() => handleDelete(aluno.id)} className="btn-icon" title="Excluir">🗑️</button>
                     </div>
@@ -548,7 +572,7 @@ export default function StudentsPage() {
                     
                     <div style={{ display: 'flex', gap: '0.5rem', flexShrink: 0 }}>
                       <button 
-                        onClick={(e) => { e.stopPropagation(); setViewingAluno(aluno); }} 
+                        onClick={(e) => { e.stopPropagation(); router.push(`/students/${aluno.id}`); }} 
                         className="btn-outline-round" 
                         style={{ width: '38px', height: '38px', fontSize: '1.1rem' }} 
                         title="Visualizar"
@@ -609,172 +633,6 @@ export default function StudentsPage() {
         </div>
       )}
 
-      {/* Modal de Visualização (Sheet Premium) */}
-      {viewingAluno && (
-        <div className="glass-modal animate-in" onClick={() => setViewingAluno(null)}>
-          <div 
-            className="glass-card animate-float-in" 
-            style={{ maxWidth: "500px", width: "95%", padding: 0, overflow: 'hidden' }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Header do Modal */}
-            <div style={{ 
-              padding: "1.5rem 2rem", 
-              borderBottom: "1px solid var(--glass-border-light)", 
-              display: "flex", 
-              justifyContent: "space-between", 
-              alignItems: "center",
-              background: "rgba(255, 255, 255, 0.02)"
-            }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-                <div style={{ 
-                  width: "40px", 
-                  height: "40px", 
-                  borderRadius: "12px", 
-                  background: "var(--primary-soft)", 
-                  display: "flex", 
-                  alignItems: "center", 
-                  justifyContent: "center",
-                  color: "var(--primary)"
-                }}>
-                  <UserIcon />
-                </div>
-                <div>
-                  <h2 style={{ margin: 0, fontSize: "1.25rem", fontWeight: 800, color: "var(--text-primary)" }}>
-                    Detalhes do Aluno
-                  </h2>
-                  <p style={{ margin: 0, fontSize: "0.8rem", color: "var(--text-tertiary)" }}>
-                    Informações cadastrais e acadêmicas
-                  </p>
-                </div>
-              </div>
-              <button 
-                onClick={() => setViewingAluno(null)} 
-                className="btn-icon" 
-                style={{ width: "32px", height: "32px", borderRadius: "8px" }}
-              >
-                <CloseIcon />
-              </button>
-            </div>
-
-            {/* Conteúdo do Modal */}
-            <div style={{ padding: "2rem" }}>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "1.5rem" }}>
-                
-                {/* Nome do Aluno */}
-                <div style={{ display: "flex", gap: "1rem" }}>
-                  <div style={{ color: "var(--primary)", marginTop: "2px" }}><UserIcon /></div>
-                  <div style={{ flex: 1 }}>
-                    <p className="mobile-data-label" style={{ marginBottom: "0.25rem" }}>NOME COMPLETO</p>
-                    <p style={{ fontSize: "1.1rem", fontWeight: 700, color: "var(--text-primary)", margin: 0 }}>
-                      {anonymizeName(viewingAluno.id, viewingAluno.nome)}
-                    </p>
-                  </div>
-                </div>
-
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.5rem" }}>
-                  {/* Série e Turma */}
-                  <div style={{ display: "flex", gap: "1rem" }}>
-                    <div style={{ color: "var(--primary)", marginTop: "2px" }}><BookIcon /></div>
-                    <div>
-                      <p className="mobile-data-label" style={{ marginBottom: "0.25rem" }}>SÉRIE / TURMA</p>
-                      <p style={{ fontSize: "1rem", fontWeight: 600, color: "var(--text-primary)", margin: 0 }}>
-                        {viewingAluno.serie} - {viewingAluno.turma}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Turno */}
-                  <div style={{ display: "flex", gap: "1rem" }}>
-                    <div style={{ color: "var(--primary)", marginTop: "2px" }}><ClockIcon /></div>
-                    <div>
-                      <p className="mobile-data-label" style={{ marginBottom: "0.25rem" }}>TURNO</p>
-                      <p style={{ fontSize: "1rem", fontWeight: 600, color: "var(--text-primary)", margin: 0 }}>
-                        {viewingAluno.turno || 'Não informado'}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.5rem" }}>
-                  {/* Meta PCM */}
-                  <div style={{ display: "flex", gap: "1rem" }}>
-                    <div style={{ color: "var(--primary)", marginTop: "2px" }}><TargetIcon /></div>
-                    <div>
-                      <p className="mobile-data-label" style={{ marginBottom: "0.25rem" }}>META PCM</p>
-                      <p style={{ fontSize: "1rem", fontWeight: 800, color: "var(--primary)", margin: 0 }}>
-                        {viewingAluno.metaPCM || '---'}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Diagnóstico */}
-                  <div style={{ display: "flex", gap: "1rem" }}>
-                    <div style={{ color: "var(--primary)", marginTop: "2px" }}><InfoIcon /></div>
-                    <div>
-                      <p className="mobile-data-label" style={{ marginBottom: "0.25rem" }}>DIAGNÓSTICO</p>
-                      <span 
-                        className="diagnosis-badge"
-                        style={{ 
-                          background: getDiagnosisStyle(viewingAluno.diagnostico).bg,
-                          color: getDiagnosisStyle(viewingAluno.diagnostico).text,
-                          borderColor: "transparent",
-                          fontSize: "0.8rem",
-                          padding: "0.2rem 0.6rem",
-                          margin: 0
-                        }}
-                      >
-                        {viewingAluno.diagnostico ? anonymizeText(viewingAluno.diagnostico) : 'Sem diagnóstico'}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Observações */}
-                {viewingAluno.observacoes && (
-                  <div style={{ 
-                    marginTop: "0.5rem", 
-                    padding: "1rem", 
-                    background: "rgba(0,0,0,0.02)", 
-                    borderRadius: "12px", 
-                    border: "1px solid var(--glass-border-light)" 
-                  }}>
-                    <p className="mobile-data-label" style={{ marginBottom: "0.5rem" }}>OBSERVAÇÕES</p>
-                    <p style={{ fontSize: "0.9rem", color: "var(--text-secondary)", lineHeight: 1.5, margin: 0 }}>
-                      {anonymizeText(viewingAluno.observacoes)}
-                    </p>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Footer com Ações */}
-            <div style={{ 
-              padding: "1.5rem 2rem", 
-              background: "rgba(0,0,0,0.01)", 
-              borderTop: "1px solid var(--glass-border-light)",
-              display: "flex",
-              flexDirection: "column",
-              gap: "0.75rem"
-            }}>
-              <button
-                onClick={() => router.push(`/students/${viewingAluno.id}/performance`)}
-                className="btn-primary"
-                style={{ width: "100%", padding: "0.85rem", gap: "0.5rem" }}
-              >
-                <span>📈</span> Ver Painel de Evolução Completo
-              </button>
-              <button 
-                onClick={() => setViewingAluno(null)} 
-                className="btn-outline" 
-                style={{ width: "100%", padding: "0.85rem" }}
-              >
-                Fechar
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

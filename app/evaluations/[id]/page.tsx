@@ -30,8 +30,6 @@ export default function ReadingPage() {
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [isFinished, setIsFinished] = useState(false);
   const [historico, setHistorico] = useState<Avaliacao[]>([]);
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [savedEvaluationId, setSavedEvaluationId] = useState<string | null>(null);
   const [recordingDuration, setRecordingDuration] = useState(0);
   const [isForeigner, setIsForeigner] = useState(false);
   const recordingStartTimeRef = useRef<number | null>(null);
@@ -82,8 +80,6 @@ export default function ReadingPage() {
     fetchData();
   }, [alunoId, firebaseInitialized]);
 
-  const [tempResult, setTempResult] = useState<any>(null);
-  const [isReviewing, setIsReviewing] = useState(false);
   const qualitativeMetrics = [
     { key: 'leitura_precisa', label: 'Leitura Precisa', icon: '🎯' },
     { key: 'leitura_silabada', label: 'Leitura Silabada', icon: '🐢' },
@@ -164,12 +160,21 @@ export default function ReadingPage() {
         texto.conteudo,
         aluno?.serie,
         aluno?.metaPCM,
-        historico.slice(0, 3), // Enviamos as últimas 3 avaliações para contexto
+        historico.slice(0, 3),
         recordingDuration,
         isForeigner
       );
-      setTempResult(result);
-      setIsReviewing(true);
+
+      // Salva dados temporários para a página de revisão
+      sessionStorage.setItem('temp_evaluation_result', JSON.stringify({
+        ...result,
+        audioUrl,
+        textoId: texto.id,
+        textoTitulo: texto.titulo,
+        textoConteudo: texto.conteudo
+      }));
+
+      router.push(`/evaluations/${alunoId}/review`);
     } catch (err: unknown) {
       console.error('Erro ao processar leitura:', err);
       alert('Erro ao processar leitura. Tente novamente.');
@@ -178,46 +183,7 @@ export default function ReadingPage() {
     }
   };
 
-  const confirmAndSave = async () => {
-    if (!tempResult || !texto) return;
-    setProcessing(true);
-    try {
-      const evaluationId = await saveAvaliacao({
-        alunoId: alunoId,
-        textoId: texto.id,
-        pcm: tempResult.pcm,
-        precisao: tempResult.metrics.precisao,
-        erros: tempResult.metrics.erros,
-        transcricao: tempResult.transcription,
-        transcricaoMarcada: tempResult.analysis.transcricao_marcada,
-        diagnosticoIA: tempResult.analysis.diagnostico,
-        intervencaoIA: tempResult.analysis.intervencao,
-        metricasQualitativas: tempResult.analysis.metricas_qualitativas,
-        perguntasCompreensao: tempResult.analysis.perguntas_compreensao
-      });
-      setSavedEvaluationId(evaluationId);
-      setShowSuccessModal(true);
-      setIsReviewing(false);
-    } catch (err) {
-      console.error('Erro ao salvar:', err);
-      alert('Erro ao salvar avaliação.');
-    } finally {
-      setProcessing(false);
-    }
-  };
 
-  const toggleMetric = (key: string) => {
-    setTempResult((prev: any) => ({
-      ...prev,
-      analysis: {
-        ...prev.analysis,
-        metricas_qualitativas: {
-          ...prev.analysis.metricas_qualitativas,
-          [key]: !prev.analysis.metricas_qualitativas[key]
-        }
-      }
-    }));
-  };
 
 
   if (loading) return <div className="animate-in" style={{ textAlign: 'center', padding: '5rem', color: 'var(--text-muted)' }}>Preparando...</div>;
@@ -342,156 +308,6 @@ export default function ReadingPage() {
             </div>
       </div>
     </div>
-
-    {isReviewing && (
-        <div className="glass-modal">
-          <div className="glass-card animate-in evaluation-review-sheet" style={{ maxWidth: "600px", width: "100%", boxShadow: "var(--glass-shadow)" }}>
-            <h2 style={{ marginBottom: "1.5rem", display: "flex", alignItems: "center", gap: "0.75rem" }}>
-              <span style={{ fontSize: "1.5rem" }}>📝</span> Revisar Avaliação
-            </h2>
-
-            <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem", marginBottom: "2rem" }}>
-              <div>
-                <p className="mobile-data-label" style={{ marginBottom: "0.5rem" }}>RESULTADO QUANTITATIVO</p>
-                <div className="evaluation-results-grid glass-panel">
-                  <div>
-                    <div style={{ fontSize: "1.75rem", fontWeight: 900, color: "var(--primary)" }}>{tempResult.pcm}</div>
-                    <div className="mobile-data-label">PCM</div>
-                  </div>
-                  <div>
-                    <div style={{ fontSize: "1.75rem", fontWeight: 900, color: "var(--success)" }}>{tempResult.metrics.precisao}%</div>
-                    <div className="mobile-data-label">PRECISÃO</div>
-                  </div>
-                  <div>
-                    <div style={{ fontSize: "1.75rem", fontWeight: 900, color: "var(--error)" }}>{tempResult.metrics.erros}</div>
-                    <div className="mobile-data-label">ERROS</div>
-                  </div>
-                </div>
-              </div>
-
-              {tempResult.analysis.analise_evolucao && (
-                <div className="glass-panel" style={{ background: "rgba(99, 102, 241, 0.1)", padding: "1.25rem", borderColor: "var(--primary)" }}>
-                  <p className="mobile-data-label" style={{ color: "var(--primary)", marginBottom: "0.5rem" }}>📈 ANÁLISE DE EVOLUÇÃO</p>
-                  <p style={{ fontSize: "0.95rem", lineHeight: 1.6 }}>{tempResult.analysis.analise_evolucao}</p>
-                </div>
-              )}
-
-              {tempResult.analysis.transcricao_marcada && (
-                <div>
-                  <p className="mobile-data-label" style={{ marginBottom: "0.5rem" }}>TEXTO MARCADO (PREVISÃO)</p>
-                  <div className="evaluation-transcription-box" style={{ background: "rgba(0,0,0,0.02)" }}>
-                    <p
-                      style={{ fontSize: "0.95rem", lineHeight: 1.6 }}
-                      dangerouslySetInnerHTML={{
-                        __html: (tempResult.analysis.transcricao_marcada || "")
-                          .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                          .replace(/\[(.*?)\]/g, '<span class="marking-omission">[$1]</span>')
-                          .replace(/\((.*?)\)/g, '<span class="marking-addition">($1)</span>')
-                      }}
-                    />
-                  </div>
-                </div>
-              )}
-
-              {tempResult.analysis.perguntas_compreensao && tempResult.analysis.perguntas_compreensao.length > 0 && (
-                <div>
-                  <p className="mobile-data-label" style={{ marginBottom: "1rem" }}>💡 PERGUNTAS DE COMPREENSÃO (IA)</p>
-                  <div className="glass-panel" style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-                    {tempResult.analysis.perguntas_compreensao.map((p: any, idx: number) => (
-                      <div key={idx} style={{ padding: "0.75rem", borderLeft: "3px solid var(--primary)", background: "rgba(0,0,0,0.01)" }}>
-                        <p style={{ fontWeight: 700, fontSize: "0.9rem", marginBottom: "0.4rem" }}>{p.pergunta}</p>
-                        <p style={{ fontSize: "0.85rem", color: "var(--text-muted)", fontStyle: "italic" }}>
-                          Resposta esperada: {p.resposta_esperada}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              <div>
-                <p className="mobile-data-label" style={{ marginBottom: "1rem" }}>MÉTRICAS QUALITATIVAS (TOQUE PARA ALTERAR)</p>
-                <div className="evaluation-metrics-list">
-                  {qualitativeMetrics.map((m) => (
-                    <div
-                      key={m.key}
-                      onClick={() => toggleMetric(m.key)}
-                      className={`evaluation-metric-card ${tempResult.analysis.metricas_qualitativas[m.key] ? 'selected' : ''}`}
-                    >
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.4rem" }}>
-                        <span style={{ fontWeight: 800, fontSize: "1rem" }}>{m.icon} {m.label}</span>
-                        <span className="mobile-data-label" style={{ color: tempResult.analysis.metricas_qualitativas[m.key] ? "var(--success)" : undefined }}>
-                          {tempResult.analysis.metricas_qualitativas[m.key] ? "SIM" : "NÃO"}
-                        </span>
-                      </div>
-                      <p style={{ fontSize: "0.85rem", color: "var(--text-muted)", fontStyle: "italic", lineHeight: 1.5 }}>
-                        {tempResult.analysis.metricas_qualitativas[`${m.key}_justificativa`]}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            <div className="evaluation-review-actions">
-              <button onClick={() => setIsReviewing(false)} className="btn-outline" style={{ flex: 1 }}>Voltar</button>
-              <button onClick={confirmAndSave} disabled={processing} className="btn-primary" style={{ flex: 2, background: "var(--success)" }}>
-                {processing ? "Salvando..." : "Salvar Avaliação"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {showSuccessModal && (
-        <div className="glass-modal animate-in" style={{ zIndex: 3000 }}>
-          <div className="glass-card" style={{ maxWidth: "480px", width: "100%", textAlign: "center", padding: "2.5rem" }}>
-            <div style={{ fontSize: "4rem", marginBottom: "1.5rem" }}>🎉</div>
-            <h2 className="page-title" style={{ fontSize: "1.75rem", marginBottom: "0.5rem" }}>Avaliação Concluída!</h2>
-            <p className="page-subtitle" style={{ marginBottom: "2rem" }}>
-              Os dados de <strong>{aluno?.nome}</strong> foram processados e salvos com sucesso.
-            </p>
-
-            <div className="glass-panel" style={{ marginBottom: "2rem", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
-              <div>
-                <div className="mobile-data-label">PCM</div>
-                <div style={{ fontSize: "2rem", fontWeight: 900, color: "var(--primary)" }}>{tempResult?.pcm}</div>
-              </div>
-              <div>
-                <div className="mobile-data-label">Precisão</div>
-                <div style={{ fontSize: "2rem", fontWeight: 900, color: "var(--success)" }}>{tempResult?.metrics.precisao}%</div>
-              </div>
-              <div style={{ gridColumn: "span 2", paddingTop: "0.5rem", borderTop: "1px solid var(--glass-border-light)", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
-                <div>
-                  <div className="mobile-data-label">Erros</div>
-                  <div style={{ fontSize: "1.25rem", fontWeight: 900, color: "var(--error)" }}>{tempResult?.metrics.erros}</div>
-                </div>
-                <div>
-                  <div className="mobile-data-label">Nível de Desempenho</div>
-                  <div style={{ fontWeight: 700, color: "var(--text-primary)", fontSize: "0.9rem" }}>{getPerformanceLevel(tempResult?.pcm || 0)}</div>
-                </div>
-              </div>
-            </div>
-
-            <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-              <button
-                onClick={() => router.push(`/history/${savedEvaluationId}`)}
-                className="btn-primary"
-                style={{ width: "100%" }}
-              >
-                📊 Ver Relatório Completo
-              </button>
-              <button
-                onClick={() => router.push('/evaluations/new')}
-                className="btn-outline"
-                style={{ width: "100%" }}
-              >
-                🔄 Nova Avaliação
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
 
   );

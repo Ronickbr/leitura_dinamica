@@ -1,4 +1,4 @@
-# 📖 Plataforma Leitura (v3.17.0)
+# 📖 Plataforma Leitura (v4.0.0)
 
 Plataforma de avaliação de fluência leitora com Next.js (App Router), persistência em Firebase e processamento de áudio via IA. O projeto foi refatorado para um monorepo Next.js unificado com API routes serverless.
 
@@ -42,6 +42,12 @@ O sistema permite que professores:
 - **[NOVO]** Suporte a **Alunos Estrangeiros**: Identificação de padrões fonológicos específicos (ex: crianças sul-americanas) para diagnósticos mais precisos;
 - **[NOVO]** Geração de **Perguntas de Compreensão**: A IA agora gera automaticamente 3 perguntas de interpretação baseadas no texto lido;
 - **[FIX]** Correção robusta na marcação de texto pedagógico (omissões/adições) usando classes CSS para evitar conflitos de estilo.
+- **v4.0.0**: **Revolução na UX: De Modais para Páginas Dedicadas**. Refatoração completa do fluxo de avaliação e detalhes de alunos.
+    - **Nova Jornada de Avaliação**: O fluxo agora é dividido em páginas sequenciais (Leitura -> Revisão -> Sucesso), permitindo foco total em cada etapa.
+    - **Página de Revisão**: Interface profissional para ajuste de métricas (PCM, Precisão, Erros) e conferência de áudio antes de salvar.
+    - **Página de Sucesso**: Feedback visual premium com resumo de desempenho e atalhos rápidos.
+    - **Página de Detalhes do Aluno**: Substituição do modal por uma página full-screen glassmorphism com visão 360º do estudante.
+    - **Limpeza de Projeto**: Remoção de artefatos legados (`frontend/`) e otimização da estrutura Next.js.
 - **v3.17.0**: **Refatoração Premium do Modal de Alunos**. Implementação de um novo design glassmorphism para o modal de detalhes do estudante, com ícones SVG personalizados, estrutura de grade organizada para métricas e efeitos de desfoque aprimorados (12px), elevando a estética para o padrão Antigravity.
 - **v3.16.3**: **Alinhamento de Diagnóstico e Ações em Linha Única (Mobile)**. Otimização adicional do card de alunos para dispositivos móveis, movendo o diagnóstico e os botões de ação para a mesma linha horizontal e utilizando ícones circulares, reduzindo o scroll vertical.
 - **v3.16.2**: **Otimização da Visualização Mobile de Alunos**. Remoção de informações redundantes nos cards de alunos em dispositivos móveis e simplificação das ações (Visualizar, Editar, Excluir) em uma única linha com ícones.
@@ -290,7 +296,7 @@ Documentação detalhada:
 
 Esta versão (v3.17.0) trouxe uma refatoração significativa:
 
-- **Remoção**: pastas `frontend/` (Vite)
+- **Remoção**: Pastas legadas e arquivos de configuração de migrações anteriores.
 - **🎯 Funcionalidades Finais (Fase 1, 2 e Robustez Acadêmica)**
 - **Painel do Aluno**: Dashboard individual com gráfico de progresso e histórico de intervenções pedágógicas da IA.
 - **Contexto SAEB/ANA**: Comparação automática com normas nacionais brasileiras de fluência leitora por série.
