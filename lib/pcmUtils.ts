@@ -59,9 +59,31 @@ export const calculatePCM = (originalText: string, transcribedText: string): Ali
         }
     }
 
+    // Encontrar o melhor prefixo do texto original que se alinha com o texto lido
+    let minCost = Infinity;
+    let best_i = n;
+    for (let i = 0; i <= n; i++) {
+        // <= garante que se houver custos iguais (ex: inserção vs substituição no final),
+        // assumiremos que o aluno tentou ler a palavra (substituição).
+        if (dp[i][m] <= minCost) {
+            minCost = dp[i][m];
+            best_i = i;
+        }
+    }
+
     const detalhes: DetalheAlinhamento[] = [];
-    let i = n, j = m;
+    let i = best_i, j = m;
     let correctCount = 0;
+
+    // As palavras do original que estão após o best_i são consideradas não lidas
+    for (let k = n; k > best_i; k--) {
+        detalhes.unshift({ 
+            tipo: 'unread', 
+            original: origWords[k - 1], 
+            originalTokens: origTokens[k - 1],
+            lido: null 
+        });
+    }
 
     while (i > 0 || j > 0) {
         if (i > 0 && j > 0 && origWords[i - 1] === tranWords[j - 1] && origWords[i-1] !== "") {
@@ -102,15 +124,7 @@ export const calculatePCM = (originalText: string, transcribedText: string): Ali
         }
     }
 
-    let unreadCount = 0;
-    for (let k = detalhes.length - 1; k >= 0; k--) {
-        if (detalhes[k].tipo === 'deletion') {
-            detalhes[k].tipo = 'unread';
-            unreadCount++;
-        } else {
-            break;
-        }
-    }
+    let unreadCount = n - best_i;
 
     return {
         corretas: correctCount,
