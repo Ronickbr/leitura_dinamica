@@ -72,6 +72,37 @@ function generateMarkedTranscription(alignment: any[]): string {
   }).join(' ').replace(/\s+/g, ' ').trim();
 }
 
+function buildTranscriptionPrompt(originalText: string, studentGrade?: string): string {
+  const normalizedGrade = studentGrade?.trim() || "3º ano";
+  const gradeGuidance = normalizedGrade.includes("3")
+    ? "3º Ano: foco em decodificação silábica. Espere pausas longas e transcrições mais fragmentadas."
+    : "4º e 5º Ano: foco em entonação e ritmo. Mantenha rigor na separação de termos compostos e adjacências de vírgulas.";
+
+  return [
+    "Você é um especialista em transcrição fonética e análise de fluência leitora para crianças do Ensino Fundamental I (3º ao 5º ano).",
+    "Sua tarefa é transcrever exatamente o que o aluno diz, sem corrigir erros gramaticais, sem preencher lacunas e mantendo a individualidade de cada palavra.",
+    'Evite aglutinações. Exemplo: transcreva "lançavam bolas" e nunca "lançavambolas".',
+    "",
+    "Diretrizes de transcrição:",
+    "- Fidelidade literal: transcreva exatamente as hesitações, pausas e repetições.",
+    "- Se o aluno substituir uma palavra, registre a palavra dita, não a palavra correta.",
+    "- Segmentação estrita: mantenha espaços claros entre as palavras.",
+    "- Se houver dúvida entre uma palavra longa ou duas curtas, priorize a separação com base no texto original de referência.",
+    "- Pontuação: use pontuação para marcar pausas respiratórias do aluno, mesmo que não coincidam com a pontuação gramatical do texto.",
+    "",
+    "Tratamento por nível:",
+    `- ${gradeGuidance}`,
+    "",
+    "Informações de referência:",
+    `- Série do aluno: ${normalizedGrade}`,
+    `- Texto base para comparação: "${originalText}"`,
+    "",
+    "Inicie a transcrição agora.",
+    "Não adicione comentários explicativos.",
+    "Retorne somente a transcrição fiel ao áudio."
+  ].join("\n");
+}
+
 async function getPedagogicalDiagnosis(
   openai: OpenAI,
   pcm: number,
@@ -112,8 +143,13 @@ ${history.map((h, i) => `  ${i + 1}. Data: ${new Date(h.data?.seconds * 1000).to
     : "";
 
   const prompt = `
-  Aja como uma Psicopedagoga Clínica especialista em alfabetização, neurociência da leitura e fluência leitora.
-  Sua missão é realizar uma análise diagnóstica extremamente precisa do desempenho de leitura do aluno.
+  Aja como uma psicopedagoga clínica especialista em alfabetização, neurociência da leitura e fluência leitora no Ensino Fundamental I.
+  Sua missão é produzir uma análise diagnóstica precisa, objetiva e tecnicamente coerente com a leitura realizada pelo aluno.
+
+  CONTEXTO GERAL:
+  - Considere que a transcrição foi produzida com foco em fidelidade literal ao áudio, preservando hesitações, pausas, repetições e segmentação entre palavras.
+  - Não normalize a leitura do aluno mentalmente. Analise o desempenho a partir do que foi efetivamente lido.
+  - Quando houver divergência entre impressão geral e dados estruturados, priorize os dados estruturados.
 
   DADOS ESTRUTURADOS (PRIORIDADE MÁXIMA):
   Use estes dados como EVIDÊNCIA para suas conclusões. Se os dados mostram erros, você DEVE apontá-los.
@@ -123,7 +159,7 @@ ${history.map((h, i) => `  ${i + 1}. Data: ${new Date(h.data?.seconds * 1000).to
   - ${targetContext}
   ${foreignerContext}
   ${glassesContext}
-  
+
   DETALHES DO ALINHAMENTO (O que foi realmente lido vs original):
   ${alignmentContext}
 
@@ -131,16 +167,18 @@ ${history.map((h, i) => `  ${i + 1}. Data: ${new Date(h.data?.seconds * 1000).to
   TRANSCRICÃO BRUTA (WHISPER): "${transcription}"
 
   INSTRUÇÕES PARA O DIAGNÓSTICO:
-  1. Análise de Acurácia: Identifique padrões nos erros (ex: troca de letras surdas/sonoras, omissão de finais de palavra, adivinhação pelo contexto).
-  2. Análise de Automaticidade: O PCM reflete uma leitura fluida ou esforçada? O aluno gasta muita energia na decodificação?
-  3. Prosódia e Ritmo: Com base na transcrição (pausas, hesitações), como está a entonação?
-  4. Comparação com Histórico: ${historyContext}
+  1. Acurácia: identifique padrões de erro como substituições fonológicas, trocas visuais, omissões, inserções e adivinhação por contexto.
+  2. Automaticidade: avalie se o PCM e a forma de leitura indicam fluidez, esforço de decodificação ou leitura silabada.
+  3. Prosódia e Ritmo: use a transcrição e a pontuação registrada como indícios de pausas, entonação e cadência.
+  4. Adequação à série: para 3º ano, observe com maior sensibilidade sinais de decodificação silábica; para 4º e 5º ano, seja mais rigorosa com fluidez, ritmo e precisão em palavras adjacentes.
+  5. Comparação com histórico: ${historyContext}
 
   RESTRIÇÕES DE RIGOR CLÍNICO (MUITO IMPORTANTE):
-  - Se houver palavras em [colchetes] na Transcrição Marcada, a 'leitura_precisa' DEVE ser false.
-  - Se houver muitas substituições [orig](lido), você DEVE citar pelo menos 2 exemplos na justificativa.
-  - NÃO ignore os dados do alinhamento. Se o alinhamento diz que houve erro e você diz que foi perfeito, seu diagnóstico estará errado.
-  - Seja empático com o aluno, mas tecnicamente rigoroso com o professor.
+  - Se houver palavras em [colchetes] na Transcrição Marcada, "leitura_precisa" DEVE ser false.
+  - Se houver substituições [orig](lido), use exemplos concretos nas justificativas sempre que forem relevantes.
+  - NÃO ignore os dados do alinhamento. Se o alinhamento mostra erro, o diagnóstico não pode descrever leitura perfeita.
+  - Não invente capacidades que não possam ser inferidas dos dados fornecidos.
+  - Seja empática com o aluno, mas tecnicamente rigorosa para apoiar a decisão pedagógica do professor.
 
   REQUISITOS DO FORMATO DE RESPOSTA (JSON):
   Você DEVE retornar EXATAMENTE este formato JSON:
@@ -261,11 +299,14 @@ export async function processReadingAudio({
   }
 
   const { openai } = createAIClients();
+  const transcriptionPrompt = buildTranscriptionPrompt(sanitizedOriginalText, studentGrade);
   console.log(`Iniciando transcrição OpenAI para arquivo: ${filename}`);
   const transcriptionResponse = await openai.audio.transcriptions.create({
     file: fs.createReadStream(filePath) as any,
     model: "whisper-1",
     language: "pt",
+    prompt: transcriptionPrompt,
+    temperature: 0,
     response_format: "json",
   });
 
