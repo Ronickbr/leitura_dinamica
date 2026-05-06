@@ -106,7 +106,7 @@ export default function ReadingPage() {
   }, [isRecording, timeLeft]);
 
   const startRecording = async () => {
-    console.log("Iniciando gravação...");
+
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')

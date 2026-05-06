@@ -8,7 +8,7 @@ export function PWAProvider({ children }: { children: React.ReactNode }) {
       navigator.serviceWorker
         .register("/sw.js")
         .then((registration) => {
-          console.log("PWA Service Worker registrado:", registration.scope);
+
         })
         .catch((error) => {
           console.error("Falha ao registrar Service Worker:", error);

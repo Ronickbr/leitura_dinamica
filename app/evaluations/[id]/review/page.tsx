@@ -46,7 +46,7 @@ export default function ReviewPage() {
             }
 
             const parsedResult = JSON.parse(storedResult);
-            console.log("Resultado carregado para revisão:", parsedResult);
+
             setResult(parsedResult);
             
             // Inicializa métricas se a IA as forneceu (novo formato: result.analysis.metricas_qualitativas)

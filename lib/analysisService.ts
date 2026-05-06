@@ -209,7 +209,7 @@ ${history.map((h, i) => `  ${i + 1}. Data: ${new Date(h.data?.seconds * 1000).to
   `;
 
   try {
-    console.log("PROMPT IA:", prompt);
+
     const response = await openai.chat.completions.create({
       model: "gpt-4o",
       messages: [
@@ -223,7 +223,7 @@ ${history.map((h, i) => `  ${i + 1}. Data: ${new Date(h.data?.seconds * 1000).to
     });
 
     const content = response.choices?.[0]?.message?.content;
-    console.log("RESPOSTA IA:", content);
+
 
     if (!content) {
       return getFallbackAnalysis();
@@ -300,7 +300,7 @@ export async function processReadingAudio({
 
   const { openai } = createAIClients();
   const transcriptionPrompt = buildTranscriptionPrompt(sanitizedOriginalText, studentGrade);
-  console.log(`Iniciando transcrição OpenAI para arquivo: ${filename}`);
+
   const transcriptionResponse = await openai.audio.transcriptions.create({
     file: fs.createReadStream(filePath) as any,
     model: "whisper-1",
@@ -311,7 +311,7 @@ export async function processReadingAudio({
   });
 
   const transcription = transcriptionResponse.text || "";
-  console.log(`Transcrição concluída: "${transcription.substring(0, 50)}..."`);
+
 
   const metrics = calculatePCM(sanitizedOriginalText, transcription);
 
@@ -322,8 +322,7 @@ export async function processReadingAudio({
 
   const level = getPerformanceLevel(pcm);
 
-  console.log(`Métricas: PCM=${pcm} (baseado em ${effectiveDuration.toFixed(1)}s), Nível=${level}`);
-  console.log("Iniciando diagnóstico OpenAI...");
+
 
   const analysis = await getPedagogicalDiagnosis(
     openai,
@@ -339,7 +338,7 @@ export async function processReadingAudio({
     isGlassesUser
   );
 
-  console.log("Diagnóstico OpenAI finalizado");
+
 
   // Geramos a transcrição marcada programaticamente para garantir precisão técnica
   // e evitar alucinações da IA em casos de grandes discrepâncias.

@@ -89,9 +89,7 @@ export async function POST(req: NextRequest) {
     tempPath = path.join(os.tmpdir(), `leitura-${Date.now()}-${validatedFile.name.replace(/\s+/g, "_")}`);
     await writeFile(tempPath, buffer);
 
-    console.log(
-      `Processando áudio para texto: "${validatedText.substring(0, 30)}..."`
-    );
+
 
     const result = await processReadingAudio({
       filePath: tempPath,
@@ -105,11 +103,7 @@ export async function POST(req: NextRequest) {
       isGlassesUser: validation.data.isGlassesUser
     });
 
-    console.log(JSON.stringify({
-      ...auditInfo,
-      status: "SUCCESS",
-      durationMs: Date.now() - startTime,
-    }));
+
 
     return NextResponse.json(result);
   } catch (error) {

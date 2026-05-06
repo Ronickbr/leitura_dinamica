@@ -108,7 +108,7 @@ export default function StudentsPage() {
 
   useEffect(() => {
     if (firebaseInitialized) {
-      console.log("Firebase inicializado. Usuário atual:", auth?.currentUser?.uid);
+
       loadAlunos();
     }
   }, [firebaseInitialized, auth]);
@@ -148,7 +148,7 @@ export default function StudentsPage() {
         getAlunos(),
         getAlunoFilterOptions()
       ]);
-      console.log(`Busca finalizada. Total de alunos no banco: ${data.length}`);
+
       setAlunos(data);
       setFilterOptions(dynamicOptions);
     } catch (err: any) {

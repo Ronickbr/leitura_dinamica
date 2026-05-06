@@ -174,7 +174,6 @@ export const addAluno = async (aluno: Omit<Aluno, 'id'>): Promise<string | null>
 
     const querySnapshot = await getDocs(q);
     if (!querySnapshot.empty) {
-      console.log(`Aluno já existe: ${nomeNorm} (${turmaNorm} - ${serieNorm}). Retornando ID existente.`);
       return querySnapshot.docs[0].id;
     }
 

@@ -88,8 +88,7 @@ export default function SettingsPage() {
             const idxTurno = getIndex(["turno", "shift", "periodo", "horario"]);
             const idxDiag = getIndex(["diagnostico", "diagnostic", "laudo", "diagnóstico", "diagnostico", "observacao", "necessidade"]);
 
-            console.log("Header encontrado na linha:", headerRowIndex);
-            console.log("Indices mapeados:", { idxNome, idxTurma, idxSerie, idxTurno, idxDiag });
+
 
             let successCount = 0;
             let errorCount = 0;
@@ -128,7 +127,7 @@ export default function SettingsPage() {
                 // Verifica duplicata localmente antes de tentar salvar
                 const key = `${normalize(nome)}|${normalize(turma)}|${normalize(serie)}`;
                 if (existingKeys.has(key)) {
-                    console.log(`Pulando duplicado: ${nome}`);
+
                     duplicateCount++;
                     continue;
                 }
