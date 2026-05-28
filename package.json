@@ -11,6 +11,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "test:reading-calibration": "node --experimental-strip-types scripts/validate-reading-calibration.ts",
     "test:mobile": "playwright test --config=playwright.config.ts",
     "test:mobile:headed": "playwright test --config=playwright.config.ts --headed",
     "deploy:preview": "vercel",
