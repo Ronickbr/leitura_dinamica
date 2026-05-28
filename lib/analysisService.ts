@@ -1,6 +1,6 @@
 import fs from "fs";
 import OpenAI from "openai";
-import { calculatePCM, getPerformanceLevel, getNormaNacional, type AlignmentResult } from "./pcmUtils";
+import { calculatePCM, getPerformanceLevel, getNormaNacional, type AlignmentResult, type DetalheAlinhamento } from "./pcmUtils";
 
 const MAX_ORIGINAL_TEXT_LENGTH = 10000;
 
@@ -33,8 +33,8 @@ function createAIClients() {
 
 function getFallbackAnalysis() {
   return {
-    diagnostico: "Não foi possível gerar a análise no momento.",
-    intervencao: "Avaliar manualmente com base no PCM e na leitura gravada.",
+    diagnostico: "Análise indisponível.",
+    intervencao: "Revisar a gravação manualmente.",
     metricas_qualitativas: {
       leitura_precisa: false,
       leitura_silabada: false,
@@ -63,13 +63,108 @@ function generateMarkedTranscription(alignment: any[]): string {
     const original = d.originalTokens || d.original || "";
     const lido = d.lidoTokens || d.lido || "";
 
-    if (d.tipo === 'match') return original;
+    if (d.tipo === 'match' || d.tipo === 'acceptable') return original;
     if (d.tipo === 'substitution') return `[${original}](${lido})`;
     if (d.tipo === 'deletion') return `[${original}]`;
     if (d.tipo === 'insertion') return `(${lido})`;
     if (d.tipo === 'unread') return '';
     return '';
   }).join(' ').replace(/\s+/g, ' ').trim();
+}
+
+function isHardAlignmentError(detail: DetalheAlinhamento) {
+  return detail.tipo === "substitution" || detail.tipo === "deletion" || detail.tipo === "insertion";
+}
+
+function isRepeatedInsertion(detail: DetalheAlinhamento, previous?: DetalheAlinhamento, next?: DetalheAlinhamento) {
+  if (detail.tipo !== "insertion") return false;
+  const inserted = (detail.lidoTokens || detail.lido || "").trim().toLowerCase();
+  const previousToken = (previous?.originalTokens || previous?.lidoTokens || previous?.original || previous?.lido || "").trim().toLowerCase();
+  const nextToken = (next?.originalTokens || next?.lidoTokens || next?.original || next?.lido || "").trim().toLowerCase();
+  return inserted !== "" && (inserted === previousToken || inserted === nextToken);
+}
+
+function buildRealErrorItems(details: DetalheAlinhamento[], maxItems = 3) {
+  const items: string[] = [];
+
+  details.forEach((detail, index) => {
+    if (!isHardAlignmentError(detail) || items.length >= maxItems) {
+      return;
+    }
+
+    const original = detail.originalTokens || detail.original || "";
+    const read = detail.lidoTokens || detail.lido || "";
+
+    if (detail.tipo === "substitution" && original && read) {
+      items.push(`troca de "${original}" por "${read}"`);
+      return;
+    }
+
+    if (detail.tipo === "deletion" && original) {
+      items.push(`omissão de "${original}"`);
+      return;
+    }
+
+    if (detail.tipo === "insertion" && read) {
+      const previous = details[index - 1];
+      const next = details[index + 1];
+      items.push(`${isRepeatedInsertion(detail, previous, next) ? "repetição" : "inserção"} de "${read}"`);
+    }
+  });
+
+  return items;
+}
+
+function buildConciseDiagnostic(metrics: AlignmentResult) {
+  const realErrorItems = buildRealErrorItems(metrics.detalhes);
+  if (realErrorItems.length === 0) {
+    return "Sem erros reais de leitura detectados.";
+  }
+
+  const hardErrorDetails = metrics.detalhes.filter(isHardAlignmentError).length;
+  const remaining = hardErrorDetails - realErrorItems.length;
+  const suffix = remaining > 0 ? ` e mais ${remaining} ocorrência(s).` : ".";
+  return `Erros reais detectados: ${realErrorItems.join("; ")}${suffix}`;
+}
+
+function buildConciseIntervention(metrics: AlignmentResult) {
+  const realErrorItems = buildRealErrorItems(metrics.detalhes, 2);
+  if (realErrorItems.length === 0) {
+    return "Sem intervenção corretiva imediata.";
+  }
+
+  return `Retomar a leitura guiada com foco em ${realErrorItems.join(" e ")}.`;
+}
+
+function applyDeterministicValidation(
+  analysis: ProcessAudioResult["analysis"],
+  metrics: AlignmentResult
+): ProcessAudioResult["analysis"] {
+  const hasRealErrors = metrics.erros > 0;
+  const conciseDiagnostic = buildConciseDiagnostic(metrics);
+  const conciseIntervention = buildConciseIntervention(metrics);
+  const realErrorItems = buildRealErrorItems(metrics.detalhes, 3);
+
+  const metricasQualitativas = {
+    ...analysis.metricas_qualitativas,
+    leitura_precisa: !hasRealErrors,
+    leitura_precisa_justificativa: hasRealErrors
+      ? conciseDiagnostic
+      : "A leitura não apresentou trocas, omissões ou repetições indevidas.",
+  };
+
+  return {
+    ...analysis,
+    diagnostico: conciseDiagnostic,
+    intervencao: conciseIntervention,
+    padrao_de_erro_detectado: hasRealErrors ? analysis.padrao_de_erro_detectado || "lexical" : "nenhum",
+    analise_evolucao: analysis.analise_evolucao ? analysis.analise_evolucao.slice(0, 120) : undefined,
+    nivel_de_confianca: hasRealErrors ? Math.max(analysis.nivel_de_confianca || 0, 75) : Math.max(analysis.nivel_de_confianca || 0, 90),
+    perguntas_compreensao: (analysis.perguntas_compreensao || []).slice(0, 3),
+    metricas_qualitativas: metricasQualitativas,
+    resumo_erros_reais: realErrorItems,
+    variacoes_aceitas: metrics.variacoes_aceitas
+  } as ProcessAudioResult["analysis"];
 }
 
 function buildTranscriptionPrompt(originalText: string, studentGrade?: string): string {
@@ -167,13 +262,14 @@ ${history.map((h, i) => `  ${i + 1}. Data: ${new Date(h.data?.seconds * 1000).to
   TRANSCRICÃO BRUTA (WHISPER): "${transcription}"
 
   INSTRUÇÕES PARA O DIAGNÓSTICO:
-  1. Acurácia: identifique padrões de erro como substituições fonológicas, trocas visuais, omissões, inserções e adivinhação por contexto.
+  1. Acurácia: identifique apenas erros reais de leitura, como substituições, omissões ou repetições indevidas.
   2. Automaticidade: avalie se o PCM e a forma de leitura indicam fluidez, esforço de decodificação ou leitura silabada.
   3. Prosódia e Ritmo: use a transcrição e a pontuação registrada como indícios de pausas, entonação e cadência.
   4. Adequação à série: para 3º ano, observe com maior sensibilidade sinais de decodificação silábica; para 4º e 5º ano, seja mais rigorosa com fluidez, ritmo e precisão em palavras adjacentes.
   5. Comparação com histórico: ${historyContext}
 
   RESTRIÇÕES DE RIGOR CLÍNICO (MUITO IMPORTANTE):
+  - Considere pausas breves, pequenas quebras de palavra e variações leves de transcrição como aceitáveis quando o alinhamento estrutural não indicar erro real.
   - Se houver palavras em [colchetes] na Transcrição Marcada, "leitura_precisa" DEVE ser false.
   - Se houver substituições [orig](lido), use exemplos concretos nas justificativas sempre que forem relevantes.
   - NÃO ignore os dados do alinhamento. Se o alinhamento mostra erro, o diagnóstico não pode descrever leitura perfeita.
@@ -183,8 +279,8 @@ ${history.map((h, i) => `  ${i + 1}. Data: ${new Date(h.data?.seconds * 1000).to
   REQUISITOS DO FORMATO DE RESPOSTA (JSON):
   Você DEVE retornar EXATAMENTE este formato JSON:
   {
-    "diagnostico": "Texto detalhado do diagnóstico clínico...",
-    "intervencao": "Sugestão de atividade prática específica...",
+    "diagnostico": "Máximo de 2 frases curtas, focadas apenas em erros reais de leitura.",
+    "intervencao": "Máximo de 1 frase curta e objetiva.",
     "metricas_qualitativas": {
       "leitura_precisa": boolean,
       "leitura_precisa_justificativa": "Cite exemplos específicos de trocas ou omissões vistos na Transcrição Marcada.",
@@ -199,7 +295,7 @@ ${history.map((h, i) => `  ${i + 1}. Data: ${new Date(h.data?.seconds * 1000).to
     },
     "padrao_de_erro_detectado": "fonológico, visual, lexical, omissão, adivinhação ou nenhum.",
     "nivel_de_confianca": number (1-100),
-    "analise_evolucao": "1 linha comparando com histórico.",
+    "analise_evolucao": "1 linha curta comparando com histórico.",
     "perguntas_compreensao": [
       { "pergunta": "...", "resposta_esperada": "..." },
       { "pergunta": "...", "resposta_esperada": "..." },
@@ -274,6 +370,8 @@ interface ProcessAudioResult {
     nivel_de_confianca: number;
     analise_evolucao?: string;
     transcricao_marcada?: string;
+    resumo_erros_reais?: string[];
+    variacoes_aceitas?: number;
     perguntas_compreensao: Array<{
       pergunta: string;
       resposta_esperada: string;
@@ -343,10 +441,11 @@ export async function processReadingAudio({
   // Geramos a transcrição marcada programaticamente para garantir precisão técnica
   // e evitar alucinações da IA em casos de grandes discrepâncias.
   const programmaticMarkedTranscription = generateMarkedTranscription(metrics.detalhes);
+  const validatedAnalysis = applyDeterministicValidation(analysis, metrics);
   
   // Se a precisão for muito baixa, adicionamos um aviso no diagnóstico
   if (metrics.precisao < 20 && !isForeigner) {
-    analysis.diagnostico = "⚠️ ALERTA DE QUALIDADE: A transcrição parece muito diferente do texto original. Verifique se o áudio está claro ou se o texto correto foi selecionado. " + analysis.diagnostico;
+    validatedAnalysis.diagnostico = "Alerta de qualidade: a transcrição ficou distante do texto de referência. Revise o áudio e o texto selecionado.";
   }
 
   return {
@@ -357,7 +456,7 @@ export async function processReadingAudio({
     level,
     transcription,
     analysis: {
-      ...analysis,
+      ...validatedAnalysis,
       transcricao_marcada: programmaticMarkedTranscription
     },
   };
