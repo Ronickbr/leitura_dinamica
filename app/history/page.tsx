@@ -164,16 +164,17 @@ export default function HistoryPage() {
           const pontuacao = x(ev.metricasQualitativas?.pontuacao);
 
           const pcm = ev.pcm || '';
+          const precisaoVal = ev.precisao !== undefined ? `${ev.precisao}%` : '';
           let diagnostico = ev.diagnosticoIA || '';
           if (diagnostico.length > 150) diagnostico = diagnostico.substring(0, 150) + '...';
           const obs = anonymizeText(diagnostico);
 
-          const cellText = `${dateStr}\n${precisa} Leitura precisa ${silabada} Leitura silabada\n${entonacao} Boa entonação ${interpretacao} Interpretação\n${pontuacao} Pontuação       PCM: ${pcm}\nObs: ${obs}`;
+          const cellText = `${dateStr}\n${precisa} Leitura precisa ${silabada} Leitura silabada\n${entonacao} Boa entonação ${interpretacao} Interpretação\n${pontuacao} Pontuação       PCM: ${pcm}   Precisão: ${precisaoVal}\nObs: ${obs}`;
 
           row.push(cellText);
         } else {
           // Format for empty month:
-          const cellText = `\n( ) Leitura precisa ( ) Leitura silabada\n( ) Boa entonação ( ) Interpretação\n( ) Pontuação       PCM: \nObs: `;
+          const cellText = `\n( ) Leitura precisa ( ) Leitura silabada\n( ) Boa entonação ( ) Interpretação\n( ) Pontuação       PCM:    Precisão: \nObs: `;
           row.push(cellText);
         }
       });

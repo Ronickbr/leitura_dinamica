@@ -12,6 +12,7 @@ export interface Texto {
   conteudo: string;
   numeroPalavras: number;
   serie: string;
+  comDiagnostico?: boolean;
 }
 
 export const getTextos = async (): Promise<Texto[]> => {

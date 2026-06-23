@@ -11,7 +11,7 @@ export default function TextsPage() {
   const [textos, setTextos] = useState<Texto[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
-  const [formData, setFormData] = useState({ titulo: '', conteudo: '', serie: '3º Ano' });
+  const [formData, setFormData] = useState({ titulo: '', conteudo: '', serie: '3º Ano', comDiagnostico: false });
   const [editingId, setEditingId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -48,7 +48,7 @@ export default function TextsPage() {
 
       setShowForm(false);
       setEditingId(null);
-      setFormData({ titulo: '', conteudo: '', serie: '3º Ano' });
+      setFormData({ titulo: '', conteudo: '', serie: '3º Ano', comDiagnostico: false });
       loadTextos();
     } catch (err) {
       console.error("Erro ao salvar:", err);
@@ -61,7 +61,8 @@ export default function TextsPage() {
     setFormData({
       titulo: texto.titulo,
       conteudo: texto.conteudo,
-      serie: texto.serie
+      serie: texto.serie,
+      comDiagnostico: texto.comDiagnostico || false
     });
     setEditingId(texto.id);
     setShowForm(true);
@@ -78,7 +79,7 @@ export default function TextsPage() {
   function handleCancel() {
     setShowForm(false);
     setEditingId(null);
-    setFormData({ titulo: '', conteudo: '', serie: '3º Ano' });
+    setFormData({ titulo: '', conteudo: '', serie: '3º Ano', comDiagnostico: false });
   }
 
   const filteredTextos = textos.filter(t =>
@@ -153,6 +154,17 @@ export default function TextsPage() {
                   <option value="5º Ano">5º Ano (E.F.)</option>
                 </select>
               </div>
+              <div style={{ display: 'flex', alignItems: 'center', marginTop: '1.5rem' }}>
+                <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', marginBottom: 0 }}>
+                  <input
+                    type="checkbox"
+                    checked={formData.comDiagnostico}
+                    onChange={e => setFormData({ ...formData, comDiagnostico: e.target.checked })}
+                    style={{ width: '1.2rem', height: '1.2rem', cursor: 'pointer' }}
+                  />
+                  <span>Texto para alunos com diagnóstico</span>
+                </label>
+              </div>
             </div>
 
             <div style={{ marginBottom: '2rem' }}>
@@ -208,6 +220,11 @@ export default function TextsPage() {
                 <div className="text-card-badges">
                   <span className="text-card-badge-primary">{texto.serie}</span>
                   <span className="text-card-badge-success">{texto.numeroPalavras} palavras</span>
+                  {texto.comDiagnostico && (
+                    <span className="text-card-badge-warning" style={{ background: 'rgba(251, 146, 60, 0.12)', color: '#fb923c', border: '1px solid rgba(251, 146, 60, 0.3)', padding: '0.2rem 0.5rem', borderRadius: '999px', fontSize: '0.75rem', fontWeight: 600 }}>
+                      Adaptado (Diagnóstico)
+                    </span>
+                  )}
                 </div>
                 <div className="text-card-actions">
                   <button onClick={() => handleEdit(texto)} className="btn-icon" title="Editar">✏️</button>

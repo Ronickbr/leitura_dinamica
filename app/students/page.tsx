@@ -358,6 +358,23 @@ export default function StudentsPage() {
               <input required value={formData.turma} onChange={e => setFormData({ ...formData, turma: e.target.value })} placeholder="Ex: A" className="glass-panel" style={{ width: '100%' }} />
             </div>
             <div className="form-group">
+              <label className="mobile-data-label">Turno</label>
+              <select
+                value={formData.turno}
+                onChange={e => setFormData({ ...formData, turno: e.target.value })}
+                className="glass-panel"
+                style={{ width: '100%' }}
+              >
+                <option value="">Nenhum</option>
+                <option value="Manhã">Manhã</option>
+                <option value="Tarde">Tarde</option>
+              </select>
+            </div>
+            <div className="form-group">
+              <label className="mobile-data-label">Ano Letivo</label>
+              <input type="number" value={formData.anoLetivo} onChange={e => setFormData({ ...formData, anoLetivo: e.target.value })} placeholder="Ex: 2026" className="glass-panel" style={{ width: '100%' }} />
+            </div>
+            <div className="form-group">
               <label className="mobile-data-label">Meta de PCM</label>
               <input
                 type="number"
@@ -368,6 +385,14 @@ export default function StudentsPage() {
                 style={{ width: '100%' }}
               />
               <small style={{ color: 'var(--text-muted)', fontSize: '0.7rem' }}>Sugerido para esta série se vazio.</small>
+            </div>
+            <div className="form-group">
+              <label className="mobile-data-label">Diagnóstico Clínico</label>
+              <input value={formData.diagnostico} onChange={e => setFormData({ ...formData, diagnostico: e.target.value })} placeholder="Ex: TEA, TDAH, Dislexia, Nenhum" className="glass-panel" style={{ width: '100%' }} />
+            </div>
+            <div className="form-group" style={{ gridColumn: 'span 2' }}>
+              <label className="mobile-data-label">Observações Pedagógicas</label>
+              <textarea rows={3} value={formData.observacoes} onChange={e => setFormData({ ...formData, observacoes: e.target.value })} placeholder="Observações adicionais sobre o aluno..." className="glass-panel" style={{ width: '100%', resize: 'vertical' }} />
             </div>
           </div>
           <button type="submit" disabled={saving} className="btn-primary">

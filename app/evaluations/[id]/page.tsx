@@ -54,8 +54,14 @@ export default function ReadingPage() {
           setAluno(studentData);
 
           const studentSerieNorm = studentData.serie.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+          const studentHasDiagnosis = !!(
+            studentData.diagnostico &&
+            studentData.diagnostico.trim() !== "" &&
+            studentData.diagnostico.toLowerCase() !== "nenhum" &&
+            studentData.diagnostico.toLowerCase() !== "nenhum diagnóstico"
+          );
 
-          const filtered = allTexts.filter(t => {
+          const textsInGrade = allTexts.filter(t => {
             const textSerieNorm = t.serie.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
 
             // Tenta match exato ou match parcial se houver números iguais (resiliência)
@@ -65,6 +71,16 @@ export default function ReadingPage() {
             const tNum = t.serie.match(/(\d+)/)?.[1];
             return sNum && tNum && sNum === tNum;
           });
+
+          // Filtra por diagnóstico binário
+          let filtered = textsInGrade.filter(t => 
+            studentHasDiagnosis ? !!t.comDiagnostico : !t.comDiagnostico
+          );
+
+          // Fallback para textos gerais caso não existam textos adaptados
+          if (studentHasDiagnosis && filtered.length === 0) {
+            filtered = textsInGrade.filter(t => !t.comDiagnostico);
+          }
 
           setTextosDisponiveis(filtered);
           if (filtered.length > 0) {
