@@ -11,6 +11,10 @@ build/
 
 .cache/
 
+# TypeScript build artifacts
+tsconfig.tsbuildinfo
+*.tsbuildinfo
+
 # OS
 .DS_Store
 Thumbs.db
