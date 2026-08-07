@@ -2,9 +2,13 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { logDetailed, formatErrorForUser } from "@/lib/errorUtils";
 import { getAlunoById, updateAluno, type Aluno } from "@/lib/services";
 import { useSettings } from "@/app/components/SettingsProvider";
+import { useFirebase } from "@/app/components/FirebaseProvider";
 import { getDiagnosisStyle } from "@/lib/styleUtils";
+
+const FILE_NAME = "app/students/[id]/page.tsx";
 
 // Ícones SVG reutilizados para manter o padrão premium
 const UserIcon = () => (
@@ -48,6 +52,7 @@ export default function StudentDetailsPage() {
   const params = useParams();
   const router = useRouter();
   const { anonymizeName, anonymizeText } = useSettings();
+  const { auth } = useFirebase();
   const [aluno, setAluno] = useState<Aluno | null>(null);
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
@@ -82,7 +87,20 @@ export default function StudentDetailsPage() {
           });
         }
       } catch (error) {
-        console.error("Erro ao buscar aluno:", error);
+        const userId = auth?.currentUser?.uid;
+        const erro = error instanceof Error ? error : new Error(String(error));
+        logDetailed({
+          level: "error",
+          message: `Falha ao buscar detalhes do aluno (ID: ${params.id})`,
+          fileName: FILE_NAME,
+          methodName: "fetchStudent",
+          lineNumber: 93,
+          userId,
+          parameters: { alunoId: params.id },
+          errorName: erro.name,
+          errorMessage: erro.message,
+          stackTrace: erro.stack
+        });
       } finally {
         setLoading(false);
       }
@@ -101,7 +119,20 @@ export default function StudentDetailsPage() {
         setIsEditing(false);
       }
     } catch (error) {
-      console.error("Erro ao salvar aluno:", error);
+      const userId = auth?.currentUser?.uid;
+      const erro = error instanceof Error ? error : new Error(String(error));
+      logDetailed({
+        level: "error",
+        message: `Falha ao salvar atualização do cadastro do aluno (ID: ${aluno?.id})`,
+        fileName: FILE_NAME,
+        methodName: "handleSave",
+        lineNumber: 115,
+        userId,
+        parameters: { alunoId: aluno?.id, formData: { nome: formData.nome, turma: formData.turma, serie: formData.serie } },
+        errorName: erro.name,
+        errorMessage: erro.message,
+        stackTrace: erro.stack
+      });
     } finally {
       setSaving(false);
     }

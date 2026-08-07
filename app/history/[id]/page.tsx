@@ -3,15 +3,20 @@
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useMobileExperience } from "@/app/components/MobileExperienceProvider";
+import { useFirebase } from "@/app/components/FirebaseProvider";
 import { getAvaliacaoById, type Avaliacao } from "@/lib/evaluationsService";
 import { getAlunoById, type Aluno } from "@/lib/services";
 import { getTextos, type Texto } from "@/lib/textsService";
 import { getNormaNacional, getPerformanceLevel } from "@/lib/pcmUtils";
+import { logDetailed, formatErrorForUser } from "@/lib/errorUtils";
+
+const FILE_NAME = "app/history/[id]/page.tsx";
 
 export default function EvaluationDetailsPage() {
     const params = useParams();
     const router = useRouter();
     const { isMobile } = useMobileExperience();
+    const { auth } = useFirebase();
     const evaluationId = params.id as string;
 
     const [avaliacao, setAvaliacao] = useState<Avaliacao | null>(null);
@@ -92,7 +97,20 @@ export default function EvaluationDetailsPage() {
                     setTexto(foundText);
                 }
             } catch (error) {
-                console.error("Erro ao carregar detalhes:", error);
+                const userId = auth?.currentUser?.uid;
+                const erro = error instanceof Error ? error : new Error(String(error));
+                logDetailed({
+                    level: "error",
+                    message: "Falha ao carregar detalhes da avaliação",
+                    fileName: FILE_NAME,
+                    methodName: "fetchData",
+                    lineNumber: 99,
+                    userId,
+                    extraData: { evaluationId },
+                    errorName: erro.name,
+                    errorMessage: erro.message,
+                    stackTrace: erro.stack
+                });
             } finally {
                 setLoading(false);
             }

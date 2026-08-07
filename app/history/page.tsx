@@ -10,10 +10,13 @@ import { useSettings } from "../components/SettingsProvider";
 import { useFirebase } from "../components/FirebaseProvider";
 import * as XLSX from "xlsx";
 import { getDiagnosisStyle } from "@/lib/styleUtils";
+import { logDetailed, formatErrorForUser } from "@/lib/errorUtils";
+
+const FILE_NAME = "app/history/page.tsx";
 
 export default function HistoryPage() {
   const router = useRouter();
-  const { initialized: firebaseInitialized } = useFirebase();
+  const { initialized: firebaseInitialized, auth } = useFirebase();
   const { anonymizeName, anonymizeText } = useSettings();
   const [studentGroups, setStudentGroups] = useState<{ alunoId: string; aluno?: Aluno; evaluations: Avaliacao[] }[]>([]);
   const [loading, setLoading] = useState(true);
@@ -62,7 +65,19 @@ export default function HistoryPage() {
 
         setStudentGroups(groups);
       } catch (error) {
-        console.error("Erro:", error);
+        const userId = auth?.currentUser?.uid;
+        const erro = error instanceof Error ? error : new Error(String(error));
+        logDetailed({
+          level: "error",
+          message: "Falha ao carregar histórico de avaliações e alunos",
+          fileName: FILE_NAME,
+          methodName: "fetchData",
+          lineNumber: 67,
+          userId,
+          errorName: erro.name,
+          errorMessage: erro.message,
+          stackTrace: erro.stack
+        });
       } finally {
         setLoading(false);
       }

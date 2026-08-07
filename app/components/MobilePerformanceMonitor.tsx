@@ -2,6 +2,9 @@
 
 import { useEffect } from "react";
 import { useMobileExperience } from "./MobileExperienceProvider";
+import { logDetailed } from "@/lib/errorUtils";
+
+const FILE_NAME = "app/components/MobilePerformanceMonitor.tsx";
 
 type MetricName =
   | "ttfb"
@@ -136,8 +139,17 @@ export default function MobilePerformanceMonitor() {
       });
       paintObserver.observe({ type: "paint", buffered: true });
       observers.push(paintObserver);
-    } catch {
-      // Ignora browsers que nao suportam a observacao detalhada de paint.
+    } catch (err) {
+      logDetailed({
+        level: "debug",
+        message: "Browser não suporta PerformanceObserver para Paint, funcionalidade de monitoramento não disponível nesta plataforma.",
+        fileName: FILE_NAME,
+        methodName: "MobilePerformanceMonitor/useEffect",
+        lineNumber: 139,
+        extraData: { userAgent: typeof navigator !== "undefined" ? navigator.userAgent?.slice(0, 200) : undefined },
+        errorName: err instanceof Error ? err.name : String(err),
+        errorMessage: err instanceof Error ? err.message : String(err)
+      });
     }
 
     try {
@@ -150,8 +162,17 @@ export default function MobilePerformanceMonitor() {
       });
       lcpObserver.observe({ type: "largest-contentful-paint", buffered: true });
       observers.push(lcpObserver);
-    } catch {
-      // Ignora browsers sem suporte a LCP.
+    } catch (err) {
+      logDetailed({
+        level: "debug",
+        message: "Browser não suporta PerformanceObserver para LCP, funcionalidade de monitoramento não disponível nesta plataforma.",
+        fileName: FILE_NAME,
+        methodName: "MobilePerformanceMonitor/useEffect",
+        lineNumber: 153,
+        extraData: { userAgent: typeof navigator !== "undefined" ? navigator.userAgent?.slice(0, 200) : undefined },
+        errorName: err instanceof Error ? err.name : String(err),
+        errorMessage: err instanceof Error ? err.message : String(err)
+      });
     }
 
     try {
@@ -171,8 +192,17 @@ export default function MobilePerformanceMonitor() {
       });
       clsObserver.observe({ type: "layout-shift", buffered: true });
       observers.push(clsObserver);
-    } catch {
-      // Ignora browsers sem suporte a CLS.
+    } catch (err) {
+      logDetailed({
+        level: "debug",
+        message: "Browser não suporta PerformanceObserver para CLS, funcionalidade de monitoramento não disponível nesta plataforma.",
+        fileName: FILE_NAME,
+        methodName: "MobilePerformanceMonitor/useEffect",
+        lineNumber: 174,
+        extraData: { userAgent: typeof navigator !== "undefined" ? navigator.userAgent?.slice(0, 200) : undefined },
+        errorName: err instanceof Error ? err.name : String(err),
+        errorMessage: err instanceof Error ? err.message : String(err)
+      });
     }
 
     try {
@@ -183,8 +213,17 @@ export default function MobilePerformanceMonitor() {
       });
       longTaskObserver.observe({ type: "longtask", buffered: true });
       observers.push(longTaskObserver);
-    } catch {
-      // Ignora browsers sem suporte a Long Tasks.
+    } catch (err) {
+      logDetailed({
+        level: "debug",
+        message: "Browser não suporta PerformanceObserver para Long Tasks, funcionalidade de monitoramento não disponível nesta plataforma.",
+        fileName: FILE_NAME,
+        methodName: "MobilePerformanceMonitor/useEffect",
+        lineNumber: 186,
+        extraData: { userAgent: typeof navigator !== "undefined" ? navigator.userAgent?.slice(0, 200) : undefined },
+        errorName: err instanceof Error ? err.name : String(err),
+        errorMessage: err instanceof Error ? err.message : String(err)
+      });
     }
 
     try {
@@ -195,8 +234,17 @@ export default function MobilePerformanceMonitor() {
       });
       resourceObserver.observe({ type: "resource", buffered: true });
       observers.push(resourceObserver);
-    } catch {
-      // Ignora browsers sem suporte a resource timing buffered.
+    } catch (err) {
+      logDetailed({
+        level: "debug",
+        message: "Browser não suporta PerformanceObserver para Resource Timing, funcionalidade de monitoramento não disponível nesta plataforma.",
+        fileName: FILE_NAME,
+        methodName: "MobilePerformanceMonitor/useEffect",
+        lineNumber: 198,
+        extraData: { userAgent: typeof navigator !== "undefined" ? navigator.userAgent?.slice(0, 200) : undefined },
+        errorName: err instanceof Error ? err.name : String(err),
+        errorMessage: err instanceof Error ? err.message : String(err)
+      });
     }
 
     const handleVisibilityChange = () => {

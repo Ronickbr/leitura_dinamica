@@ -3,6 +3,9 @@
 import { useState } from "react";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { useFirebase } from "@/app/components/FirebaseProvider";
+import { logDetailed, formatErrorForUser, tryExtractFirebaseErrorCode, formatFirebaseAuthError } from "@/lib/errorUtils";
+
+const FILE_NAME = "app/components/LoginForm.tsx";
 
 export default function LoginForm() {
     const { auth, initialized, error: firebaseError } = useFirebase();
@@ -27,10 +30,34 @@ export default function LoginForm() {
         setError("");
         try {
             await signInWithEmailAndPassword(auth, email, password);
-            // No need to redirect here if used on a page that conditionally renders based on auth state
         } catch (err: any) {
-            console.error("Erro no login:", err);
-            setError(err.message || "Erro ao fazer login. Tente novamente.");
+            logDetailed({
+                level: "error",
+                message: "Erro no login",
+                fileName: FILE_NAME,
+                methodName: "LoginForm/handleLogin",
+                lineNumber: 31,
+                errorName: err instanceof Error ? err.name : String(err),
+                errorMessage: err instanceof Error ? err.message : String(err),
+                stackTrace: err instanceof Error ? err.stack : undefined,
+                extraData: { emailProvided: email ? email.slice(0, 3) + "..." : undefined }
+            });
+            const firebaseCode = tryExtractFirebaseErrorCode(err);
+            let userMessage = "Erro ao fazer login. Tente novamente.";
+            let fieldName: string | undefined;
+            if (firebaseCode) {
+                const formatted = formatFirebaseAuthError(firebaseCode);
+                userMessage = formatted.userMessage;
+                fieldName = formatted.fieldName;
+            }
+            setError(formatErrorForUser(err, {
+                operation: "fazer login",
+                fileName: FILE_NAME,
+                methodName: "LoginForm/handleLogin",
+                fieldName: fieldName,
+                fieldValue: email ? email.slice(0, 3) + "..." : undefined,
+                userMessage
+            }));
         } finally {
             setLoading(false);
         }

@@ -4,10 +4,13 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useFirebase } from "../components/FirebaseProvider";
 import { getTextos, addTexto, updateTexto, deleteTexto, type Texto } from "@/lib/textsService";
+import { logDetailed, formatErrorForUser } from "@/lib/errorUtils";
+
+const FILE_NAME = "app/texts/page.tsx";
 
 export default function TextsPage() {
   const router = useRouter();
-  const { initialized: firebaseInitialized } = useFirebase();
+  const { initialized: firebaseInitialized, auth } = useFirebase();
   const [textos, setTextos] = useState<Texto[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -28,7 +31,19 @@ export default function TextsPage() {
       const data = await getTextos();
       setTextos(data);
     } catch (err) {
-      console.error("Erro:", err);
+      const userId = auth?.currentUser?.uid;
+      const erro = err instanceof Error ? err : new Error(String(err));
+      logDetailed({
+        level: "error",
+        message: "Falha ao carregar lista de textos da biblioteca",
+        fileName: FILE_NAME,
+        methodName: "loadTextos",
+        lineNumber: 32,
+        userId,
+        errorName: erro.name,
+        errorMessage: erro.message,
+        stackTrace: erro.stack
+      });
     } finally {
       setLoading(false);
     }
@@ -51,7 +66,27 @@ export default function TextsPage() {
       setFormData({ titulo: '', conteudo: '', serie: '3º Ano', comDiagnostico: false });
       loadTextos();
     } catch (err) {
-      console.error("Erro ao salvar:", err);
+      const userId = auth?.currentUser?.uid;
+      const erro = err instanceof Error ? err : new Error(String(err));
+      logDetailed({
+        level: "error",
+        message: editingId ? "Falha ao atualizar texto existente" : "Falha ao cadastrar novo texto",
+        fileName: FILE_NAME,
+        methodName: "handleSubmit",
+        lineNumber: 58,
+        userId,
+        extraData: { editingId, titulo: formData.titulo, serie: formData.serie },
+        errorName: erro.name,
+        errorMessage: erro.message,
+        stackTrace: erro.stack
+      });
+      alert(formatErrorForUser(err, {
+        userMessage: editingId ? "Não foi possível atualizar o texto." : "Não foi possível salvar o novo texto.",
+        fileName: FILE_NAME,
+        methodName: "handleSubmit",
+        fieldName: "Dados do Texto",
+        fieldValue: formData.titulo
+      }));
     } finally {
       setSaving(false);
     }

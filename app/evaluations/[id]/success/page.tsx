@@ -2,14 +2,19 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { useFirebase } from "@/app/components/FirebaseProvider";
 import { getAvaliacaoById, type Avaliacao } from "@/lib/evaluationsService";
 import { getAlunoById, type Aluno } from "@/lib/services";
 import { getPerformanceLevel } from "@/lib/pcmUtils";
+import { logDetailed, formatErrorForUser } from "@/lib/errorUtils";
+
+const FILE_NAME = "app/evaluations/[id]/success/page.tsx";
 
 export default function SuccessPage() {
     const params = useParams();
     const router = useRouter();
     const searchParams = useSearchParams();
+    const { auth } = useFirebase();
     const evalId = searchParams.get('evalId');
     const alunoId = params.id as string;
 
@@ -27,14 +32,29 @@ export default function SuccessPage() {
                 ]);
                 setAvaliacao(ev);
                 setAluno(al);
-            } catch (err) {
-                console.error("Erro ao carregar dados de sucesso:", err);
+            } catch (err: unknown) {
+                const userId = auth?.currentUser?.uid;
+                const errorName = err instanceof Error ? err.name : "UnknownError";
+                const errorMessage = err instanceof Error ? err.message : String(err);
+                const stackTrace = err instanceof Error ? err.stack : undefined;
+                logDetailed({
+                    level: "error",
+                    message: "Falha ao carregar dados na página de sucesso da avaliação (avaliação e aluno)",
+                    fileName: FILE_NAME,
+                    methodName: "fetchData",
+                    lineNumber: 31,
+                    userId,
+                    errorName,
+                    errorMessage,
+                    stackTrace,
+                    extraData: { evalId, alunoId }
+                });
             } finally {
                 setLoading(false);
             }
         }
         fetchData();
-    }, [evalId, alunoId]);
+    }, [evalId, alunoId, auth]);
 
     if (loading) return <div className="animate-in" style={{ textAlign: 'center', padding: '5rem', color: 'var(--text-muted)' }}>Finalizando...</div>;
 

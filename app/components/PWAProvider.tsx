@@ -1,6 +1,9 @@
 "use client";
 
 import { useEffect } from "react";
+import { logDetailed } from "@/lib/errorUtils";
+
+const FILE_NAME = "app/components/PWAProvider.tsx";
 
 export function PWAProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
@@ -11,7 +14,16 @@ export function PWAProvider({ children }: { children: React.ReactNode }) {
 
         })
         .catch((error) => {
-          console.error("Falha ao registrar Service Worker:", error);
+          logDetailed({
+            level: "warn",
+            message: "Falha ao registrar Service Worker",
+            fileName: FILE_NAME,
+            methodName: "PWAProvider/useEffect",
+            lineNumber: 13,
+            errorName: error instanceof Error ? error.name : String(error),
+            errorMessage: error instanceof Error ? error.message : String(error),
+            stackTrace: error instanceof Error ? error.stack : undefined
+          });
         });
     }
   }, []);

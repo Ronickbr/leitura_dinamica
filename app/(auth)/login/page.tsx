@@ -3,7 +3,10 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { signInWithEmailAndPassword } from "firebase/auth";
+import { logDetailed, formatErrorForUser } from "@/lib/errorUtils";
 import { useFirebase } from "@/app/components/FirebaseProvider";
+
+const FILE_NAME = "app/(auth)/login/page.tsx";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -31,8 +34,21 @@ export default function LoginPage() {
       await signInWithEmailAndPassword(auth, email, password);
       router.push("/");
     } catch (err: any) {
-      console.error("Erro no login:", err);
-      setError(err.message || "Erro ao fazer login. Tente novamente.");
+      const userId = auth?.currentUser?.uid;
+      const erro = err instanceof Error ? err : new Error(String(err));
+      logDetailed({
+        level: "error",
+        message: "Falha ao realizar login do usuário",
+        fileName: FILE_NAME,
+        methodName: "handleLogin",
+        lineNumber: 41,
+        userId,
+        parameters: { email },
+        errorName: erro.name,
+        errorMessage: erro.message,
+        stackTrace: erro.stack
+      });
+      setError(formatErrorForUser(err, { operation: "realizar login", fileName: FILE_NAME, methodName: "handleLogin" }));
     } finally {
       setLoading(false);
     }

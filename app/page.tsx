@@ -3,10 +3,13 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { logDetailed, formatErrorForUser } from "@/lib/errorUtils";
 import { getAlunos, type Aluno } from "@/lib/services";
 import { getAllAvaliacoes, type Avaliacao } from "@/lib/evaluationsService";
 import { useFirebase } from "@/app/components/FirebaseProvider";
 import LoginForm from "@/app/components/LoginForm";
+
+const FILE_NAME = "app/page.tsx";
 
 const UsersIcon = () => <span>👥</span>;
 const AwardIcon = () => <span>🏆</span>;
@@ -77,7 +80,19 @@ export default function Dashboard() {
         }));
         setRecentEvaluations(recent);
       } catch (error) {
-        console.error("Erro no Dashboard:", error);
+        const userId = firebaseAuth?.currentUser?.uid;
+        const erro = error instanceof Error ? error : new Error(String(error));
+        logDetailed({
+          level: "error",
+          message: "Falha ao carregar dados do Dashboard (estatísticas e avaliações recentes)",
+          fileName: FILE_NAME,
+          methodName: "fetchDashboardData",
+          lineNumber: 88,
+          userId,
+          errorName: erro.name,
+          errorMessage: erro.message,
+          stackTrace: erro.stack
+        });
       } finally {
         setLoading(false);
       }

@@ -2,12 +2,15 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { logDetailed, formatErrorForUser } from "@/lib/errorUtils";
 import { getAlunos, addAluno, updateAluno, deleteAluno, getAlunoFilterOptions, type Aluno, type AlunoFilterOptions } from "@/lib/services";
 import { MobileCard, MobileCardList, MobileDataGrid, MobileDataPoint } from "../components/MobileCards";
 import { useSettings } from "../components/SettingsProvider";
 import { useFirebase } from "../components/FirebaseProvider";
 import { getDiagnosisStyle } from "@/lib/styleUtils";
 import { StudentFilterSelects } from "../components/StudentFilterSelects";
+
+const FILE_NAME = "app/students/page.tsx";
 
 const SearchIcon = () => (
   <svg viewBox="0 0 24 24" width="18" height="18" fill="none" aria-hidden="true">
@@ -152,9 +155,21 @@ export default function StudentsPage() {
       setAlunos(data);
       setFilterOptions(dynamicOptions);
     } catch (err: any) {
-      console.error("Erro ao carregar alunos:", err);
-      setError("Erro ao carregar dados do Firebase. Verifique sua conexão e permissões.");
-      setFiltersError("Nao foi possivel carregar as opcoes dos selects dinamicos.");
+      const userId = auth?.currentUser?.uid;
+      const erro = err instanceof Error ? err : new Error(String(err));
+      logDetailed({
+        level: "error",
+        message: "Falha ao carregar lista de alunos e opções de filtro dinâmicas",
+        fileName: FILE_NAME,
+        methodName: "loadAlunos",
+        lineNumber: 162,
+        userId,
+        errorName: erro.name,
+        errorMessage: erro.message,
+        stackTrace: erro.stack
+      });
+      setError(formatErrorForUser(err, { operation: "carregar lista de alunos", fileName: FILE_NAME, methodName: "loadAlunos" }));
+      setFiltersError(formatErrorForUser(err, { operation: "carregar opções dos filtros dinâmicos", fileName: FILE_NAME, methodName: "loadAlunos" }));
       setFilterOptions(EMPTY_FILTER_OPTIONS);
     } finally {
       setLoading(false);
@@ -176,7 +191,22 @@ export default function StudentsPage() {
       setFormData({ nome: '', turma: '', serie: '', turno: '', diagnostico: '', observacoes: '', anoLetivo: new Date().getFullYear().toString(), metaPCM: 0 });
       loadAlunos();
     } catch (err) {
-      console.error("Erro ao salvar:", err);
+      const userId = auth?.currentUser?.uid;
+      const erro = err instanceof Error ? err : new Error(String(err));
+      logDetailed({
+        level: "error",
+        message: editingId
+          ? `Falha ao atualizar dados do aluno (ID: ${editingId})`
+          : "Falha ao cadastrar novo aluno",
+        fileName: FILE_NAME,
+        methodName: "handleSubmit",
+        lineNumber: 190,
+        userId,
+        parameters: { editingId, formData: { nome: formData.nome, turma: formData.turma, serie: formData.serie } },
+        errorName: erro.name,
+        errorMessage: erro.message,
+        stackTrace: erro.stack
+      });
     } finally {
       setSaving(false);
     }

@@ -8,6 +8,9 @@ import { getAlunoById, type Aluno } from "@/lib/services";
 import { getTextos, type Texto } from "@/lib/textsService";
 import { processAudio, saveAvaliacao, getAvaliacoesPorAluno, type Avaliacao } from "@/lib/evaluationsService";
 import { getNormaNacional, getPerformanceLevel } from "@/lib/pcmUtils";
+import { logDetailed, formatErrorForUser } from "@/lib/errorUtils";
+
+const FILE_NAME = "app/evaluations/[id]/page.tsx";
 
 const MicIcon = () => <span>🎤</span>;
 const SquareIcon = () => <span>⏹️</span>;
@@ -17,7 +20,7 @@ export default function ReadingPage() {
   const params = useParams();
   const router = useRouter();
   const { isMobile } = useMobileExperience();
-  const { initialized: firebaseInitialized } = useFirebase();
+  const { initialized: firebaseInitialized, auth } = useFirebase();
   const alunoId = params.id as string;
 
   const [isRecording, setIsRecording] = useState(false);
@@ -64,7 +67,6 @@ export default function ReadingPage() {
           const textsInGrade = allTexts.filter(t => {
             const textSerieNorm = t.serie.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
 
-            // Tenta match exato ou match parcial se houver números iguais (resiliência)
             if (studentSerieNorm === textSerieNorm) return true;
 
             const sNum = studentData.serie.match(/(\d+)/)?.[1];
@@ -72,12 +74,10 @@ export default function ReadingPage() {
             return sNum && tNum && sNum === tNum;
           });
 
-          // Filtra por diagnóstico binário
           let filtered = textsInGrade.filter(t => 
             studentHasDiagnosis ? !!t.comDiagnostico : !t.comDiagnostico
           );
 
-          // Fallback para textos gerais caso não existam textos adaptados
           if (studentHasDiagnosis && filtered.length === 0) {
             filtered = textsInGrade.filter(t => !t.comDiagnostico);
           }
@@ -88,14 +88,29 @@ export default function ReadingPage() {
           }
           setHistorico(studentHistory);
         }
-      } catch (err) {
-        console.error("Erro ao carregar dados:", err);
+      } catch (err: unknown) {
+        const userId = auth?.currentUser?.uid;
+        const errorName = err instanceof Error ? err.name : "UnknownError";
+        const errorMessage = err instanceof Error ? err.message : String(err);
+        const stackTrace = err instanceof Error ? err.stack : undefined;
+        logDetailed({
+          level: "error",
+          message: "Falha ao carregar dados da página de avaliação (aluno, textos, histórico)",
+          fileName: FILE_NAME,
+          methodName: "fetchData",
+          lineNumber: 92,
+          userId,
+          errorName,
+          errorMessage,
+          stackTrace,
+          extraData: { alunoId, firebaseInitialized }
+        });
       } finally {
         setLoading(false);
       }
     }
     fetchData();
-  }, [alunoId, firebaseInitialized]);
+  }, [alunoId, firebaseInitialized, auth]);
 
   const qualitativeMetrics = [
     { key: 'leitura_precisa', label: 'Leitura Precisa', icon: '🎯' },
@@ -144,10 +159,9 @@ export default function ReadingPage() {
         const audioBlob = new Blob(audioChunksRef.current, { type: finalMime });
         setAudioUrl(URL.createObjectURL(audioBlob));
 
-        // Calcula a duração real em segundos
         if (recordingStartTimeRef.current) {
           const duration = (Date.now() - recordingStartTimeRef.current) / 1000;
-          setRecordingDuration(Math.min(duration, 60)); // Máximo de 60s
+          setRecordingDuration(Math.min(duration, 60));
         }
 
         setIsFinished(true);
@@ -157,9 +171,29 @@ export default function ReadingPage() {
       setIsRecording(true);
       setTimeLeft(60);
       recordingStartTimeRef.current = Date.now();
-    } catch (err) {
-      console.error('Erro ao acessar o microfone:', err);
-      alert('Erro ao acessar o microfone. Verifique as permissões.');
+    } catch (err: unknown) {
+      const userId = auth?.currentUser?.uid;
+      const errorName = err instanceof Error ? err.name : "UnknownError";
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      const stackTrace = err instanceof Error ? err.stack : undefined;
+      logDetailed({
+        level: "error",
+        message: "Falha ao acessar microfone para iniciar gravação da avaliação",
+        fileName: FILE_NAME,
+        methodName: "startRecording",
+        lineNumber: 161,
+        userId,
+        errorName,
+        errorMessage,
+        stackTrace,
+        extraData: { alunoId }
+      });
+      alert(formatErrorForUser(err, {
+        userMessage: "Erro ao acessar o microfone. Verifique as permissões do navegador e permita o acesso ao dispositivo de áudio (causa comum: permissão de microfone negada ou dispositivo indisponível).",
+        fileName: FILE_NAME,
+        methodName: "startRecording",
+        fieldName: "Microfone / Permissão de Áudio"
+      }));
     }
   };
 
@@ -183,7 +217,6 @@ export default function ReadingPage() {
         isGlassesUser
       );
 
-      // Salva dados temporários para a página de revisão
       sessionStorage.setItem('temp_evaluation_result', JSON.stringify({
         ...result,
         audioUrl,
@@ -194,8 +227,27 @@ export default function ReadingPage() {
 
       router.push(`/evaluations/${alunoId}/review`);
     } catch (err: unknown) {
-      console.error('Erro ao processar leitura:', err);
-      alert('Erro ao processar leitura. Tente novamente.');
+      const userId = auth?.currentUser?.uid;
+      const errorName = err instanceof Error ? err.name : "UnknownError";
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      const stackTrace = err instanceof Error ? err.stack : undefined;
+      logDetailed({
+        level: "error",
+        message: "Falha ao processar áudio da leitura e encaminhar para revisão",
+        fileName: FILE_NAME,
+        methodName: "handleFinish",
+        lineNumber: 197,
+        userId,
+        errorName,
+        errorMessage,
+        stackTrace,
+        extraData: { alunoId, textoId: texto?.id, recordingDuration, isForeigner, isGlassesUser }
+      });
+      alert(formatErrorForUser(err, {
+        userMessage: "Erro ao processar leitura. Não foi possível analisar o áudio gravado. Verifique a conexão e tente novamente.",
+        fileName: FILE_NAME,
+        methodName: "handleFinish"
+      }));
     } finally {
       setProcessing(false);
     }

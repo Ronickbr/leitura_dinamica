@@ -9,6 +9,9 @@ import { useFirebase } from "./FirebaseProvider";
 import { useMobileExperience } from "./MobileExperienceProvider";
 import { resetDatabase } from "@/lib/resetDatabaseService";
 import ThemeToggle from "./ThemeToggle";
+import { logDetailed, formatErrorForUser } from "@/lib/errorUtils";
+
+const FILE_NAME = "app/components/Layout.tsx";
 
 const MobileNav = dynamic(() => import("./MobileNav"), {
   ssr: false,
@@ -75,7 +78,16 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       }
       router.push("/login");
     } catch (error) {
-      console.error("Erro ao fazer logout:", error);
+      logDetailed({
+        level: "error",
+        message: "Erro ao fazer logout",
+        fileName: FILE_NAME,
+        methodName: "Layout/handleLogout",
+        lineNumber: 77,
+        errorName: error instanceof Error ? error.name : String(error),
+        errorMessage: error instanceof Error ? error.message : String(error),
+        stackTrace: error instanceof Error ? error.stack : undefined
+      });
     }
   };
 
@@ -97,11 +109,40 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         setShowResetModal(false);
         router.push("/");
       } else {
-        alert("Falha ao resetar banco de dados. Verifique o console ou suas regras de segurança do Firebase.");
+        const resetFailError = new Error("Serviço retornou falha sem exceção explícita ao resetar coleções: " + selectedCollections.join(", "));
+        logDetailed({
+          level: "error",
+          message: "Falha ao resetar banco de dados (retorno false sem exceção).",
+          fileName: FILE_NAME,
+          methodName: "Layout/handleResetDb",
+          lineNumber: 99,
+          extraData: { selectedCollections }
+        });
+        alert(formatErrorForUser(resetFailError, {
+          operation: "resetar banco de dados",
+          fileName: FILE_NAME,
+          methodName: "Layout/handleResetDb",
+          userMessage: "Falha ao resetar banco de dados. Verifique o console ou suas regras de segurança do Firebase."
+        }));
       }
     } catch (err) {
-      console.error(err);
-      alert("Erro grave ao tentar resetar.");
+      logDetailed({
+        level: "error",
+        message: "Erro grave ao tentar resetar banco de dados",
+        fileName: FILE_NAME,
+        methodName: "Layout/handleResetDb",
+        lineNumber: 102,
+        errorName: err instanceof Error ? err.name : String(err),
+        errorMessage: err instanceof Error ? err.message : String(err),
+        stackTrace: err instanceof Error ? err.stack : undefined,
+        extraData: { selectedCollections }
+      });
+      alert(formatErrorForUser(err, {
+        operation: "resetar banco de dados",
+        fileName: FILE_NAME,
+        methodName: "Layout/handleResetDb",
+        userMessage: "Erro grave ao tentar resetar."
+      }));
     } finally {
       setResetting(false);
     }

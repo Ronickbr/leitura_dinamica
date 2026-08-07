@@ -2,15 +2,20 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { logDetailed, formatErrorForUser } from "@/lib/errorUtils";
 import { getAlunoById, type Aluno } from "@/lib/services";
 import { getAvaliacoesPorAluno, type Avaliacao } from "@/lib/evaluationsService";
 import { getNormaNacional } from "@/lib/pcmUtils";
 import { useSettings } from "@/app/components/SettingsProvider";
+import { useFirebase } from "@/app/components/FirebaseProvider";
+
+const FILE_NAME = "app/students/[id]/performance/page.tsx";
 
 export default function StudentPerformancePage() {
     const params = useParams();
     const router = useRouter();
     const { anonymizeName, anonymizeText } = useSettings();
+    const { auth } = useFirebase();
     const [aluno, setAluno] = useState<Aluno | null>(null);
     const [evaluations, setEvaluations] = useState<Avaliacao[]>([]);
     const [loading, setLoading] = useState(true);
@@ -30,7 +35,20 @@ export default function StudentPerformancePage() {
                     return dateA - dateB; // Ordem cronológica para o gráfico
                 }));
             } catch (error) {
-                console.error("Erro ao buscar dados:", error);
+                const userId = auth?.currentUser?.uid;
+                const erro = error instanceof Error ? error : new Error(String(error));
+                logDetailed({
+                    level: "error",
+                    message: `Falha ao carregar dados de performance do aluno (ID: ${params.id})`,
+                    fileName: FILE_NAME,
+                    methodName: "fetchData",
+                    lineNumber: 41,
+                    userId,
+                    parameters: { alunoId: params.id },
+                    errorName: erro.name,
+                    errorMessage: erro.message,
+                    stackTrace: erro.stack
+                });
             } finally {
                 setLoading(false);
             }

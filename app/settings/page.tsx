@@ -8,11 +8,14 @@ import * as XLSX from "xlsx";
 import { addAluno, getAlunos, Aluno, addImportRecord, getImportHistory, ImportRecord } from "@/lib/services";
 import { saveAvaliacao } from "@/lib/evaluationsService";
 import { Timestamp } from "firebase/firestore";
+import { logDetailed, formatErrorForUser } from "@/lib/errorUtils";
+
+const FILE_NAME = "app/settings/page.tsx";
 
 export default function SettingsPage() {
     const router = useRouter();
     const { isAnonymized, setAnonymized } = useSettings();
-    const { initialized: firebaseInitialized } = useFirebase();
+    const { initialized: firebaseInitialized, auth } = useFirebase();
     const [loading, setLoading] = useState(false);
     const [uploadStatus, setUploadStatus] = useState<{ message: string; type: 'success' | 'error' | '' }>({ message: '', type: '' });
     const [history, setHistory] = useState<ImportRecord[]>([]);
@@ -148,7 +151,20 @@ export default function SettingsPage() {
                         errorCount++;
                     }
                 } catch (e) {
-                    console.error(`Erro ao importar aluno "${nome}":`, e);
+                    const userId = auth?.currentUser?.uid;
+                    const erro = e instanceof Error ? e : new Error(String(e));
+                    logDetailed({
+                        level: "error",
+                        message: `Falha ao importar aluno "${nome}" da planilha Excel`,
+                        fileName: FILE_NAME,
+                        methodName: "handleFileUpload",
+                        lineNumber: 154,
+                        userId,
+                        extraData: { rowIndex: i, nomeAlunoFalhou: String(nome), turma, serie },
+                        errorName: erro.name,
+                        errorMessage: erro.message,
+                        stackTrace: erro.stack
+                    });
                     errorCount++;
                 }
             }
@@ -167,8 +183,30 @@ export default function SettingsPage() {
             });
 
         } catch (err) {
-            console.error(err);
-            setUploadStatus({ message: 'Erro ao ler arquivo Excel.', type: 'error' });
+            const userId = auth?.currentUser?.uid;
+            const erro = err instanceof Error ? err : new Error(String(err));
+            logDetailed({
+                level: "error",
+                message: "Falha ao ler e processar arquivo Excel de importação de alunos",
+                fileName: FILE_NAME,
+                methodName: "handleFileUpload",
+                lineNumber: 187,
+                userId,
+                extraData: { fileName: file?.name, fileSize: file?.size },
+                errorName: erro.name,
+                errorMessage: erro.message,
+                stackTrace: erro.stack
+            });
+            setUploadStatus({ 
+                message: formatErrorForUser(err, { 
+                    userMessage: "Erro ao ler arquivo Excel de importação.", 
+                    fileName: FILE_NAME, 
+                    methodName: "handleFileUpload",
+                    fieldName: "Arquivo Excel",
+                    fieldValue: file?.name
+                }), 
+                type: 'error' 
+            });
         } finally {
             setLoading(false);
             e.target.value = '';
@@ -278,6 +316,20 @@ export default function SettingsPage() {
                     });
                     success++;
                 } catch (err) {
+                    const userId = auth?.currentUser?.uid;
+                    const erro = err instanceof Error ? err : new Error(String(err));
+                    logDetailed({
+                        level: "error",
+                        message: `Falha ao importar avaliação histórica do aluno "${row[idxAluno]}"`,
+                        fileName: FILE_NAME,
+                        methodName: "handleHistoryUpload",
+                        lineNumber: 313,
+                        userId,
+                        extraData: { rowIndex: i, nomeAlunoFalhou: String(row[idxAluno]), alunoId, pcmRaw: row[idxPCM], precisaoRaw: row[idxPrec] },
+                        errorName: erro.name,
+                        errorMessage: erro.message,
+                        stackTrace: erro.stack
+                    });
                     errors++;
                 }
             }
@@ -288,7 +340,30 @@ export default function SettingsPage() {
             });
 
         } catch (err) {
-            setUploadStatus({ message: 'Falha ao processar arquivo de histórico.', type: 'error' });
+            const userId = auth?.currentUser?.uid;
+            const erro = err instanceof Error ? err : new Error(String(err));
+            logDetailed({
+                level: "error",
+                message: "Falha ao processar arquivo de histórico de avaliações",
+                fileName: FILE_NAME,
+                methodName: "handleHistoryUpload",
+                lineNumber: 347,
+                userId,
+                extraData: { fileName: file?.name, fileSize: file?.size },
+                errorName: erro.name,
+                errorMessage: erro.message,
+                stackTrace: erro.stack
+            });
+            setUploadStatus({ 
+                message: formatErrorForUser(err, { 
+                    userMessage: "Falha ao processar arquivo de histórico de avaliações.", 
+                    fileName: FILE_NAME, 
+                    methodName: "handleHistoryUpload",
+                    fieldName: "Arquivo de Histórico",
+                    fieldValue: file?.name
+                }), 
+                type: 'error' 
+            });
         } finally {
             setLoading(false);
             e.target.value = '';

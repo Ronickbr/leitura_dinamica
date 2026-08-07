@@ -6,6 +6,9 @@ import { useFirebase } from "@/app/components/FirebaseProvider";
 import { getAlunos, type Aluno } from "@/lib/services";
 import { MobileCard, MobileCardList, MobileDataGrid, MobileDataPoint } from "@/app/components/MobileCards";
 import { getDiagnosisStyle } from "@/lib/styleUtils";
+import { logDetailed, formatErrorForUser } from "@/lib/errorUtils";
+
+const FILE_NAME = "app/evaluations/new/page.tsx";
 
 const SearchIcon = () => <span>🔍</span>;
 const StudentAvatarIcon = () => (
@@ -25,7 +28,7 @@ const StudentAvatarIcon = () => (
 
 export default function SelectionPage() {
   const router = useRouter();
-  const { initialized: firebaseInitialized } = useFirebase();
+  const { initialized: firebaseInitialized, auth } = useFirebase();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedTurma, setSelectedTurma] = useState('Todas');
   const [selectedSerie, setSelectedSerie] = useState('Todas');
@@ -63,14 +66,29 @@ export default function SelectionPage() {
       try {
         const data = await getAlunos();
         setAlunos(data);
-      } catch (err) {
-        console.error("Erro ao buscar alunos:", err);
+      } catch (err: unknown) {
+        const userId = auth?.currentUser?.uid;
+        const errorName = err instanceof Error ? err.name : "UnknownError";
+        const errorMessage = err instanceof Error ? err.message : String(err);
+        const stackTrace = err instanceof Error ? err.stack : undefined;
+        logDetailed({
+          level: "error",
+          message: "Falha ao buscar lista de alunos para seleção de avaliação",
+          fileName: FILE_NAME,
+          methodName: "fetchAlunos",
+          lineNumber: 67,
+          userId,
+          errorName,
+          errorMessage,
+          stackTrace,
+          extraData: { firebaseInitialized }
+        });
       } finally {
         setLoading(false);
       }
     }
     fetchAlunos();
-  }, [firebaseInitialized]);
+  }, [firebaseInitialized, auth]);
 
   const filteredAlunos = alunos.filter(aluno => {
     const matchesName = aluno.nome.toLowerCase().includes(searchTerm.toLowerCase());
