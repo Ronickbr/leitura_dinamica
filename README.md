@@ -1,4 +1,4 @@
-# 📖 Plataforma Leitura (v4.1.5)
+# 📖 Plataforma Leitura (v4.2.0)
 
 Plataforma de avaliação de fluência leitora com Next.js (App Router), persistência em Firebase e processamento de áudio via IA. O projeto foi refatorado para um monorepo Next.js unificado com API routes serverless.
 
@@ -6,6 +6,7 @@ Plataforma de avaliação de fluência leitora com Next.js (App Router), persist
 
 - [Visão Geral](#visão-geral)
 - [Stack Atual](#stack-atual)
+- [Arquitetura de Tratamento de Erros](#arquitetura-de-tratamento-de-erros)
 - [Banco de Dados](#banco-de-dados)
 - [Estrutura do Projeto](#estrutura-do-projeto)
 - [Variáveis de Ambiente](#variáveis-de-ambiente)
@@ -14,6 +15,7 @@ Plataforma de avaliação de fluência leitora com Next.js (App Router), persist
 - [Deploy na Vercel](#deploy-na-vercel)
 - [Experiência Mobile](#experiência-mobile)
 - [Migração Realizada](#migração-realizada)
+- [Troubleshooting](#troubleshooting)
 
 ## Visão Geral
 
@@ -29,87 +31,60 @@ O sistema permite que professores:
 - exportem relatórios completos em Excel filtrados;
 - exportem relatórios pedagógicos detalhados com diagnósticos de IA;
 - exportem datasets anonimizados para pesquisa acadêmica e artigos científicos;
-- **[NOVO]** alternem entre Temas Claro e Escuro com persistência de preferência;
-- **[NOVO]** operem a plataforma com experiência "app-like" em dispositivos móveis (Navegação Inferior);
-- **[NOVO]** detectem automaticamente dispositivos móveis, conexão lenta e preferência por economia de dados;
-- **[NOVO]** monitorem métricas mobile contínuas no cliente para diagnóstico de performance;
-- **[NOVO]** acompanhe o diagnóstico clínico do aluno (TDA, TDH, TEA, etc.) com estilização visual no histórico;
-- **[NOVO]** revisem métricas qualitativas justificadas por IA (Fluência, Silabação, etc.) antes de salvar;
-- **[NOVO-SEGURANÇA]** Validação robusta de uploads (Zod) e sanitização de inputs contra Prompt Injection;
-- **[NOVO-ACADÊMICO]** Cálculo automático de estatísticas acadêmicas (Desvio Padrão, IC 95%) e exportação de datasets JSON para pesquisa.
-- **[NOVO]** Importação Lote de Histórico via Excel (permite migrar avaliações antigas);
-- **[NOVO]** Análise de Evolução Comparativa via IA baseada em registros anteriores;
-- **[NOVO]** Suporte a **Alunos Estrangeiros**: Identificação de padrões fonológicos específicos (ex: crianças sul-americanas) para diagnósticos mais precisos;
-- **[NOVO]** Geração de **Perguntas de Compreensão**: A IA agora gera automaticamente 3 perguntas de interpretação baseadas no texto lido;
-- **[FIX]** Correção robusta na marcação de texto pedagógico (omissões/adições) usando classes CSS para evitar conflitos de estilo.
-- **v4.1.5**: **Limpeza de Código**. Remoção de logs de debug (console.log) e arquivos de testes obsoletos para um ambiente de produção mais limpo.
-- **v4.1.4**: **Refino dos Prompts de IA e Versionamento**. A transcrição agora recebe um guia contextual com série escolar, segmentação estrita e `temperature: 0`, enquanto o diagnóstico pedagógico passa a priorizar explicitamente a leitura literal e os dados estruturados do alinhamento.
-- **v4.1.3**: **Aprimoramento do Alinhamento de Omissões**. Refatoração da lógica de PCM usando *prefix matching* (programação dinâmica) para calcular com exatidão onde o aluno parou de ler no áudio de 1 minuto, impedindo que ruídos ou inserções no final da transcrição façam com que o restante do texto seja contabilizado incorretamente como erro.
-- **v4.1.2**: **Correção na Contagem de Omissões**. Ajustado o algoritmo de PCM para não classificar palavras não lidas no final do teste de leitura como erros em todos os casos (devido a uma interrupção por tempo esgotado), refletindo precisamente a fluência até o ponto de parada.
-- **v4.1.0**: **Fidelidade Visual e Precisão Pedagógica**. Melhoria no motor de alinhamento e renderização de transcrições.
-    - **Fidelidade de Transcrição**: Preservação total da pontuação e capitalização do texto original nas palavras acertadas.
-    - **Visualização de Substituições**: Novo formato `[original](lido)` com estilos CSS dedicados, permitindo que o professor veja exatamente qual palavra foi trocada por qual.
-    - **Prompt IA Otimizado**: Aprimoramento do diagnóstico clínico para identificar padrões fonológicos, visuais e de estrangeiros com maior rigor.
-    - **PCM Real**: Garantia de uso da duração exata do áudio no cálculo de fluência.
-- **v4.0.0**: **Revolução na UX: De Modais para Páginas Dedicadas**. Refatoração completa do fluxo de avaliação e detalhes de alunos.
-    - **Nova Jornada de Avaliação**: O fluxo agora é dividido em páginas sequenciais (Leitura -> Revisão -> Sucesso), permitindo foco total em cada etapa.
-    - **Página de Revisão**: Interface profissional para ajuste de métricas (PCM, Precisão, Erros) e conferência de áudio antes de salvar.
-    - **Página de Sucesso**: Feedback visual premium com resumo de desempenho e atalhos rápidos.
-    - **Página de Detalhes do Aluno**: Substituição do modal por uma página full-screen glassmorphism com visão 360º do estudante.
-    - **Limpeza de Projeto**: Remoção de artefatos legados (`frontend/`) e otimização da estrutura Next.js.
-- **v3.17.0**: **Refatoração Premium do Modal de Alunos**. Implementação de um novo design glassmorphism para o modal de detalhes do estudante, com ícones SVG personalizados, estrutura de grade organizada para métricas e efeitos de desfoque aprimorados (12px), elevando a estética para o padrão Antigravity.
-- **v3.16.3**: **Alinhamento de Diagnóstico e Ações em Linha Única (Mobile)**. Otimização adicional do card de alunos para dispositivos móveis, movendo o diagnóstico e os botões de ação para a mesma linha horizontal e utilizando ícones circulares, reduzindo o scroll vertical.
-- **v3.16.2**: **Otimização da Visualização Mobile de Alunos**. Remoção de informações redundantes nos cards de alunos em dispositivos móveis e simplificação das ações (Visualizar, Editar, Excluir) em uma única linha com ícones.
-- **v3.16.1**: **Correção de Lint**. Corrigido erro de *Temporal Dead Zone* ao acessar a variável `totalPages` antes de sua declaração no `useEffect` de ajuste de página.
-- **v3.16.0**: **Sistema de Paginação de Alunos**. Implementação de paginação na gestão de alunos para otimizar a performance e usabilidade. Inclui controles responsivos, reset automático de filtros e correção de posicionamento de modais em listas extensas.
-- **v3.15.2**: **Correção de Sobreposição Mobile**. Ajuste na variável `--header-height` e no `padding-top` do container principal para garantir que o cabeçalho fixo não cubra o conteúdo das páginas em dispositivos móveis.
-- **v3.15.0**: **Padronização do Sistema de Design**. Migração completa do token legado `--text-main` para `--text-primary` em toda a aplicação. Limpeza de cores indigo hardcoded em favor da paleta "Deep Institutional Blue" em gradientes, botões e badges. Adição de tokens auxiliares `--primary-soft` e `--primary-border` para maior consistência.
-- **v3.14.1**: **Exibição de Erros em Relatórios**. Adicionada a exibição explícita do total de erros cometidos pelo aluno nos modais de revisão, sucesso e no relatório detalhado do histórico, melhorando o feedback pedagógico quantitativo.
-- **v3.14.0**: **Suporte a Alunos Estrangeiros e Perguntas de Compreensão**. Implementada a detecção de padrões fonológicos para estrangeiros e geração automática de 3 perguntas de interpretação de texto integradas ao relatório e histórico.
-- **v3.13.5**: **Refinamento de Espaçamento Mobile**. Aumentado o recuo superior do conteúdo principal para 100px no mobile (Header 80px + Respiro), garantindo que títulos de página e botões de navegação nunca fiquem sob o cabeçalho fixo.
-- **v3.13.4**: **Correção de Sobreposição Mobile**. Ajuste global no sistema de design para evitar que o cabeçalho fixo sobreponha o conteúdo principal em dispositivos móveis. Aumentada a altura do cabeçalho para 64px em telas pequenas e recalibrado o padding superior das páginas para garantir visibilidade total dos títulos e elementos de navegação.
-- **v3.13.3**: **Persistência de Filtros na Avaliação**. Implementação de persistência automática dos filtros de "Série" e "Turma" na página de seleção de estudantes via `localStorage`, facilitando o fluxo de trabalho de professores que realizam múltiplas avaliações consecutivas para a mesma turma.
-- **NOVO**: Melhoria no espaçamento e visibilidade dos filtros na página de alunos (Gerenciar Alunos), garantindo exibição inline e sem cortes.
-- **[NOVO]** Filtros dinâmicos por Série e Turma na página de histórico para segmentação de avaliações.
-- **[NOVO]** Cards de estatísticas (Total Alunos, Média PCM, etc.) e exportações (Excel/JSON) no histórico agora são reativos aos filtros aplicados.
-- **[NOVO]** Melhoria no espaçamento e visibilidade dos filtros no histórico, garantindo exibição inline e adaptável.
-- **[NOVO]** Modal de Revisão de Avaliação com efeito glassmorphism para uma experiência de usuário mais interativa.
-- **v3.11.0**: Migração AI Unificada. Refatoração do `analysisService.ts` para utilizar exclusivamente OpenAI (Whisper-1 e GPT-4o), simplificando a infraestrutura e removendo dependências obsoletas como Groq e OpenRouter.
-- **v3.9.1**: **Modal de Resultado e Refinamento de Diagnóstico**. Implementação do modal de feedback imediato após a avaliação, exibindo PCM e Precisão de forma destacada. Refinamento do prompt de IA para utilizar os dados de alinhamento global (Levenshtein) em diagnósticos pedagógicos mais técnicos e precisos.
-- **v3.9.0**: **Motor de Avaliação de Alta Precisão**. Implementação de algoritmo de alinhamento global de palavras (Levenshtein) para detecção milimétrica de omissões e substituições fonológicas. Inclusão de captura de duração real do áudio para cálculo exato de PCM, eliminando subestimativas em leituras rápidas.
-- **v3.8.6**: Modal de Resultado Pós-Avaliação. Implementação de um feedback visual imediato após o salvamento dos dados, exibindo um resumo quantitativo (PCM e Precisão) e o nível de desempenho, facilitando a navegação entre o relatório completo e novas avaliações.
-- **v3.8.5**: Melhoria Global de Temas (Claro/Escuro). Padronização de tokens de texto para garantir alto contraste em ambos os modos, eliminação de cores hardcoded (#000000) e refinamento estético com novos tokens de borda glass e padrões de fundo dinâmicos para uma experiência premium Antigravity.
-- **v3.8.4**: Melhorias de Usabilidade Mobile. Ajuste no padding superior da página para evitar sobreposição do conteúdo pelo cabeçalho fixo e remoção do efeito glassmorphism da barra de navegação inferior (agora com fundo sólido) para melhor clareza e performance em dispositivos antigos.
-- **v3.8.3**: Ajustes de Contraste e Layout no Relatório. Conversão de todo o texto do relatório para preto puro (#000000) e alinhamento dos cards de métricas (PCM, Precisão, Objetivo) em uma única linha horizontal para melhor densidade de informação.
-- **v3.8.2**: Otimização de Espaçamento no Relatório. Redução do tamanho das métricas de desempenho e ajustes de margens para garantir o encaixe de todo o conteúdo em uma única página A4.
-- **v3.8.1**: Ajustes finos no Relatório PDF. Ocultação do cabeçalho global do sistema na impressão, remoção de emojis coloridos e normalização para 100% Preto e Branco (BW) com bordas sólidas.
-- **v3.8.0**: **Relatório Minimalista e Profissional (1 Página)**. Refatoração completa da Engine de Impressão para gerar documentos institucionais em Preto e Branco, otimizados para economia de tinta e conformidade técnica. O novo layout garante que todos os dados essenciais (aluno, PCM, precisão, diagnósticos e transcrição) caibam em uma única folha A4, incluindo áreas formais para assinaturas.
-- v3.7.0: **Redesign Institucional Premium e Listas Mobile Optimizadas**. Implementação da nova paleta "Deep Institutional Blue" e tipografia **Lexend** para foco pedagógico. Refatoração completa das tabelas mobile: substituímos os cards pesados por uma **Lista com Drop (Accordions)**, garantindo maior densidade de informação e um visual profissional de alto nível. Inclusão de animações staggered em todas as telas principais.
-- v3.6.2: Refinamento de Layout e Acessibilidade. Padronização de `touch-target` para 48px via variáveis CSS; melhoria na estrutura de cabeçalhos responsivos; implementação de scroll horizontal via CSS em tabelas densas no desktop; e otimização do fluxo de carregamento no formulário de login para uma experiência mais fluida.
-- v3.6.1: Implementação de **Cards Expansíveis (Collapsible)** em todas as listagens mobile.
-- **v3.6.0**: Otimização profunda da responsividade mobile. Refatoração completa da `MobileNav` (Navegação Inferior) para eliminar falhas de layout e overflow; ajuste global de tokens de espaçamento para telas ultra-estreitas; melhoria nos alvos de toque (mínimo 44px) e legibilidade de fontes. Remoção de estilos inline residuais em páginas críticas.
-- **v3.5.1**: Pequenas correções e melhorias. Introdução do componente `StudentFilterSelects` para filtragem refinada de alunos e suporte a geração automatizada de ícones PWA.
-- **v3.5.0**: Reformulação do Sistema de Design. Introdução de escala de espaçamento padronizada (`--space-scale`), refatoração completa de paddings, margins e grids para garantir consistência visual em todos os dispositivos e eliminar erros de transbordamento de cards.
-- **v3.4.1**: Ajustes de Respiro e Layout. Correção de espaçamentos entre blocos, frases e elementos de formulário para evitar visual "apertado" e sobreposições.
-- **v3.4.0**: Upgrade Premium UI/UX. Refatoração completa do sistema de design, tokens HSL equilibrados, animações staggered, nova tipografia (Outfit) e acabamento premium com Glassmorphism 2.0.
-- **v3.3.1**: Implementada Marcação Pedagógica na Transcrição. A IA agora identifica e destaca visualmente: **Erros/Substituições (Negrito)**, [Omissões (Colchetes)] e (Adições (Parênteses)), facilitando o diagnóstico visual rápido para o professor.
-- **v3.3.0**: Conclusão da Modularização do CSS. Refatoração completa das páginas de Histórico, Detalhes de Avaliação, Seleção de Estudante e Biblioteca de Textos para o padrão de Design System modular (styles/*.css), eliminando estilos inline residuais e garantindo responsividade mobile 100% consistente. Correção de lints de propriedades CSS para compatibilidade padrão.
-- **v3.2.1**: Implementada Arquitetura CSS Modular unificada (`globals.css` -> `styles/*.css`); Refatoração completa das páginas de Dashboard, Avaliação e Alunos para eliminar estilos inline; Restauração de layouts quebrados e melhoria na manutenção do sistema de design.
-- **v3.2.0**: Upgrade "Premium" na interface da Biblioteca de Textos com design glassmorphism aprimorado, busca dinâmica, badges de métricas e animações de entrada; Adicionada funcionalidade de edição de textos.
-- **v3.1.2**: Correção de redirecionamento para usuários autenticados na página de login e ocultação do cabeçalho do app em rotas públicas para evitar sobreposição visual.
-- **v3.1.1**: Remoção da transparência do cabeçalho para melhor legibilidade; Adição de validação de texto original no serviço de avaliação para prevenir erros de processamento massivo; Atualização da lista de ignore do Git.
-- **v3.1.0**: Implementação de renderização condicional do formulário de login na home page, eliminando redirecionamentos desnecessários.
-- **v3.0.1**: Correção do layout do botão "Exportar JSON (Pesquisa)" na página de histórico, garantindo alinhamento e estilização correta no desktop e mobile.
-- **v3.0.0**: Implementação de importação de histórico via Excel e análise de evolução comparativa automática.
-- **v2.8.0**: Implementação de diagnósticos de leitura dinâmicos calibrados por série e meta de PCM, categorização de erros e indicador de confiança.
-- **v2.7.6**: Ajuste de contraste nos filtros da página de seleção de estudante (correção da cor da fonte nos selects e inputs).
-- **v2.7.5**: Adição de resumo de totais (total de alunos e total com diagnóstico) ao final da listagem de alunos (Desktop e Mobile).
-- **v2.7.4**: Implementação das Regras de Segurança do Firestore (`firestore.rules`) incluindo a coleção de textos.
-- **v2.7.3**: Correção na visibilidade de textos cadastrados e resiliência nas consultas Firestore (remoção de `orderBy` para evitar erros de índice); Sincronização robusta com inicialização do Firebase em todas as páginas de listagem.
-- **v2.7.2**: Correção de visibilidade e contraste das cores de diagnósticos clínicos; Uniformização visual com novo utilitário de estilos.
-- **v2.7.1**: Correção na Importação Lote (Cabeçalhos Flexíveis) e Sincronização de Dados (Firebase Wait).
-- **v2.7.0**: Dashboard Individual do Aluno, Metas Personalizadas e Normas SAEB/ANA integrada.
-- **v2.6.0**: Relatório PDF nativo, Organização por Ano Letivo, Segurança de Headers (CORS/CSP) e Audit Logging.
+- alternem entre Temas Claro e Escuro com persistência de preferência;
+- operem a plataforma com experiência "app-like" em dispositivos móveis (Navegação Inferior);
+- detectem automaticamente dispositivos móveis, conexão lenta e preferência por economia de dados;
+- monitorem métricas mobile contínuas no cliente para diagnóstico de performance;
+- acompanhe o diagnóstico clínico do aluno (TDA, TDH, TEA, etc.) com estilização visual no histórico;
+- revisem métricas qualitativas justificadas por IA (Fluência, Silabação, etc.) antes de salvar;
+- Validação robusta de uploads (Zod) e sanitização de inputs contra Prompt Injection;
+- Cálculo automático de estatísticas acadêmicas (Desvio Padrão, IC 95%) e exportação de datasets JSON para pesquisa.
+- Importação Lote de Histórico via Excel (permite migrar avaliações antigas);
+- Análise de Evolução Comparativa via IA baseada em registros anteriores;
+- Suporte a **Alunos Estrangeiros**: Identificação de padrões fonológicos específicos (ex: crianças sul-americanas) para diagnósticos mais precisos;
+- Geração de **Perguntas de Compreensão**: A IA agora gera automaticamente 3 perguntas de interpretação baseadas no texto lido;
+- Correção robusta na marcação de texto pedagógico (omissões/adições) usando classes CSS para evitar conflitos de estilo.
+
+## Changelog
+
+### v4.2.0 — **Arquitetura de Erros e Limpeza de Artefatos**
+- **Arquitetura Centralizada de Exceções**: Implementado `lib/errorUtils.ts` com a classe `DetailedError`, função `logDetailed()` e `formatErrorForUser()` para tratamento uniforme em toda a aplicação.
+- **Eliminação de Catch Genéricos**: Removidos 64 blocos `try/catch` genéricos em 22 arquivos (Firebase, OpenAI, PCM, UI). Toda exceção agora carrega metadados completos: Arquivo, Linha, Método, Endpoint, Código HTTP, Campo/Valor causador.
+- **Logs Exaustivos**: Implementado registro obrigatório de Timestamp, Usuário, Método, Parâmetros, Exceção completa e Stack Trace em ambiente de desenvolvimento.
+- **Segurança de Exposição**: Stack trace e detalhes técnicos só são expostos ao usuário em ambiente de desenvolvimento; em produção, retorna mensagem amigável com ID de correlação.
+- **Validações Específicas**: Todo erro de validação informa o campo exato e o motivo detalhado, eliminando mensagens genéricas.
+- **Remoção de Artefatos de Teste**: Excluídos scripts de calibração (`validate-reading-calibration.ts`, `test-aluno-teste5.ts`), configuração Playwright e dependência `@playwright/test`. Repositório agora contém apenas código de produção.
+- **Novo Script `typecheck`**: Adicionado `npm run typecheck` para validação estática TypeScript sem emitir arquivos.
+- **Convenção de Engenharia**: Avaliações com `transcricaoMarcada` (edição manual do professor) ignoram o recálculo automático de métricas PCM, preservando a intervenção pedagógica.
+
+### v4.1.5 — **Limpeza de Código**
+Remoção de logs de debug (console.log) e arquivos de testes obsoletos para um ambiente de produção mais limpo.
+
+### v4.1.4 — **Refino dos Prompts de IA e Versionamento**
+A transcrição agora recebe um guia contextual com série escolar, segmentação estrita e `temperature: 0`, enquanto o diagnóstico pedagógico passa a priorizar explicitamente a leitura literal e os dados estruturados do alinhamento.
+
+### v4.1.3 — **Aprimoramento do Alinhamento de Omissões**
+Refatoração da lógica de PCM usando *prefix matching* (programação dinâmica) para calcular com exatidão onde o aluno parou de ler no áudio de 1 minuto, impedindo que ruídos ou inserções no final da transcrição façam com que o restante do texto seja contabilizado incorretamente como erro.
+
+### v4.1.2 — **Correção na Contagem de Omissões**
+Ajustado o algoritmo de PCM para não classificar palavras não lidas no final do teste de leitura como erros em todos os casos (devido a uma interrupção por tempo esgotado), refletindo precisamente a fluência até o ponto de parada.
+
+### v4.1.0 — **Fidelidade Visual e Precisão Pedagógica**
+Melhoria no motor de alinhamento e renderização de transcrições.
+- **Fidelidade de Transcrição**: Preservação total da pontuação e capitalização do texto original nas palavras acertadas.
+- **Visualização de Substituições**: Novo formato `[original](lido)` com estilos CSS dedicados.
+- **Prompt IA Otimizado**: Diagnóstico clínico aprimorado para padrões fonológicos e de estrangeiros.
+- **PCM Real**: Garantia de uso da duração exata do áudio no cálculo de fluência.
+
+### v4.0.0 — **Revolução na UX: De Modais para Páginas Dedicadas**
+Refatoração completa do fluxo de avaliação e detalhes de alunos.
+- **Nova Jornada de Avaliação**: Fluxo dividido em páginas sequenciais (Leitura → Revisão → Sucesso).
+- **Página de Revisão**: Interface profissional para ajuste de métricas antes de salvar.
+- **Página de Sucesso**: Feedback visual premium com resumo de desempenho.
+- **Página de Detalhes do Aluno**: Página full-screen glassmorphism com visão 360°.
+- **Limpeza de Projeto**: Remoção de artefatos legados (`frontend/`).
+
+---
 
 ## Stack Atual
 
@@ -119,6 +94,58 @@ O sistema permite que professores:
 - **API**: Next.js API Routes (serverless)
 - **IA**: OpenAI Total (Whisper-1 + GPT-4o)
 - **Deploy**: Vercel
+- **Validação**: Zod 4
+- **Tratamento de Erros**: `lib/errorUtils.ts` (DetailedError + logDetailed)
+
+## Arquitetura de Tratamento de Erros
+
+Toda a aplicação segue um contrato estrito de tratamento de exceções centralizado em [`lib/errorUtils.ts`](./lib/errorUtils.ts).
+
+### Princípios Fundamentais
+
+| Regra | Descrição |
+| --- | --- |
+| ❌ Proibido | Mensagens genéricas ("Algo deu errado", "Erro interno") |
+| ❌ Proibido | Blocos `catch` genéricos sem metadados ou `try/catch` vazios |
+| ✅ Obrigatório | Cada exceção informa: Nome, Arquivo, Linha, Método, Endpoint (se houver), Código HTTP, Mensagem original, Campo/Valor causador |
+| ✅ Obrigatório | Logs contêm: Timestamp, Usuário, Método, Parâmetros, Exceção completa + Stack Trace |
+| ✅ Segurança | Stack trace só é exposto em `NODE_ENV !== 'production'` |
+
+### Uso Padrão
+
+```typescript
+import { DetailedError, logDetailed, formatErrorForUser } from "@/lib/errorUtils";
+
+// 1. Capturar com contexto
+try {
+  await algumServico(parametros);
+} catch (originalError) {
+  const erro = new DetailedError(
+    "Falha ao processar a avaliação do aluno",
+    originalError,
+    {
+      arquivo: "app/evaluations/new/page.tsx",
+      linha: 142,
+      metodo: "handleSalvarAvaliacao",
+      dados: { alunoId, textoId, audioDuracao },
+    }
+  );
+  logDetailed(erro); // Loga tudo (console + metadados)
+  toast.error(formatErrorForUser(erro)); // Mostra apenas mensagem segura ao usuário
+}
+```
+
+### Fluxo de Erro
+
+```
+Exceção Bruta
+     ↓
+DetailedError (envelope com metadados)
+     ↓
+logDetailed() (registro exaustivo em DEV)
+     ↓
+formatErrorForUser() (mensagem segura / stacktrace em DEV)
+```
 
 ## Banco de Dados
 
@@ -138,30 +165,37 @@ leitura/
 │   │   ├── health/
 │   │   └── process-audio/
 │   ├── (auth)/               # Grupo de autenticação (Login opcional)
-│   ├── evaluations/          # Avaliações
+│   ├── evaluations/          # Avaliações (fluxo multi-página)
 │   ├── students/             # Gerenciamento de alunos
 │   ├── texts/                # Biblioteca de textos
 │   ├── history/              # Histórico de avaliações
 │   ├── components/           # Componentes compartilhados
+│   ├── styles/               # Design System modular (tokens, glass, layout)
 │   ├── layout.tsx            # Layout principal
 │   ├── page.tsx              # Dashboard
 │   └── globals.css           # Estilos globais
 ├── lib/                      # Serviços e utilitários
 │   ├── firebase.ts           # Configuração Firebase
 │   ├── auth.ts               # Autenticação
+│   ├── errorUtils.ts         # 🔐 Arquitetura centralizada de erros
 │   ├── services.ts           # CRUD alunos
 │   ├── textsService.ts       # CRUD textos
 │   ├── evaluationsService.ts # Avaliações + processAudio
 │   ├── analysisService.ts    # IA (OpenAI Total: Transcrição + Diagnóstico)
-│   ├── pcmUtils.ts           # Utilitários PCM
-│   └── statsUtils.ts         # Estatísticas Acadêmicas (Média, Desvio Padrão, IC 95%)
-├── docs/                     # Documentação
-├── .env                      # Variáveis de ambiente
+│   ├── pcmUtils.ts           # Utilitários PCM e alinhamento
+│   ├── resetDatabaseService.ts # Reset seguro do BD (admin apenas)
+│   ├── statsUtils.ts         # Estatísticas Acadêmicas
+│   └── styleUtils.ts         # Tokens de estilo
+├── docs/                     # Documentação técnica
+├── public/                   # Assets estáveis e PWA
+├── scripts/
+│   └── generate-icons.js     # Geração de ícones PWA
 ├── .env.example              # Template de variáveis
 ├── next.config.ts            # Configuração Next.js
 ├── package.json              # Scripts e dependências
 ├── tsconfig.json             # Configuração TypeScript
-├── vercel.json               # Configuração Vercel
+├── firestore.rules           # Regras de segurança do Firestore
+├── firebase.json             # Configuração Firebase Hosting
 └── README.md
 ```
 
@@ -198,11 +232,11 @@ Copy-Item .env.example .env
 | `npm run dev` | Inicia o servidor de desenvolvimento em `:3000` |
 | `npm run build` | Gera o build de produção |
 | `npm run start` | Inicia o servidor de produção |
-| `npm run lint` | Executa ESLint |
-| `npm run test:mobile` | Executa a suíte mobile em navegadores emulados |
-| `npm run test:mobile:headed` | Executa a suíte mobile com interface gráfica |
+| `npm run lint` | Executa ESLint em todo o projeto |
+| `npm run typecheck` | Valida tipos TypeScript sem emitir arquivos |
 | `npm run deploy:preview` | Dispara deploy preview via Vercel CLI |
 | `npm run deploy:prod` | Dispara deploy de produção via Vercel CLI |
+| `npm run generate:icons` | Gera ícones PWA em múltiplos tamanhos |
 
 ## Desenvolvimento Local
 
@@ -233,13 +267,14 @@ O projeto estará disponível em `http://localhost:3000`.
 ### 4. Validar antes de subir
 
 ```bash
+# Valida tipos TypeScript
+npm run typecheck
+
+# Valida lint
+npm run lint
+
+# Gera build de produção
 npm run build
-```
-
-### 5. Validar a experiência mobile
-
-```bash
-npm run test:mobile
 ```
 
 ## Deploy na Vercel
@@ -287,26 +322,24 @@ npm run deploy:prod
 
 ## Experiência Mobile
 
-O projeto agora possui uma camada dedicada de experiência mobile com:
+O projeto possui uma camada dedicada de experiência mobile com:
 
 - detecção automática de viewport, touch, economia de dados e orientação;
 - navegação inferior carregada sob demanda;
 - cabeçalhos, formulários e listas adaptados para telas pequenas;
 - conversão de tabelas para **Listas com Drop (Accordions)** profissionais, eliminando cards redundantes;
-- monitoramento contínuo de `ttfb`, `fcp`, `lcp`, `cls`, `load`, `longTaskCount` e `resourceCount`;
-- testes automatizados em perfis iPhone, Android Chrome e WebKit mobile.
+- monitoramento contínuo de `ttfb`, `fcp`, `lcp`, `cls`, `load`, `longTaskCount` e `resourceCount`.
 
 Documentação detalhada:
 
 - [docs/mobile-experience.md](./docs/mobile-experience.md)
-- [skill mobile-experience-optimizer](./.trae/skills/mobile-experience-optimizer/SKILL.md)
 
 ## Migração Realizada
 
-Esta versão (v4.1.0) consolidou a nova arquitetura de fluxo de avaliação:
+Esta versão consolidou a nova arquitetura de fluxo de avaliação:
 
-- **v4.x**: Transição completa para fluxo de avaliação multi-página (`new` -> `[id]` -> `review` -> `success`), garantindo foco e precisão em cada etapa.
-- **Limpeza**: Remoção definitiva de pastas legadas (`frontend/`), artefatos temporários (`scratch/`) e rotas de teste (`mobile-preview/`).
+- **v4.x**: Transição completa para fluxo de avaliação multi-página (`new` → `[id]` → `review` → `success`), garantindo foco e precisão em cada etapa.
+- **Limpeza**: Remoção definitiva de pastas legadas (`frontend/`), artefatos temporários (`scratch/`), rotas de teste (`mobile-preview/`) e suítes de teste locais.
 - **🎯 Funcionalidades Finais (Fase 1, 2 e Robustez Acadêmica)**:
     - **Painel do Aluno**: Dashboard individual com gráfico de progresso e histórico de intervenções pedagógicas da IA.
     - **Contexto SAEB/ANA**: Comparação automática com normas nacionais brasileiras de fluência leitora por série.
@@ -314,12 +347,13 @@ Esta versão (v4.1.0) consolidou a nova arquitetura de fluxo de avaliação:
     - **Segurança de Infra**: Headers HTTP restritivos, Prevenção de XSS, Sanitização de inputs (Zod) e Auditoria de chamadas de IA.
     - **Relatório PDF**: Exportação visual profissional dos diagnósticos diretamente do navegador.
     - **Autenticação**: Fluxo seguro de E-mail e Senha.
+    - **Arquitetura de Erros**: Tratamento centralizado sem catch genéricos, com metadados completos em cada exceção.
 
 ## Troubleshooting
 
 ### Build falha ou tela branca
 
-Verifique se todas as variáveis do Firebase estão cadastradas na Vercel e no `.env` local.
+Verifique se todas as variáveis do Firebase estão cadastradas na Vercel e no `.env` local. Rode `npm run typecheck` para validar tipos antes do build.
 
 ### `/api/process-audio` retorna erro 500
 
@@ -328,7 +362,10 @@ Confirme:
 - formato do áudio suportado;
 - tamanho do arquivo abaixo de 25 MB.
 
+Os logs completos com stack trace estarão no console do servidor em ambiente de desenvolvimento, incluindo arquivo, linha e método da falha.
+
 ### Tela de login em branco
+
 Caso a tela de login não apareça, certifique-se de estar usando a versão mais recente com a correção do componente `Layout` que impede bloqueio de renderização do formulário.
 
 ### Auth/invalid-api-key no build
