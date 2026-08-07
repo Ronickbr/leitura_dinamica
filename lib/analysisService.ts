@@ -9,6 +9,130 @@ const MAX_ORIGINAL_TEXT_LENGTH = 10000;
 const MAX_AUDIO_FILE_SIZE_BYTES = 25 * 1024 * 1024; // 25 MB
 const OPENAI_TIMEOUT_MS = 120_000; // 2 minutos
 
+const RETRY_MAX_ATTEMPTS = 3;
+const RETRY_BASE_DELAY_MS = 1000;
+const RETRY_MAX_DELAY_MS = 30_000;
+const RETRY_JITTER_RATIO = 0.3;
+
+function sleep(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function extractRetryAfterMs(error: unknown): number | null {
+  const headers = (error as any)?.headers;
+  if (!headers) return null;
+  const retryAfterSec =
+    headers["retry-after"] ??
+    headers["Retry-After"];
+  if (retryAfterSec !== undefined && retryAfterSec !== null) {
+    const parsed = Number(retryAfterSec);
+    if (!Number.isNaN(parsed) && parsed > 0) {
+      return Math.min(parsed * 1000, RETRY_MAX_DELAY_MS);
+    }
+  }
+  const rateLimitReset =
+    headers["x-ratelimit-reset-requests"] ??
+    headers["X-RateLimit-Reset-Requests"] ??
+    headers["x-ratelimit-reset-tokens"] ??
+    headers["X-RateLimit-Reset-Tokens"];
+  if (rateLimitReset && typeof rateLimitReset === "string") {
+    try {
+      const match = rateLimitReset.match(/(\d+(?:\.\d+)?)\s*s/);
+      if (match) {
+        const secs = Number(match[1]);
+        if (!Number.isNaN(secs) && secs > 0) {
+          return Math.min(Math.ceil(secs * 1000), RETRY_MAX_DELAY_MS);
+        }
+      }
+    } catch {}
+  }
+  return null;
+}
+
+function computeBackoffDelay(attempt: number, retryAfterMs: number | null): number {
+  if (retryAfterMs !== null) {
+    const jitter = retryAfterMs * RETRY_JITTER_RATIO * (Math.random() * 2 - 1);
+    return Math.min(Math.max(retryAfterMs + jitter, RETRY_BASE_DELAY_MS), RETRY_MAX_DELAY_MS);
+  }
+  const exponential = RETRY_BASE_DELAY_MS * Math.pow(2, attempt - 1);
+  const jitter = exponential * RETRY_JITTER_RATIO * (Math.random() * 2 - 1);
+  return Math.min(Math.max(exponential + jitter, RETRY_BASE_DELAY_MS), RETRY_MAX_DELAY_MS);
+}
+
+interface WithRetryContext {
+  operationName: string;
+  fileName: string;
+  methodName: string;
+  lineNumber: number;
+  userId?: string;
+  extraData?: Record<string, unknown>;
+  maxAttempts?: number;
+}
+
+async function withRetry<T>(
+  operation: (attempt: number) => Promise<T>,
+  context: WithRetryContext
+): Promise<T> {
+  const maxAttempts = context.maxAttempts ?? RETRY_MAX_ATTEMPTS;
+  let lastError: unknown;
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      if (attempt > 1) {
+        logDetailed({
+          level: "info",
+          message: `[Retry ${attempt}/${maxAttempts}] Executando nova tentativa para: ${context.operationName}`,
+          fileName: context.fileName,
+          methodName: context.methodName,
+          lineNumber: context.lineNumber,
+          userId: context.userId,
+          extraData: { ...context.extraData, attempt, maxAttempts }
+        });
+      }
+      return await operation(attempt);
+    } catch (error: unknown) {
+      lastError = error;
+      const classification = classifyOpenAIError(error);
+
+      if (!classification.retryable || attempt >= maxAttempts) {
+        throw error;
+      }
+
+      const retryAfterMs = extractRetryAfterMs(error);
+      const delayMs = computeBackoffDelay(attempt, retryAfterMs);
+      const originalName = error instanceof Error ? error.name : "UnknownError";
+      const originalMessage = error instanceof Error ? error.message : String(error);
+      const httpStatus = (error as any)?.status ?? (error as any)?.code ?? null;
+
+      logDetailed({
+        level: "warn",
+        message: `[Retry ${attempt}/${maxAttempts}] Erro retryable detectado em ${context.operationName}. Aguardando ${Math.round(delayMs)}ms antes da próxima tentativa.`,
+        fileName: context.fileName,
+        methodName: context.methodName,
+        lineNumber: context.lineNumber,
+        userId: context.userId,
+        errorName: originalName,
+        errorMessage: originalMessage,
+        extraData: {
+          ...context.extraData,
+          attempt,
+          maxAttempts,
+          categoria: classification.category,
+          retryable: classification.retryable,
+          httpStatus,
+          delayMs: Math.round(delayMs),
+          retryAfterHeaderMs: retryAfterMs,
+          nextAttemptAt: new Date(Date.now() + delayMs).toISOString()
+        }
+      });
+
+      await sleep(delayMs);
+    }
+  }
+
+  throw lastError;
+}
+
 function sanitizeInput(text: string): string {
   if (!text) return "";
   return text
@@ -537,16 +661,32 @@ ${history.map((h, i) => {
       }
     });
 
-    const response = await openai.chat.completions.create({
-      model: "gpt-4o",
-      messages: [
-        { role: "system", content: systemContent },
-        { role: "user", content: userContent },
-      ],
-      response_format: { type: "json_object" },
-      temperature: 0.2,
-      max_tokens: 1800,
-    });
+    const response = await withRetry(
+      async () => {
+        return await openai.chat.completions.create({
+          model: "gpt-4o",
+          messages: [
+            { role: "system", content: systemContent },
+            { role: "user", content: userContent },
+          ],
+          response_format: { type: "json_object" },
+          temperature: 0.2,
+          max_tokens: 1800,
+        });
+      },
+      {
+        operationName: "Diagnóstico Pedagógico (GPT-4o)",
+        fileName: FILE_NAME,
+        methodName,
+        lineNumber: 664,
+        userId: undefined,
+        extraData: {
+          pcm,
+          studentGrade: studentGrade ?? "(padrão)",
+          promptChars: userContent.length
+        }
+      }
+    );
 
     const duracaoMs = Date.now() - startTime;
     const content = response?.choices?.[0]?.message?.content;
@@ -795,14 +935,31 @@ export async function processReadingAudio(params: ProcessAudioParams): Promise<P
       }
     });
 
-    const transcriptionResponse = await openai.audio.transcriptions.create({
-      file: fs.createReadStream(filePath) as any,
-      model: "whisper-1",
-      language: "pt",
-      prompt: transcriptionPrompt,
-      temperature: 0,
-      response_format: "json",
-    });
+    const transcriptionResponse = await withRetry(
+      async () => {
+        return await openai.audio.transcriptions.create({
+          file: fs.createReadStream(filePath) as any,
+          model: "whisper-1",
+          language: "pt",
+          prompt: transcriptionPrompt,
+          temperature: 0,
+          response_format: "json",
+        });
+      },
+      {
+        operationName: "Transcrição Whisper-1",
+        fileName: FILE_NAME,
+        methodName,
+        lineNumber: 922,
+        userId: userId ?? undefined,
+        extraData: {
+          fileSizeKB: Math.round(fileStats!.size / 1024),
+          durationSec: duration,
+          studentGrade: studentGrade ?? "(padrão)",
+          promptLength: transcriptionPrompt.length
+        }
+      }
+    );
 
     const whisperDuracaoMs = Date.now() - whisperStart;
     transcription = transcriptionResponse.text || "";

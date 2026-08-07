@@ -7,12 +7,15 @@ import { useFirebase } from "@/app/components/FirebaseProvider";
 import { getAlunoById, type Aluno } from "@/lib/services";
 import { saveAvaliacao, type Avaliacao, type MetricasQualitativas } from "@/lib/evaluationsService";
 import { getNormaNacional, getPerformanceLevel } from "@/lib/pcmUtils";
+import { logDetailed, formatErrorForUser } from "@/lib/errorUtils";
+
+const FILE_NAME = "app/evaluations/[id]/review/page.tsx";
 
 export default function ReviewPage() {
     const params = useParams();
     const router = useRouter();
     const { isMobile } = useMobileExperience();
-    const { initialized: firebaseInitialized } = useFirebase();
+    const { initialized: firebaseInitialized, auth } = useFirebase();
     const alunoId = params.id as string;
 
     const [aluno, setAluno] = useState<Aluno | null>(null);
@@ -49,7 +52,6 @@ export default function ReviewPage() {
 
             setResult(parsedResult);
             
-            // Inicializa métricas se a IA as forneceu (novo formato: result.analysis.metricas_qualitativas)
             const aiQualitative = parsedResult.analysis?.metricas_qualitativas || parsedResult.metricasQualitativas;
             if (aiQualitative) {
                 setMetricas(prev => ({
@@ -61,14 +63,29 @@ export default function ReviewPage() {
             try {
                 const studentData = await getAlunoById(alunoId);
                 setAluno(studentData);
-            } catch (err) {
-                console.error("Erro ao carregar aluno:", err);
+            } catch (err: unknown) {
+                const userId = auth?.currentUser?.uid;
+                const errorName = err instanceof Error ? err.name : "UnknownError";
+                const errorMessage = err instanceof Error ? err.message : String(err);
+                const stackTrace = err instanceof Error ? err.stack : undefined;
+                logDetailed({
+                    level: "error",
+                    message: "Falha ao carregar dados do aluno na página de revisão",
+                    fileName: FILE_NAME,
+                    methodName: "fetchData",
+                    lineNumber: 65,
+                    userId,
+                    errorName,
+                    errorMessage,
+                    stackTrace,
+                    extraData: { alunoId }
+                });
             } finally {
                 setLoading(false);
             }
         }
         fetchData();
-    }, [alunoId, firebaseInitialized, router]);
+    }, [alunoId, firebaseInitialized, router, auth]);
 
     const handleSave = async () => {
         if (!aluno || !result) return;
@@ -86,7 +103,7 @@ export default function ReviewPage() {
                 intervencaoIA: result.analysis?.intervencao || result.intervencao_ia || result.intervencaoIA,
                 metricasQualitativas: metricas,
                 perguntasCompreensao: result.analysis?.perguntas_compreensao || result.perguntas_compreensao || result.perguntasCompreensao,
-                data: null // O serviço preencherá com Timestamp.now()
+                data: null
             };
 
             const savedId = await saveAvaliacao(avaliacaoData);
@@ -94,11 +111,46 @@ export default function ReviewPage() {
                 sessionStorage.removeItem('temp_evaluation_result');
                 router.push(`/evaluations/${alunoId}/success?evalId=${savedId}`);
             } else {
-                alert("Erro ao salvar avaliação. Tente novamente.");
+                const userId = auth?.currentUser?.uid;
+                logDetailed({
+                    level: "error",
+                    message: "saveAvaliacao retornou ID vazio/nulo ao salvar revisão da avaliação",
+                    fileName: FILE_NAME,
+                    methodName: "handleSave",
+                    lineNumber: 97,
+                    userId,
+                    errorName: "EmptySaveIdError",
+                    errorMessage: "O serviço saveAvaliacao não retornou um ID válido",
+                    extraData: { alunoId, textoId: result.textoId, pcm: result.pcm }
+                });
+                alert(formatErrorForUser(new Error("saveAvaliacao retornou ID vazio"), {
+                    userMessage: "Erro ao salvar avaliação. O servidor não confirmou o salvamento. Verifique a conexão e tente novamente.",
+                    fileName: FILE_NAME,
+                    methodName: "handleSave"
+                }));
             }
-        } catch (err) {
-            console.error("Erro ao salvar:", err);
-            alert("Erro ao salvar avaliação.");
+        } catch (err: unknown) {
+            const userId = auth?.currentUser?.uid;
+            const errorName = err instanceof Error ? err.name : "UnknownError";
+            const errorMessage = err instanceof Error ? err.message : String(err);
+            const stackTrace = err instanceof Error ? err.stack : undefined;
+            logDetailed({
+                level: "error",
+                message: "Exceção ao salvar avaliação na página de revisão",
+                fileName: FILE_NAME,
+                methodName: "handleSave",
+                lineNumber: 101,
+                userId,
+                errorName,
+                errorMessage,
+                stackTrace,
+                extraData: { alunoId, textoId: result.textoId, pcm: result.pcm }
+            });
+            alert(formatErrorForUser(err, {
+                userMessage: "Erro ao salvar avaliação. Ocorreu uma falha ao persistir os dados. Verifique a conexão e tente novamente.",
+                fileName: FILE_NAME,
+                methodName: "handleSave"
+            }));
         } finally {
             setSaving(false);
         }
