@@ -308,6 +308,20 @@ export const processAudio = async (
     }
 
     const detailMsg = typeof errorDetail?.detail === 'string' ? errorDetail.detail : JSON.stringify(errorDetail).substring(0, 500);
+    const detailLower = detailMsg.toLowerCase();
+
+    const isOpenAIQuotaError =
+      response.status === 429 &&
+      (detailLower.includes('insufficient_quota') ||
+       detailLower.includes('no credits remaining') ||
+       detailLower.includes('you have no credits remaining') ||
+       detailLower.includes('billing quota') ||
+       detailLower.includes('add credits') ||
+       detailLower.includes('exceeded your current quota'));
+
+    const userDetailMsg = isOpenAIQuotaError
+      ? 'A API da OpenAI está sem créditos disponíveis. Adicione créditos no painel de cobrança da OpenAI e tente novamente.'
+      : detailMsg;
 
     logDetailed({
       level: 'error',
@@ -323,8 +337,8 @@ export const processAudio = async (
     });
 
     throw new DetailedError({
-      userMessage: detailMsg
-        ? `Falha no processamento do áudio.\nMotivo: ${detailMsg}\nCódigo HTTP: ${response.status}`
+      userMessage: userDetailMsg
+        ? `Falha no processamento do áudio.\nMotivo: ${userDetailMsg}\nCódigo HTTP: ${response.status}`
         : `Falha no processamento do áudio.\nO servidor retornou o código HTTP ${response.status} (${response.statusText}). Verifique o arquivo de áudio e tente novamente.`,
       fileName: FILE_NAME,
       methodName,
@@ -332,7 +346,7 @@ export const processAudio = async (
       endpoint: ENDPOINT_PROCESS_AUDIO,
       httpCode: response.status,
       userId,
-      extraData: { responseStatus: response.status, duracaoMs }
+      extraData: { responseStatus: response.status, duracaoMs, isOpenAIQuotaError }
     });
   }
 

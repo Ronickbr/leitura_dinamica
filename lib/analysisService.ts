@@ -430,6 +430,28 @@ function buildTranscriptionPrompt(originalText: string, studentGrade?: string): 
   ].join("\n");
 }
 
+function isInsufficientQuotaError(error: unknown): boolean {
+  const err = error as any;
+  const code = String(err?.code ?? err?.error?.code ?? "").toLowerCase();
+  const type = String(err?.type ?? err?.error?.type ?? "").toLowerCase();
+  const message = String(err?.message ?? err?.error?.message ?? "").toLowerCase();
+
+  // 429 pode significar rate limit temporário OU falta de créditos/quota.
+  // Falta de créditos nunca deve entrar no retry, pois esperar não repõe o saldo.
+  return (
+    code === "insufficient_quota" ||
+    type === "insufficient_quota" ||
+    message.includes("insufficient_quota") ||
+    message.includes("you have no credits remaining") ||
+    message.includes("no credits remaining") ||
+    message.includes("billing quota") ||
+    message.includes("billing_hard_limit") ||
+    message.includes("exceeded your current quota") ||
+    message.includes("quota has been exceeded") ||
+    message.includes("add credits")
+  );
+}
+
 function classifyOpenAIError(error: unknown): { category: string; userMessage: string; retryable: boolean; fieldName?: string; fieldValue?: unknown } {
   if (error instanceof AuthenticationError) {
     return {
@@ -440,9 +462,18 @@ function classifyOpenAIError(error: unknown): { category: string; userMessage: s
     };
   }
   if (error instanceof RateLimitError) {
+    if (isInsufficientQuotaError(error)) {
+      return {
+        category: "INSUFFICIENT_QUOTA",
+        userMessage: `A API da OpenAI está sem créditos disponíveis. Adicione créditos no painel de cobrança da OpenAI e tente novamente.`,
+        retryable: false,
+        fieldName: "OPENAI_API_KEY"
+      };
+    }
+
     return {
       category: "RATE_LIMIT",
-      userMessage: `Limite de requisições/cota da OpenAI excedido (HTTP 429). Aguarde alguns minutos ou aumente a cota no painel da OpenAI.`,
+      userMessage: `Limite temporário de requisições da OpenAI excedido (HTTP 429). Aguarde alguns instantes e tente novamente.`,
       retryable: true
     };
   }
@@ -502,10 +533,23 @@ function classifyOpenAIError(error: unknown): { category: string; userMessage: s
     };
   }
   if (error instanceof APIError) {
+    const status = String((error as any).status ?? "");
+
+    if (status === "429" && isInsufficientQuotaError(error)) {
+      return {
+        category: "INSUFFICIENT_QUOTA",
+        userMessage: `A API da OpenAI está sem créditos disponíveis. Adicione créditos no painel de cobrança da OpenAI e tente novamente.`,
+        retryable: false,
+        fieldName: "OPENAI_API_KEY"
+      };
+    }
+
     return {
-      category: "API",
-      userMessage: `Erro genérico da API OpenAI (HTTP ${(error as any).status ?? "?"}). Detalhe: ${error.message || "(sem mensagem)"}`,
-      retryable: /^5/.test(String((error as any).status ?? ""))
+      category: status === "429" ? "RATE_LIMIT" : "API",
+      userMessage: status === "429"
+        ? `Limite temporário de requisições da OpenAI excedido (HTTP 429). Aguarde alguns instantes e tente novamente.`
+        : `Erro genérico da API OpenAI (HTTP ${status || "?"}). Detalhe: ${error.message || "(sem mensagem)"}`,
+      retryable: status === "429" || /^5/.test(status)
     };
   }
   if (error instanceof TypeError && /fetch|network|socket/i.test(error.message || "")) {
@@ -1134,4 +1178,4 @@ export async function processReadingAudio(params: ProcessAudioParams): Promise<P
   };
 }
 
-export { MAX_ORIGINAL_TEXT_LENGTH, getFallbackAnalysis, classifyOpenAIError };
+export { MAX_ORIGINAL_TEXT_LENGTH, getFallbackAnalysis, classifyOpenAIError, isInsufficientQuotaError };
