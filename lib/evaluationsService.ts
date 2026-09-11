@@ -150,6 +150,8 @@ export interface Avaliacao {
   perguntasCompreensao?: Array<{ pergunta: string; resposta_esperada: string }>;
   data?: Timestamp | { seconds?: number; toDate?: () => Date } | null;
   professorId: string;
+  words?: any[];
+  fluencyMetrics?: any;
 }
 
 export const processAudio = async (

@@ -294,6 +294,57 @@ const isAcceptableVariation = (original: string, transcribed: string): boolean =
     }
 };
 
+export interface WhisperWord {
+    word: string;
+    start: number;
+    end: number;
+}
+
+export interface FluencyMetrics {
+    ppm: number;
+    pauses: Array<{
+        afterWord: string;
+        beforeWord: string;
+        durationSec: number;
+        start: number;
+        end: number;
+    }>;
+}
+
+export const calculateFluencyMetrics = (words: WhisperWord[], pauseThresholdSec: number = 1.5): FluencyMetrics => {
+    if (!words || words.length === 0) {
+        return { ppm: 0, pauses: [] };
+    }
+
+    const pauses: FluencyMetrics["pauses"] = [];
+    
+    for (let i = 0; i < words.length - 1; i++) {
+        const currentWord = words[i];
+        const nextWord = words[i + 1];
+        const pauseDuration = nextWord.start - currentWord.end;
+
+        if (pauseDuration >= pauseThresholdSec) {
+            pauses.push({
+                afterWord: currentWord.word,
+                beforeWord: nextWord.word,
+                durationSec: Number(pauseDuration.toFixed(2)),
+                start: currentWord.end,
+                end: nextWord.start
+            });
+        }
+    }
+
+    // Calcular PPM usando o array de words
+    // Vamos contar quantas palavras úteis existem.
+    const wordCount = words.length;
+    // A duração baseada na última palavra lida menos a primeira
+    const duration = Math.max(words[words.length - 1].end - words[0].start, 1);
+    
+    const ppm = Math.round((wordCount / duration) * 60);
+
+    return { ppm, pauses };
+};
+
 export interface DetalheAlinhamento {
     tipo: "match" | "acceptable" | "substitution" | "deletion" | "insertion" | "unread";
     original: string | null;

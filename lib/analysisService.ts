@@ -1,7 +1,7 @@
 import fs from "fs";
 import OpenAI from "openai";
 import { APIError, APIConnectionError, AuthenticationError, BadRequestError, RateLimitError, NotFoundError, ConflictError, UnprocessableEntityError, InternalServerError } from "openai/error";
-import { calculatePCM, getPerformanceLevel, getNormaNacional, type AlignmentResult, type DetalheAlinhamento } from "./pcmUtils";
+import { calculatePCM, getPerformanceLevel, getNormaNacional, type AlignmentResult, type DetalheAlinhamento, calculateFluencyMetrics, type FluencyMetrics, type WhisperWord } from "./pcmUtils";
 import { logDetailed, DetailedError, IS_DEV } from "./errorUtils";
 
 const FILE_NAME = "analysisService.ts";
@@ -599,7 +599,8 @@ async function getPedagogicalDiagnosis(
   history?: any[],
   alignmentDetails?: any[],
   isForeigner?: boolean,
-  isGlassesUser?: boolean
+  isGlassesUser?: boolean,
+  fluencyMetrics?: FluencyMetrics
 ) {
   const methodName = "getPedagogicalDiagnosis";
   const lineNumber = 348;
@@ -638,6 +639,12 @@ ${history.map((h, i) => {
     "${markedTranscription.substring(0, 4000)}"`
     : "";
 
+  const fluencyContext = fluencyMetrics
+    ? `MÉTRICAS DE FLUÊNCIA (WHISPER TIMESTAMPS):
+    - Velocidade Efetiva (PPM): ${fluencyMetrics.ppm}
+    - Pausas Anômalas/Longas (>1.5s): ${fluencyMetrics.pauses.length > 0 ? fluencyMetrics.pauses.map(p => `Entre "${p.afterWord}" e "${p.beforeWord}" (${p.durationSec}s)`).join(", ") : "Nenhuma pausa excessiva."}`
+    : "Métricas de fluência baseadas em tempo não disponíveis.";
+
   const systemContent = "Você é uma psicopedagoga que responde estritamente em JSON, seguindo o formato solicitado.";
   const userContent = `
   Aja como uma psicopedagoga clínica especialista em alfabetização, neurociência da leitura e fluência leitora no Ensino Fundamental I.
@@ -656,6 +663,8 @@ ${history.map((h, i) => {
   - ${targetContext}
   ${foreignerContext}
   ${glassesContext}
+
+  ${fluencyContext}
 
   DETALHES DO ALINHAMENTO (O que foi realmente lido vs original):
   ${alignmentContext}
@@ -843,6 +852,8 @@ interface ProcessAudioResult {
   level: string;
   transcription: string;
   analysis: any;
+  fluencyMetrics?: FluencyMetrics;
+  words?: WhisperWord[];
 }
 
 export async function processReadingAudio(params: ProcessAudioParams): Promise<ProcessAudioResult> {
@@ -982,6 +993,8 @@ export async function processReadingAudio(params: ProcessAudioParams): Promise<P
   const transcriptionPrompt = buildTranscriptionPrompt(sanitizedOriginalText, studentGrade);
 
   let transcription: string;
+  let whisperWords: WhisperWord[] = [];
+  let fluencyMetrics: FluencyMetrics | undefined;
   const whisperStart = Date.now();
   try {
     logDetailed({
@@ -1008,7 +1021,8 @@ export async function processReadingAudio(params: ProcessAudioParams): Promise<P
           language: "pt",
           prompt: transcriptionPrompt,
           temperature: 0,
-          response_format: "json",
+          response_format: "verbose_json",
+          timestamp_granularities: ["word"],
         });
       },
       {
@@ -1028,6 +1042,8 @@ export async function processReadingAudio(params: ProcessAudioParams): Promise<P
 
     const whisperDuracaoMs = Date.now() - whisperStart;
     transcription = transcriptionResponse.text || "";
+    whisperWords = (transcriptionResponse as any).words || [];
+    fluencyMetrics = calculateFluencyMetrics(whisperWords, 1.5);
 
     logDetailed({
       level: "info",
@@ -1166,7 +1182,8 @@ export async function processReadingAudio(params: ProcessAudioParams): Promise<P
     history,
     metrics.detalhes,
     isForeigner,
-    isGlassesUser
+    isGlassesUser,
+    fluencyMetrics
   );
 
   const programmaticMarkedTranscription = generateMarkedTranscription(metrics.detalhes);
@@ -1196,6 +1213,8 @@ export async function processReadingAudio(params: ProcessAudioParams): Promise<P
       ...validatedAnalysis,
       transcricao_marcada: programmaticMarkedTranscription
     },
+    fluencyMetrics,
+    words: whisperWords
   };
 }
 
