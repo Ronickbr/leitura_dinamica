@@ -178,21 +178,42 @@ function getRequiredEnv(name: string) {
 function createAIClients() {
   const methodName = "createAIClients";
   const lineNumber = 55;
-  const apiKey = getRequiredEnv("OPENAI_API_KEY");
+  const openRouterKey = process.env.OPENROUTER_API_KEY;
+  const openAiKey = process.env.OPENAI_API_KEY;
+  
+  if (!openAiKey && !openRouterKey) {
+    getRequiredEnv("OPENAI_API_KEY");
+  }
+  
+  const isOpenAi = !!openAiKey;
+  const apiKey = openAiKey || openRouterKey || "";
+  const isOpenRouter = !isOpenAi && !!openRouterKey;
+
   const maskedKey = apiKey.length > 8 ? `${apiKey.substring(0, 4)}...${apiKey.substring(apiKey.length - 4)}` : "(chave muito curta)";
   logDetailed({
     level: "info",
-    message: "Inicializando cliente OpenAI",
+    message: `Inicializando cliente ${isOpenRouter ? 'OpenRouter' : 'OpenAI'}`,
     fileName: FILE_NAME,
     methodName,
     lineNumber,
-    extraData: { apiKeyMasked: maskedKey, keyLength: apiKey.length }
+    extraData: { apiKeyMasked: maskedKey, keyLength: apiKey.length, provider: isOpenRouter ? 'OpenRouter' : 'OpenAI' }
   });
+  
+  const config: any = {
+    apiKey,
+    timeout: OPENAI_TIMEOUT_MS
+  };
+  
+  if (isOpenRouter) {
+    config.baseURL = "https://openrouter.ai/api/v1";
+    config.defaultHeaders = {
+      "HTTP-Referer": process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
+      "X-Title": "Plataforma Leitura",
+    };
+  }
+  
   return {
-    openai: new OpenAI({
-      apiKey,
-      timeout: OPENAI_TIMEOUT_MS
-    }),
+    openai: new OpenAI(config),
   };
 }
 
@@ -708,7 +729,7 @@ ${history.map((h, i) => {
     const response = await withRetry(
       async () => {
         return await openai.chat.completions.create({
-          model: "gpt-4o",
+          model: process.env.AI_MODEL || "gpt-4o",
           messages: [
             { role: "system", content: systemContent },
             { role: "user", content: userContent },
