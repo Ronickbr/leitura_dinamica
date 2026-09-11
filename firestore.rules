@@ -1,35 +1,58 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    match /alunos/{alunoId} {
-      allow read, write: if request.auth != null;
-      // Permite que APENAS o administrador apague dados
-      allow delete: if request.auth != null && 
-                    request.auth.token.email == "kmkz.clan@gmail.com";
+    function signedIn() { return request.auth != null; }
+    function admin() { return signedIn() && request.auth.token.get('admin', false) == true; }
+    function owner(data) { return signedIn() && data.get('professorId', '') == request.auth.uid; }
+    function ownCreate() { return owner(request.resource.data); }
+    function stableOwner() { return request.resource.data.professorId == resource.data.professorId; }
+    function studentAccess(data) {
+      return exists(/databases/$(database)/documents/alunos/$(data.alunoId)) &&
+        (admin() || owner(get(/databases/$(database)/documents/alunos/$(data.alunoId)).data));
     }
-    
-    // Filtro específico para o histórico de importação
+    function validPlan(p) {
+      return p.keys().hasOnly(['atividade', 'meta', 'reavaliacao', 'status']) &&
+        p.atividade is string && p.atividade.size() <= 2000 &&
+        p.meta is string && p.meta.size() <= 500 &&
+        p.reavaliacao is string && (p.reavaliacao == '' || p.reavaliacao.matches('[0-9]{4}-[0-9]{2}-[0-9]{2}')) &&
+        p.status in ['planejada', 'em_andamento', 'concluida'];
+    }
+    match /alunos/{id} {
+      allow read: if admin() || owner(resource.data);
+      allow create: if ownCreate() && request.resource.data.nome is string;
+      allow update: if (admin() || owner(resource.data)) && stableOwner();
+      allow delete: if admin();
+    }
     match /import_history/{id} {
-      allow read, write: if request.auth != null;
-      allow delete: if request.auth.token.email == "kmkz.clan@gmail.com";
+      allow read: if admin() || owner(resource.data);
+      allow create: if ownCreate();
+      allow update: if false;
+      allow delete: if admin();
     }
-    
-    match /avaliacoes/{evalId} {
-      allow read, write: if request.auth != null;
+    match /avaliacoes/{id} {
+      allow get: if admin() || owner(resource.data) ||
+        (signedIn() && !exists(/databases/$(database)/documents/avaliacoes/$(id)) && id.matches(request.auth.uid + '_.*'));
+      allow list: if admin() || owner(resource.data);
+      allow create: if ownCreate() && studentAccess(request.resource.data)
+        && request.resource.data.pcm is number && request.resource.data.pcm >= 0
+        && request.resource.data.precisao is number && request.resource.data.precisao >= 0
+        && request.resource.data.precisao <= 100
+        && (!request.resource.data.keys().hasAny(['planoPedagogico']) || validPlan(request.resource.data.planoPedagogico))
+        && exists(/databases/$(database)/documents/textos/$(request.resource.data.textoId));
+      allow update: if (admin() || owner(resource.data)) && stableOwner()
+        && request.resource.data.alunoId == resource.data.alunoId
+        && request.resource.data.textoId == resource.data.textoId
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['planoPedagogico'])
+        && validPlan(request.resource.data.planoPedagogico);
+      allow delete: if admin();
     }
-
-    // Regras para a coleção de textos
-    match /textos/{textoId} {
-      allow read, write: if request.auth != null;
-      // Opcional: restringir delete também para o admin
-      allow delete: if request.auth != null && 
-                    request.auth.token.email == "kmkz.clan@gmail.com";
+    match /textos/{id} {
+      allow read: if signedIn();
+      allow create: if ownCreate();
+      allow update: if (admin() || owner(resource.data)) &&
+        request.resource.data.get('professorId', '') == resource.data.get('professorId', '');
+      allow delete: if admin();
     }
-
-    // Bloqueio padrão para qualquer outra coleção
-    match /{document=**} {
-      allow read, write: if false;
-    }
+    match /{document=**} { allow read, write: if false; }
   }
 }

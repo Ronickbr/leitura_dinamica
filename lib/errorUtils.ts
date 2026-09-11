@@ -135,6 +135,13 @@ export class DetailedError extends Error {
 }
 
 export function logDetailed(entry: Omit<DetailedLogEntry, "timestamp">): void {
+  if (!IS_DEV) {
+    if (entry.level === 'debug' || entry.level === 'info') return;
+    console.error(JSON.stringify({ timestamp: new Date().toISOString(), level: entry.level,
+      file: entry.fileName, operation: entry.methodName, status: entry.httpStatusCode ?? entry.httpCode,
+      errorType: entry.errorName }));
+    return;
+  }
   const fullEntry: DetailedLogEntry = {
     ...entry,
     timestamp: new Date().toISOString(),
