@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { getAllAvaliacoes, type Avaliacao } from "@/lib/evaluationsService";
+import { useState, useEffect, useRef } from "react";
+import { getAvaliacoesPage, type Avaliacao } from "@/lib/evaluationsService";
 import { getAlunos, type Aluno } from "@/lib/services";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -20,6 +20,31 @@ export default function HistoryPage() {
   const { anonymizeName, anonymizeText } = useSettings();
   const [studentGroups, setStudentGroups] = useState<{ alunoId: string; aluno?: Aluno; evaluations: Avaliacao[] }[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [hasMore, setHasMore] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [retry, setRetry] = useState(0);
+  const cursor = useRef<Awaited<ReturnType<typeof getAvaliacoesPage>>['cursor']>(undefined);
+  const students = useRef<Aluno[]>([]);
+  const evaluations = useRef<Avaliacao[]>([]);
+  const groupEvaluations = (evs: Avaliacao[], als: Aluno[]) => {
+    const map = new Map(als.map(aluno => [aluno.id, aluno]));
+    const groups = new Map<string, Avaliacao[]>();
+    for (const ev of evs) groups.set(ev.alunoId, [...(groups.get(ev.alunoId) || []), ev]);
+    return [...groups.entries()].map(([alunoId, evaluations]) => ({ alunoId, aluno: map.get(alunoId), evaluations }))
+      .sort((a, b) => (a.aluno?.nome || '').localeCompare(b.aluno?.nome || ''));
+  };
+  const loadMore = async () => {
+    setLoadingMore(true); setError('');
+    try {
+      const page = await getAvaliacoesPage(cursor.current);
+      const seen = new Map([...evaluations.current, ...page.items].map(ev => [ev.id, ev]));
+      evaluations.current = [...seen.values()];
+      cursor.current = page.cursor; setHasMore(page.hasMore);
+      setStudentGroups(groupEvaluations(evaluations.current, students.current));
+    } catch { setError('Não foi possível carregar mais avaliações. Tente novamente.'); }
+    finally { setLoadingMore(false); }
+  };
   const [expandedStudentId, setExpandedStudentId] = useState<string | null>(null);
   const [filterAnoLetivo, setFilterAnoLetivo] = useState(new Date().getFullYear().toString());
   const [filterSerie, setFilterSerie] = useState('');
@@ -30,41 +55,13 @@ export default function HistoryPage() {
 
     async function fetchData() {
       try {
-        const [evs, als] = await Promise.all([getAllAvaliacoes(), getAlunos()]);
-        const alunoMap = new Map<string, Aluno>(als.map(a => [a.id, a]));
-
-        // Agrupar avaliações por aluno
-        const groupsMap = new Map<string, Avaliacao[]>();
-        evs.forEach(ev => {
-          if (!groupsMap.has(ev.alunoId)) {
-            groupsMap.set(ev.alunoId, []);
-          }
-          groupsMap.get(ev.alunoId)!.push(ev);
-        });
-
-        const groups = Array.from(groupsMap.entries()).map(([alunoId, evList]) => {
-          // Ordenar do mais recente para o mais antigo na lista
-          const sortedEvs = [...evList].sort((a, b) => {
-            const dateA = a.data?.toDate ? a.data.toDate().getTime() : 0;
-            const dateB = b.data?.toDate ? b.data.toDate().getTime() : 0;
-            return dateB - dateA;
-          });
-          return {
-            alunoId,
-            aluno: alunoMap.get(alunoId),
-            evaluations: sortedEvs
-          };
-        });
-
-        // Ordenar os alunos pelo nome
-        groups.sort((a, b) => {
-          const nameA = a.aluno?.nome || '';
-          const nameB = b.aluno?.nome || '';
-          return nameA.localeCompare(nameB);
-        });
-
-        setStudentGroups(groups);
+        setLoading(true); setError('');
+        const [page, als] = await Promise.all([getAvaliacoesPage(), getAlunos()]);
+        students.current = als; evaluations.current = page.items;
+        cursor.current = page.cursor; setHasMore(page.hasMore);
+        setStudentGroups(groupEvaluations(page.items, als));
       } catch (error) {
+        setError('Não foi possível carregar o histórico. Verifique a conexão e tente novamente.');
         const userId = auth?.currentUser?.uid;
         const erro = error instanceof Error ? error : new Error(String(error));
         logDetailed({
@@ -83,7 +80,7 @@ export default function HistoryPage() {
       }
     }
     fetchData();
-  }, []);
+  }, [firebaseInitialized, auth, retry]);
 
   const formatDate = (data: any) => {
     if (!data) return '-';
@@ -266,6 +263,9 @@ export default function HistoryPage() {
 
   return (
     <div className="animate-in history-container">
+      {error && <div role="alert"><p>{error}</p><button className="btn-primary" onClick={() => setRetry(value => value + 1)}>Tentar novamente</button></div>}
+      <p role="status">{evaluations.current.length} avaliações carregadas. Filtros, totais e exportações consideram apenas os registros carregados.</p>
+      {hasMore && <button className="btn-primary" disabled={loadingMore} onClick={loadMore}>{loadingMore ? 'Carregando...' : 'Carregar mais avaliações'}</button>}
       <header className="page-header">
         <div className="page-header-content">
           <button

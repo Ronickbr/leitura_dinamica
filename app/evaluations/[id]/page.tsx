@@ -10,6 +10,8 @@ import { processAudio, saveAvaliacao, getAvaliacoesPorAluno, type Avaliacao } fr
 import { getNormaNacional, getPerformanceLevel } from "@/lib/pcmUtils";
 import { logDetailed, formatErrorForUser } from "@/lib/errorUtils";
 
+import { draftKey } from '@/lib/evaluationDraft';
+
 const FILE_NAME = "app/evaluations/[id]/page.tsx";
 
 const MicIcon = () => <span>🎤</span>;
@@ -120,6 +122,12 @@ export default function ReadingPage() {
     { key: 'pontuacao', label: 'Pontuação', icon: '📍' }
   ] as const;
 
+  useEffect(() => () => {
+    const recorder = mediaRecorderRef.current;
+    if (recorder?.state === 'recording') recorder.stop();
+    recorder?.stream.getTracks().forEach(track => track.stop());
+  }, []);
+
   const stopRecording = () => {
     if (mediaRecorderRef.current && isRecording) {
       mediaRecorderRef.current.stop();
@@ -155,13 +163,14 @@ export default function ReadingPage() {
       };
 
       mediaRecorder.onstop = () => {
+        stream.getTracks().forEach(track => track.stop());
         const finalMime = mediaRecorder.mimeType || 'audio/webm';
         const audioBlob = new Blob(audioChunksRef.current, { type: finalMime });
         setAudioUrl(URL.createObjectURL(audioBlob));
 
         if (recordingStartTimeRef.current) {
           const duration = (Date.now() - recordingStartTimeRef.current) / 1000;
-          setRecordingDuration(Math.min(duration, 60));
+          setRecordingDuration(duration);
         }
 
         setIsFinished(true);
@@ -214,10 +223,14 @@ export default function ReadingPage() {
         historico.slice(0, 3),
         recordingDuration,
         isForeigner,
-        isGlassesUser
+        isGlassesUser,
+        alunoId,
+        texto.id
       );
 
-      sessionStorage.setItem('temp_evaluation_result', JSON.stringify({
+      if (!auth?.currentUser) throw new Error('Sua sessão expirou.');
+      sessionStorage.setItem(draftKey(auth.currentUser.uid, alunoId), JSON.stringify({
+        draftId: crypto.randomUUID(), professorId: auth.currentUser.uid, alunoId, createdAt: Date.now(),
         ...result,
         audioUrl,
         textoId: texto.id,
