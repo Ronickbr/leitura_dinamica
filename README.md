@@ -1,3 +1,7 @@
+# Atualização 4.3.0
+
+Consulte [CHANGELOG.md](CHANGELOG.md) e o [guia de implantação](docs/implantacao-4.3.md) antes de publicar. Esta versão restringe permissões por professor, exige Firebase Admin no servidor e restaura testes automáticos. As notas antigas abaixo descrevem versões anteriores.
+
 # 📖 Plataforma Leitura (v4.2.0)
 
 Plataforma de avaliação de fluência leitora com Next.js (App Router), persistência em Firebase e processamento de áudio via IA. O projeto foi refatorado para um monorepo Next.js unificado com API routes serverless.
