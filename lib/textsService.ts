@@ -1,3 +1,4 @@
+import { getAuth } from 'firebase/auth';
 import { collection, getDocs, doc, getDoc, addDoc, updateDoc, deleteDoc, query, orderBy, Timestamp, Firestore } from 'firebase/firestore';
 import {
   logDetailed,
@@ -88,6 +89,7 @@ export interface Texto {
   numeroPalavras: number;
   serie: string;
   comDiagnostico?: boolean;
+  professorId?: string;
 }
 
 export const getTextos = async (): Promise<Texto[]> => {
@@ -245,6 +247,7 @@ export const addTexto = async (texto: Omit<Texto, 'id'>): Promise<string | null>
 
     const docRef = await addDoc(collection(cachedDb!, 'textos'), {
       ...texto,
+      professorId: getAuth().currentUser!.uid,
       titulo: texto.titulo.trim(),
       conteudo: texto.conteudo.trim(),
       serie: texto.serie.trim(),

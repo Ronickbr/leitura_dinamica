@@ -10,6 +10,8 @@ import { useFirebase } from "../components/FirebaseProvider";
 import { getDiagnosisStyle } from "@/lib/styleUtils";
 import { StudentFilterSelects } from "../components/StudentFilterSelects";
 
+import { useAdmin } from '../components/useAdmin';
+
 const FILE_NAME = "app/students/page.tsx";
 
 const SearchIcon = () => (
@@ -81,6 +83,7 @@ export default function StudentsPage() {
   const router = useRouter();
   const { anonymizeName, anonymizeText } = useSettings();
   const { initialized: firebaseInitialized, auth } = useFirebase();
+  const isAdmin = useAdmin();
   const defaultAnoLetivo = new Date().getFullYear().toString();
   const [alunos, setAlunos] = useState<Aluno[]>([]);
   const [loading, setLoading] = useState(true);
@@ -213,6 +216,7 @@ export default function StudentsPage() {
   }
 
   async function handleDelete(id: string) {
+    if (!isAdmin) return;
     if (confirm('Tem certeza que deseja excluir?')) {
       await deleteAluno(id);
       loadAlunos();
@@ -267,7 +271,7 @@ export default function StudentsPage() {
   }, [totalPages, currentPage]);
 
   // Componente de Controles de Paginação
-  const PaginationControls = () => {
+  const renderPaginationControls = () => {
     if (totalPages <= 1) return null;
 
     const startIdx = (currentPage - 1) * ITEMS_PER_PAGE + 1;
@@ -577,12 +581,12 @@ export default function StudentsPage() {
                     <div className="students-grid-cell students-grid-cell-actions">
                       <button onClick={() => router.push(`/students/${aluno.id}`)} className="btn-icon" title="Visualizar">👁️</button>
                       <button onClick={() => { setFormData({ nome: aluno.nome, turma: aluno.turma, serie: aluno.serie, turno: aluno.turno || '', diagnostico: aluno.diagnostico || '', observacoes: aluno.observacoes || '', anoLetivo: aluno.anoLetivo, metaPCM: aluno.metaPCM || 0 }); setEditingId(aluno.id); setShowForm(true); window.scrollTo(0, 0); }} className="btn-icon" title="Editar">✏️</button>
-                      <button onClick={() => handleDelete(aluno.id)} className="btn-icon" title="Excluir">🗑️</button>
+                      <button onClick={() => handleDelete(aluno.id)} disabled={!isAdmin} className="btn-icon" title={isAdmin ? "Excluir" : "Exclusão reservada ao administrador"}>🗑️</button>
                     </div>
                   </div>
                 ))}
               </div>
-              <PaginationControls />
+              {renderPaginationControls()}
               {filteredAlunos.length > 0 && (
                 <div className="students-grid-footer">
                   <div className="students-grid-cell">
@@ -652,7 +656,8 @@ export default function StudentsPage() {
                         onClick={(e) => { e.stopPropagation(); handleDelete(aluno.id); }} 
                         className="btn-outline-round" 
                         style={{ width: '38px', height: '38px', fontSize: '1.1rem', color: 'var(--error)', borderColor: 'rgba(239, 68, 68, 0.15)' }}
-                        title="Excluir"
+                        disabled={!isAdmin}
+                        title={isAdmin ? "Excluir" : "Exclusão reservada ao administrador"}
                       >
                         🗑️
                       </button>
@@ -661,7 +666,7 @@ export default function StudentsPage() {
                 </MobileCard>
               ))}
             </MobileCardList>
-            <PaginationControls />
+            {renderPaginationControls()}
 
             {filteredAlunos.length > 0 && (
               <div className="glass-card animate-in fade-in slide-in-from-bottom-4 duration-700" style={{ marginTop: '1.5rem', padding: '1.5rem', background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', boxShadow: 'var(--glass-shadow)' }}>

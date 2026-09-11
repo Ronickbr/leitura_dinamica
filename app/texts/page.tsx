@@ -6,11 +6,14 @@ import { useFirebase } from "../components/FirebaseProvider";
 import { getTextos, addTexto, updateTexto, deleteTexto, type Texto } from "@/lib/textsService";
 import { logDetailed, formatErrorForUser } from "@/lib/errorUtils";
 
+import { useAdmin } from '../components/useAdmin';
+
 const FILE_NAME = "app/texts/page.tsx";
 
 export default function TextsPage() {
   const router = useRouter();
   const { initialized: firebaseInitialized, auth } = useFirebase();
+  const isAdmin = useAdmin();
   const [textos, setTextos] = useState<Texto[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -105,6 +108,7 @@ export default function TextsPage() {
   }
 
   async function handleDelete(id: string) {
+    if (!isAdmin) return;
     if (confirm('Deseja realmente excluir este texto? Esta ação não pode ser desfeita.')) {
       await deleteTexto(id);
       loadTextos();
@@ -262,8 +266,8 @@ export default function TextsPage() {
                   )}
                 </div>
                 <div className="text-card-actions">
-                  <button onClick={() => handleEdit(texto)} className="btn-icon" title="Editar">✏️</button>
-                  <button onClick={() => handleDelete(texto.id)} className="btn-icon" title="Excluir" style={{ color: 'var(--accent)' }}>🗑️</button>
+                  <button disabled={!isAdmin && texto.professorId !== auth?.currentUser?.uid} onClick={() => handleEdit(texto)} className="btn-icon" title="Editar">✏️</button>
+                  <button onClick={() => handleDelete(texto.id)} disabled={!isAdmin} className="btn-icon" title={isAdmin ? "Excluir" : "Exclusão reservada ao administrador"} style={{ color: 'var(--accent)' }}>🗑️</button>
                 </div>
               </div>
               

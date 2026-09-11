@@ -21,6 +21,7 @@ const MobileNav = dynamic(() => import("./MobileNav"), {
 export default function Layout({ children }: { children: React.ReactNode }) {
   const { auth, db, initialized } = useFirebase();
   const { isMobile, isTouchDevice } = useMobileExperience();
+  const [isAdmin, setIsAdmin] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [resetting, setResetting] = useState(false);
@@ -39,6 +40,10 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     }
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
+      setIsAdmin(false);
+      currentUser?.getIdTokenResult().then(token => {
+        if (auth.currentUser?.uid === currentUser.uid) setIsAdmin(token.claims.admin === true);
+      }).catch(() => setIsAdmin(false));
       setLoading(false);
     });
     return () => unsubscribe();
@@ -75,6 +80,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     try {
       if (auth) {
         await signOut(auth);
+        for (const key of Object.keys(sessionStorage)) {
+          if (key.startsWith('evaluation:') || key === 'temp_evaluation_result') sessionStorage.removeItem(key);
+        }
       }
       router.push("/login");
     } catch (error) {
@@ -91,7 +99,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const isAdmin = user?.email === process.env.NEXT_PUBLIC_ADMIN_EMAIL;
 
   const handleResetDb = async () => {
     if (selectedCollections.length === 0) return;

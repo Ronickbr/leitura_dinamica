@@ -1,3 +1,5 @@
+import { measuredPCM, analysisConfidence, READING_PROTOCOL, CLASSIFICATION_VERSION } from './readingProtocol';
+import { z } from 'zod';
 import fs from "fs";
 import OpenAI from "openai";
 import { APIError, APIConnectionError, AuthenticationError, BadRequestError, RateLimitError, NotFoundError, ConflictError, UnprocessableEntityError, InternalServerError } from "openai/error";
@@ -7,11 +9,11 @@ import { logDetailed, DetailedError, IS_DEV } from "./errorUtils";
 const FILE_NAME = "analysisService.ts";
 const MAX_ORIGINAL_TEXT_LENGTH = 10000;
 const MAX_AUDIO_FILE_SIZE_BYTES = 25 * 1024 * 1024; // 25 MB
-const OPENAI_TIMEOUT_MS = 120_000; // 2 minutos
+const OPENAI_TIMEOUT_MS = 30_000; // 2 minutos
 
-const RETRY_MAX_ATTEMPTS = 3;
+const RETRY_MAX_ATTEMPTS = 2;
 const RETRY_BASE_DELAY_MS = 1000;
-const RETRY_MAX_DELAY_MS = 30_000;
+const RETRY_MAX_DELAY_MS = 5_000;
 const RETRY_JITTER_RATIO = 0.3;
 
 function sleep(ms: number): Promise<void> {
@@ -191,7 +193,8 @@ function createAIClients() {
   return {
     openai: new OpenAI({
       apiKey,
-      timeout: OPENAI_TIMEOUT_MS
+      timeout: OPENAI_TIMEOUT_MS,
+      maxRetries: 0
     }),
   };
 }
@@ -240,7 +243,16 @@ function parseAnalysisPayload(content: string) {
     if (content.trim().length === 0) {
       throw new SyntaxError("Conteúdo JSON recebido é uma string vazia.");
     }
-    return JSON.parse(content);
+    const schema = z.object({
+      diagnostico: z.string(), intervencao: z.string(),
+      nivel_de_confianca: z.number().min(0).max(100),
+      metricas_qualitativas: z.object({
+        leitura_precisa: z.boolean(), leitura_silabada: z.boolean(),
+        boa_entonacao: z.boolean(), interpretacao: z.boolean(), pontuacao: z.boolean(),
+      }).passthrough(),
+      perguntas_compreensao: z.array(z.object({ pergunta: z.string(), resposta_esperada: z.string() })).max(3),
+    }).passthrough();
+    return schema.parse(JSON.parse(content));
   } catch (parseError: unknown) {
     const originalName = parseError instanceof Error ? parseError.name : "UnknownError";
     const originalMessage = parseError instanceof Error ? parseError.message : String(parseError);
@@ -369,10 +381,11 @@ function buildConciseIntervention(metrics: AlignmentResult) {
   return `Retomar a leitura guiada com foco em ${realErrorItems.join(" e ")}.`;
 }
 
-function applyDeterministicValidation(
+export function applyDeterministicValidation(
   analysis: any,
   metrics: AlignmentResult
 ) {
+  const unavailable = !!analysis?._fallbackReason;
   const hasRealErrors = (metrics?.erros || 0) > 0;
   const conciseDiagnostic = buildConciseDiagnostic(metrics);
   const conciseIntervention = buildConciseIntervention(metrics);
@@ -387,11 +400,13 @@ function applyDeterministicValidation(
   };
 
   return {
-    diagnostico: conciseDiagnostic,
-    intervencao: conciseIntervention,
+    status: unavailable ? 'indisponivel' : 'disponivel',
+    revisaoNecessaria: true,
+    diagnostico: unavailable ? 'Análise de IA indisponível. Revise a leitura manualmente.' : conciseDiagnostic,
+    intervencao: unavailable ? 'Defina a intervenção após a revisão docente.' : conciseIntervention,
     padrao_de_erro_detectado: hasRealErrors ? analysis?.padrao_de_erro_detectado || "lexical" : "nenhum",
     analise_evolucao: analysis?.analise_evolucao ? String(analysis.analise_evolucao).slice(0, 200) : undefined,
-    nivel_de_confianca: hasRealErrors ? Math.max(Number(analysis?.nivel_de_confianca) || 0, 75) : Math.max(Number(analysis?.nivel_de_confianca) || 0, 90),
+    nivel_de_confianca: analysisConfidence(analysis?.nivel_de_confianca, unavailable),
     perguntas_compreensao: Array.isArray(analysis?.perguntas_compreensao) ? analysis.perguntas_compreensao.slice(0, 3) : [],
     metricas_qualitativas: metricasQualitativas,
     resumo_erros_reais: realErrorItems,
@@ -822,6 +837,9 @@ interface ProcessAudioResult {
   level: string;
   transcription: string;
   analysis: any;
+  protocolVersion: string;
+  classificationVersion: string;
+  studentGrade?: string;
 }
 
 export async function processReadingAudio(params: ProcessAudioParams): Promise<ProcessAudioResult> {
@@ -960,6 +978,7 @@ export async function processReadingAudio(params: ProcessAudioParams): Promise<P
   const { openai } = createAIClients();
   const transcriptionPrompt = buildTranscriptionPrompt(sanitizedOriginalText, studentGrade);
 
+  let verifiedDuration = 0;
   let transcription: string;
   const whisperStart = Date.now();
   try {
@@ -987,7 +1006,7 @@ export async function processReadingAudio(params: ProcessAudioParams): Promise<P
           language: "pt",
           prompt: transcriptionPrompt,
           temperature: 0,
-          response_format: "json",
+          response_format: "verbose_json",
         });
       },
       {
@@ -1007,6 +1026,8 @@ export async function processReadingAudio(params: ProcessAudioParams): Promise<P
 
     const whisperDuracaoMs = Date.now() - whisperStart;
     transcription = transcriptionResponse.text || "";
+    verifiedDuration = transcriptionResponse.duration;
+    measuredPCM(0, verifiedDuration);
 
     logDetailed({
       level: "info",
@@ -1110,8 +1131,8 @@ export async function processReadingAudio(params: ProcessAudioParams): Promise<P
     }, alignError);
   }
 
-  const effectiveDuration = Math.max(duration || 0, 1);
-  const pcm = Math.round((metrics.corretas / effectiveDuration) * 60);
+  const effectiveDuration = verifiedDuration;
+  const pcm = measuredPCM(metrics.corretas, effectiveDuration);
   const level = getPerformanceLevel(pcm);
 
   logDetailed({
@@ -1168,6 +1189,9 @@ export async function processReadingAudio(params: ProcessAudioParams): Promise<P
     filename: filename || "audio.webm",
     pcm,
     duration: effectiveDuration,
+    protocolVersion: READING_PROTOCOL,
+    classificationVersion: CLASSIFICATION_VERSION,
+    studentGrade: studentGrade,
     metrics,
     level,
     transcription,

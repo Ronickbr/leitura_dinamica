@@ -9,6 +9,10 @@ import { saveAvaliacao, type Avaliacao, type MetricasQualitativas } from "@/lib/
 import { getNormaNacional, getPerformanceLevel } from "@/lib/pcmUtils";
 import { logDetailed, formatErrorForUser } from "@/lib/errorUtils";
 
+import { draftKey, parseDraft } from '@/lib/evaluationDraft';
+import { PedagogicalPlan } from '@/app/components/PedagogicalPlan';
+import type { PlanoPedagogico } from '@/lib/evaluationsService';
+
 const FILE_NAME = "app/evaluations/[id]/review/page.tsx";
 
 export default function ReviewPage() {
@@ -22,6 +26,9 @@ export default function ReviewPage() {
     const [result, setResult] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
+    const [error, setError] = useState('');
+    const [reviewed, setReviewed] = useState(false);
+    const [plan, setPlan] = useState<PlanoPedagogico>({ atividade: '', meta: '', reavaliacao: '', status: 'planejada' });
     const [metricas, setMetricas] = useState<MetricasQualitativas>({
         leitura_precisa: true,
         leitura_silabada: false,
@@ -42,13 +49,16 @@ export default function ReviewPage() {
         async function fetchData() {
             if (!alunoId || !firebaseInitialized) return;
 
-            const storedResult = sessionStorage.getItem('temp_evaluation_result');
+            try {
+            const uid = auth?.currentUser?.uid;
+            if (!uid) throw new Error('Faça login para revisar a avaliação.');
+            const storedResult = sessionStorage.getItem(draftKey(uid, alunoId));
             if (!storedResult) {
                 router.push(`/evaluations/${alunoId}`);
                 return;
             }
 
-            const parsedResult = JSON.parse(storedResult);
+            const parsedResult = parseDraft(storedResult, uid, alunoId);
 
             setResult(parsedResult);
             
@@ -56,14 +66,14 @@ export default function ReviewPage() {
             if (aiQualitative) {
                 setMetricas(prev => ({
                     ...prev,
-                    ...aiQualitative
+                    ...(aiQualitative as Partial<MetricasQualitativas>)
                 }));
             }
 
-            try {
                 const studentData = await getAlunoById(alunoId);
                 setAluno(studentData);
             } catch (err: unknown) {
+                setError(err instanceof Error ? err.message : 'Não foi possível carregar a revisão.');
                 const userId = auth?.currentUser?.uid;
                 const errorName = err instanceof Error ? err.name : "UnknownError";
                 const errorMessage = err instanceof Error ? err.message : String(err);
@@ -88,7 +98,10 @@ export default function ReviewPage() {
     }, [alunoId, firebaseInitialized, router, auth]);
 
     const handleSave = async () => {
-        if (!aluno || !result) return;
+        if (!aluno || !result || saving || !reviewed) return;
+        if (result.alunoId !== alunoId || result.professorId !== auth?.currentUser?.uid) {
+            setError('O rascunho não corresponde ao aluno ou à sessão atual.'); return;
+        }
         setSaving(true);
         try {
             const avaliacaoData: Omit<Avaliacao, "id" | "professorId"> = {
@@ -103,12 +116,18 @@ export default function ReviewPage() {
                 intervencaoIA: result.analysis?.intervencao || result.intervencao_ia || result.intervencaoIA,
                 metricasQualitativas: metricas,
                 perguntasCompreensao: result.analysis?.perguntas_compreensao || result.perguntas_compreensao || result.perguntasCompreensao,
+                duration: result.duration,
+                protocolVersion: result.protocolVersion,
+                classificationVersion: result.classificationVersion,
+                studentGrade: aluno.serie,
+                analysisStatus: result.analysis?.status || 'indisponivel',
+                planoPedagogico: plan,
                 data: null
             };
 
-            const savedId = await saveAvaliacao(avaliacaoData);
+            const savedId = await saveAvaliacao(avaliacaoData, result.draftId);
             if (savedId) {
-                sessionStorage.removeItem('temp_evaluation_result');
+                sessionStorage.removeItem(draftKey(auth!.currentUser!.uid, alunoId));
                 router.push(`/evaluations/${alunoId}/success?evalId=${savedId}`);
             } else {
                 const userId = auth?.currentUser?.uid;
@@ -156,6 +175,7 @@ export default function ReviewPage() {
         }
     };
 
+    if (error) return <section role="alert"><p>{error}</p><button className="btn-primary" onClick={() => router.push('/evaluations/' + alunoId)}>Voltar à gravação</button></section>;
     if (loading) return <div className="animate-in" style={{ textAlign: 'center', padding: '5rem', color: 'var(--text-muted)' }}>Preparando revisão...</div>;
 
     const normaNacional = getNormaNacional(aluno?.serie || "");
@@ -182,6 +202,10 @@ export default function ReviewPage() {
                 </div>
             </header>
 
+            {result?.analysis?.status === 'indisponivel' && <p role="status">A análise de IA está indisponível. Confira a gravação e revise as métricas antes de salvar.</p>}
+            <p>Tempo verificado: {Number(result?.duration).toFixed(1)} s. Classificação por faixas históricas, sujeita à revisão docente.</p>
+            <label style={{ display: 'block', margin: '1rem 0' }}><input type="checkbox" checked={reviewed} onChange={e => setReviewed(e.target.checked)} /> Conferi o aluno, a leitura e as métricas desta avaliação.</label>
+            <PedagogicalPlan value={plan} onChange={setPlan} />
             <div className="evaluation-layout">
                 <div className="evaluation-detail-main">
                     <div className="glass-card evaluation-detail-section">
@@ -343,7 +367,7 @@ export default function ReviewPage() {
                             <button 
                                 onClick={handleSave} 
                                 className="btn-primary" 
-                                disabled={saving}
+                                disabled={saving || !reviewed}
                                 style={{ width: '100%', padding: '1rem' }}
                             >
                                 {saving ? 'Salvando...' : 'Confirmar e Salvar'}

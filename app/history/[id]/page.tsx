@@ -10,19 +10,25 @@ import { getTextos, type Texto } from "@/lib/textsService";
 import { getNormaNacional, getPerformanceLevel } from "@/lib/pcmUtils";
 import { logDetailed, formatErrorForUser } from "@/lib/errorUtils";
 
+import { PedagogicalPlan } from '@/app/components/PedagogicalPlan';
+import { savePedagogicalPlan, type PlanoPedagogico } from '@/lib/evaluationsService';
+
 const FILE_NAME = "app/history/[id]/page.tsx";
 
 export default function EvaluationDetailsPage() {
     const params = useParams();
     const router = useRouter();
     const { isMobile } = useMobileExperience();
-    const { auth } = useFirebase();
+    const { auth, initialized } = useFirebase();
     const evaluationId = params.id as string;
 
     const [avaliacao, setAvaliacao] = useState<Avaliacao | null>(null);
     const [aluno, setAluno] = useState<Aluno | null>(null);
     const [texto, setTexto] = useState<Texto | null>(null);
     const [loading, setLoading] = useState(true);
+    const [plan, setPlan] = useState<PlanoPedagogico>({ atividade: '', meta: '', reavaliacao: '', status: 'planejada' });
+    const [planMessage, setPlanMessage] = useState('');
+    const [savingPlan, setSavingPlan] = useState(false);
 
     const qualitativeMetrics = [
         {
@@ -84,11 +90,12 @@ export default function EvaluationDetailsPage() {
 
     useEffect(() => {
         async function fetchData() {
-            if (!evaluationId) return;
+            if (!evaluationId || !initialized || !auth?.currentUser) return;
             try {
                 const ev = await getAvaliacaoById(evaluationId);
                 if (ev) {
                     setAvaliacao(ev);
+                    if (ev.planoPedagogico) setPlan(ev.planoPedagogico);
                     const student = await getAlunoById(ev.alunoId);
                     setAluno(student);
 
@@ -116,7 +123,7 @@ export default function EvaluationDetailsPage() {
             }
         }
         fetchData();
-    }, [evaluationId]);
+    }, [evaluationId, initialized, auth]);
 
     const formatDate = (data: any) => {
         if (!data) return "-";
@@ -418,6 +425,16 @@ export default function EvaluationDetailsPage() {
                         </div>
                     </div>
 
+                    <section className="no-print">
+                      <PedagogicalPlan value={plan} onChange={setPlan} />
+                      <button className="btn-primary" disabled={savingPlan} onClick={async () => {
+                        setSavingPlan(true); setPlanMessage('');
+                        try { await savePedagogicalPlan(evaluationId, plan); setPlanMessage('Acompanhamento salvo.'); }
+                        catch { setPlanMessage('Não foi possível salvar. Verifique a conexão e tente novamente.'); }
+                        finally { setSavingPlan(false); }
+                      }}>{savingPlan ? 'Salvando...' : 'Salvar acompanhamento'}</button>
+                      <p role="status">{planMessage}</p>
+                    </section>
                     <div className="glass-card evaluation-detail-section">
                         <h3 className="evaluation-detail-section-title font-ui">Análise Pedagógica</h3>
                         <div style={{ marginBottom: "0.5rem" }}>

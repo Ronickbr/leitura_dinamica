@@ -1,9 +1,16 @@
+import { ownerConstraints } from './access';
 import {
   collection,
   query,
   where,
   getDocs,
   addDoc,
+  runTransaction,
+  updateDoc,
+  limit,
+  startAfter,
+  QueryDocumentSnapshot,
+  DocumentData,
   orderBy,
   Timestamp,
   doc,
@@ -150,6 +157,12 @@ export interface Avaliacao {
   perguntasCompreensao?: Array<{ pergunta: string; resposta_esperada: string }>;
   data?: Timestamp | { seconds?: number; toDate?: () => Date } | null;
   professorId: string;
+  duration?: number;
+  protocolVersion?: string;
+  classificationVersion?: string;
+  studentGrade?: string;
+  analysisStatus?: string;
+  planoPedagogico?: PlanoPedagogico;
 }
 
 export const processAudio = async (
@@ -160,7 +173,9 @@ export const processAudio = async (
   history?: any[],
   duration?: number,
   isForeigner?: boolean,
-  isGlassesUser?: boolean
+  isGlassesUser?: boolean,
+  alunoId?: string,
+  textoId?: string
 ) => {
   const methodName = 'processAudio';
   const lineNumber = 156;
@@ -227,7 +242,11 @@ export const processAudio = async (
     return null;
   }) : null;
 
+  if (!token) throw new Error('Faça login novamente para processar a leitura.');
+  if (!alunoId || !textoId) throw new Error('Selecione o aluno e o texto.');
   const formData = new FormData();
+  formData.append('aluno_id', alunoId);
+  formData.append('texto_id', textoId);
   formData.append('file', audioBlob, 'reading.webm');
   formData.append('original_text', originalText);
   if (studentGrade) formData.append('student_grade', studentGrade);
@@ -404,7 +423,7 @@ export const processAudio = async (
   }
 };
 
-export const saveAvaliacao = async (avaliacao: Omit<Avaliacao, 'id' | 'professorId'>): Promise<string | null> => {
+export const saveAvaliacao = async (avaliacao: Omit<Avaliacao, 'id' | 'professorId'>, draftId?: string): Promise<string | null> => {
   const methodName = 'saveAvaliacao';
   const lineNumber = 353;
   const parameters = {
@@ -443,28 +462,36 @@ export const saveAvaliacao = async (avaliacao: Omit<Avaliacao, 'id' | 'professor
     const currentUser = cachedAuth!.currentUser!;
     logDetailed({ level: 'info', message: `Salvando avaliação: Aluno=${avaliacao.alunoId.substring(0, 8)}... | Texto=${avaliacao.textoId.substring(0, 8)}... | PCM=${avaliacao.pcm}`, fileName: FILE_NAME, methodName, lineNumber, userId: currentUser.uid, parameters });
 
-    const docRef = await addDoc(collection(cachedDb!, 'avaliacoes'), {
-      ...avaliacao,
-      professorId: currentUser.uid,
-      data: avaliacao.data || Timestamp.now()
+    if (draftId && !/^[0-9a-f-]{36}$/i.test(draftId)) throw new Error('Identificador de rascunho inválido.');
+    const docRef = draftId ? doc(cachedDb!, 'avaliacoes', currentUser.uid + '_' + draftId)
+      : doc(cachedDb!, 'avaliacoes', currentUser.uid + '_' + crypto.randomUUID());
+    const payload = Object.fromEntries(Object.entries({
+      ...avaliacao, professorId: currentUser.uid, data: avaliacao.data || Timestamp.now(),
+    }).filter(([, value]) => value !== undefined));
+    await runTransaction(cachedDb!, async transaction => {
+      const existing = await transaction.get(docRef);
+      if (existing.exists()) {
+        if (existing.data().alunoId !== avaliacao.alunoId || existing.data().textoId !== avaliacao.textoId)
+          throw new Error('Rascunho já utilizado em outra avaliação.');
+        return;
+      }
+      transaction.set(docRef, payload);
     });
 
     logDetailed({ level: 'info', message: `Avaliação salva. Novo ID: ${docRef.id.substring(0, 8)}...`, fileName: FILE_NAME, methodName, lineNumber, userId: currentUser.uid, extraData: { avaliacaoId: docRef.id } });
     return docRef.id;
   } catch (error) {
     const info = logFirestoreError(error, { methodName, lineNumber, parameters, operation: 'salvar avaliação', collection: 'avaliacoes' });
-    if (IS_DEV) {
-      throw new DetailedError({
-        userMessage: `Falha ao salvar avaliação. ${info.formatted?.userMessage || info.originalMessage}`,
-        fieldName: info.formatted?.fieldName,
-        fileName: FILE_NAME,
-        methodName,
-        lineNumber,
-        userId: getCurrentUserId() ?? undefined,
-        extraData: { firebaseErrorCode: info.fbCode }
-      }, error);
-    }
-    return null;
+    throw new DetailedError({
+      userMessage: `Falha ao salvar avaliação. ${info.formatted?.userMessage || info.originalMessage}`,
+      fieldName: info.formatted?.fieldName,
+      fileName: FILE_NAME,
+      methodName,
+      lineNumber,
+      userId: getCurrentUserId() ?? undefined,
+      extraData: { firebaseErrorCode: info.fbCode }
+    }, error);
+
   }
 };
 
@@ -485,7 +512,7 @@ export const getAvaliacoesPorAluno = async (alunoId: string): Promise<Avaliacao[
   try {
     logDetailed({ level: 'info', message: `Buscando avaliações do aluno id=${alunoId.substring(0, 8)}...`, fileName: FILE_NAME, methodName, lineNumber, userId: getCurrentUserId() ?? undefined, parameters });
 
-    const q = query(collection(cachedDb!, 'avaliacoes'), where('alunoId', '==', alunoId));
+    const q = query(collection(cachedDb!, 'avaliacoes'), ...await ownerConstraints(cachedAuth), where('alunoId', '==', alunoId));
     const querySnapshot = await getDocs(q);
     const results = querySnapshot.docs.map(d => ({ id: d.id, ...d.data() } as Avaliacao)).sort((a, b) => {
       const dateA = (a.data as any)?.seconds || 0;
@@ -497,10 +524,8 @@ export const getAvaliacoesPorAluno = async (alunoId: string): Promise<Avaliacao[
     return results;
   } catch (error) {
     const info = logFirestoreError(error, { methodName, lineNumber, parameters, operation: `buscar avaliações do aluno ${alunoId?.substring(0, 8)}`, collection: 'avaliacoes' });
-    if (IS_DEV) {
-      throw new DetailedError({ userMessage: `Falha ao buscar avaliações do aluno. ${info.formatted?.userMessage || info.originalMessage}`, fieldName: info.formatted?.fieldName || 'Aluno ID', fieldValue: alunoId, fileName: FILE_NAME, methodName, lineNumber, extraData: { firebaseErrorCode: info.fbCode } }, error);
-    }
-    return [];
+    throw new DetailedError({ userMessage: `Falha ao buscar avaliações do aluno. ${info.formatted?.userMessage || info.originalMessage}`, fieldName: info.formatted?.fieldName || 'Aluno ID', fieldValue: alunoId, fileName: FILE_NAME, methodName, lineNumber, extraData: { firebaseErrorCode: info.fbCode } }, error);
+
   }
 };
 
@@ -512,7 +537,7 @@ export const getAllAvaliacoes = async (): Promise<Avaliacao[]> => {
 
   try {
     logDetailed({ level: 'info', message: 'Buscando TODAS as avaliações (lista geral)', fileName: FILE_NAME, methodName, lineNumber, userId: getCurrentUserId() ?? undefined });
-    const q = query(collection(cachedDb!, 'avaliacoes'));
+    const q = query(collection(cachedDb!, 'avaliacoes'), ...await ownerConstraints(cachedAuth));
     const querySnapshot = await getDocs(q);
     const results = querySnapshot.docs.map(d => ({ id: d.id, ...d.data() } as Avaliacao)).sort((a, b) => {
       const dateA = (a.data as any)?.seconds || 0;
@@ -523,10 +548,8 @@ export const getAllAvaliacoes = async (): Promise<Avaliacao[]> => {
     return results;
   } catch (error) {
     const info = logFirestoreError(error, { methodName, lineNumber, operation: 'buscar todas as avaliações', collection: 'avaliacoes' });
-    if (IS_DEV) {
-      throw new DetailedError({ userMessage: `Falha ao buscar avaliações. ${info.formatted?.userMessage || info.originalMessage}`, fieldName: info.formatted?.fieldName, fileName: FILE_NAME, methodName, lineNumber, extraData: { firebaseErrorCode: info.fbCode } }, error);
-    }
-    return [];
+    throw new DetailedError({ userMessage: `Falha ao buscar avaliações. ${info.formatted?.userMessage || info.originalMessage}`, fieldName: info.formatted?.fieldName, fileName: FILE_NAME, methodName, lineNumber, extraData: { firebaseErrorCode: info.fbCode } }, error);
+
   }
 };
 
@@ -557,9 +580,27 @@ export const getAvaliacaoById = async (id: string): Promise<Avaliacao | null> =>
     return null;
   } catch (error) {
     const info = logFirestoreError(error, { methodName, lineNumber, parameters, operation: `buscar avaliação por ID=${id?.substring(0, 8)}`, collection: 'avaliacoes' });
-    if (IS_DEV) {
-      throw new DetailedError({ userMessage: `Falha ao buscar avaliação por ID. ${info.formatted?.userMessage || info.originalMessage}`, fieldName: info.formatted?.fieldName || 'Avaliação ID', fieldValue: id, fileName: FILE_NAME, methodName, lineNumber, extraData: { firebaseErrorCode: info.fbCode } }, error);
-    }
-    return null;
+    throw new DetailedError({ userMessage: `Falha ao buscar avaliação por ID. ${info.formatted?.userMessage || info.originalMessage}`, fieldName: info.formatted?.fieldName || 'Avaliação ID', fieldValue: id, fileName: FILE_NAME, methodName, lineNumber, extraData: { firebaseErrorCode: info.fbCode } }, error);
+
   }
 };
+export interface PlanoPedagogico {
+  atividade: string;
+  meta: string;
+  reavaliacao: string;
+  status: 'planejada' | 'em_andamento' | 'concluida';
+}
+export async function savePedagogicalPlan(id: string, plan: PlanoPedagogico) {
+  if (!cachedDb || !cachedAuth?.currentUser) throw new Error('Faça login novamente.');
+  if (plan.atividade.length > 2000 || plan.meta.length > 500 || !['planejada', 'em_andamento', 'concluida'].includes(plan.status))
+    throw new Error('Confira os dados do plano.');
+  await updateDoc(doc(cachedDb, 'avaliacoes', id), { planoPedagogico: plan });
+}
+export async function getAvaliacoesPage(cursor?: QueryDocumentSnapshot<DocumentData>, pageSize = 30) {
+  if (!cachedDb) throw new Error('Aguarde a conexão com o banco.');
+  const constraints = await ownerConstraints(cachedAuth);
+  const snapshot = await getDocs(query(collection(cachedDb, 'avaliacoes'), ...constraints,
+    orderBy('data', 'desc'), ...(cursor ? [startAfter(cursor)] : []), limit(pageSize)));
+  return { items: snapshot.docs.map(d => ({ ...d.data(), id: d.id } as Avaliacao)),
+    cursor: snapshot.docs.at(-1), hasMore: snapshot.size === pageSize };
+}

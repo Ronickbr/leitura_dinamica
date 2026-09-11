@@ -1,3 +1,4 @@
+import { ownerConstraints } from './access';
 import {
   collection,
   query,
@@ -177,7 +178,7 @@ export const getAlunos = async (turma?: string): Promise<Aluno[]> => {
       userId: getCurrentUserId() ?? undefined
     });
 
-    let q = query(collection(cachedDb!, 'alunos'));
+    let q = query(collection(cachedDb!, 'alunos'), ...await ownerConstraints(cachedAuth));
     if (turma && turma !== 'Todas') {
       q = query(q, where('turma', '==', turma));
     }
@@ -206,17 +207,14 @@ export const getAlunos = async (turma?: string): Promise<Aluno[]> => {
       operation: 'buscar alunos',
       collection: 'alunos'
     });
-    if (IS_DEV) {
-      throw new DetailedError({
-        userMessage: `Falha ao buscar alunos. ${info.formatted?.userMessage || info.originalMessage}`,
-        fieldName: info.formatted?.fieldName,
-        fileName: FILE_NAME,
-        methodName,
-        lineNumber,
-        extraData: { firebaseErrorCode: info.fbCode }
-      }, error);
-    }
-    return [];
+    throw new DetailedError({
+      userMessage: `Falha ao buscar alunos. ${info.formatted?.userMessage || info.originalMessage}`,
+      fieldName: info.formatted?.fieldName,
+      fileName: FILE_NAME,
+      methodName,
+      lineNumber,
+      extraData: { firebaseErrorCode: info.fbCode }
+    }, error);
   }
 };
 
@@ -244,7 +242,7 @@ export const getAlunoFilterOptions = async (): Promise<AlunoFilterOptions> => {
       userId: getCurrentUserId() ?? undefined
     });
 
-    const querySnapshot = await getDocs(query(collection(cachedDb!, 'alunos')));
+    const querySnapshot = await getDocs(query(collection(cachedDb!, 'alunos'), ...await ownerConstraints(cachedAuth)));
 
     if (querySnapshot.empty) {
       logDetailed({
@@ -307,17 +305,14 @@ export const getAlunoFilterOptions = async (): Promise<AlunoFilterOptions> => {
       operation: 'buscar opções de filtro',
       collection: 'alunos'
     });
-    if (IS_DEV) {
-      throw new DetailedError({
-        userMessage: `Falha ao buscar opções de filtro. ${info.formatted?.userMessage || info.originalMessage}`,
-        fieldName: info.formatted?.fieldName,
-        fileName: FILE_NAME,
-        methodName,
-        lineNumber,
-        extraData: { firebaseErrorCode: info.fbCode }
-      }, error);
-    }
-    return emptyResult;
+    throw new DetailedError({
+      userMessage: `Falha ao buscar opções de filtro. ${info.formatted?.userMessage || info.originalMessage}`,
+      fieldName: info.formatted?.fieldName,
+      fileName: FILE_NAME,
+      methodName,
+      lineNumber,
+      extraData: { firebaseErrorCode: info.fbCode }
+    }, error);
   }
 };
 
@@ -378,18 +373,15 @@ export const getAlunoById = async (id: string): Promise<Aluno | null> => {
       operation: `buscar aluno por ID=${id?.substring(0, 8)}`,
       collection: 'alunos'
     });
-    if (IS_DEV) {
-      throw new DetailedError({
-        userMessage: `Falha ao buscar aluno por ID. ${info.formatted?.userMessage || info.originalMessage}`,
-        fieldName: info.formatted?.fieldName || 'Aluno ID',
-        fieldValue: id,
-        fileName: FILE_NAME,
-        methodName,
-        lineNumber,
-        extraData: { firebaseErrorCode: info.fbCode }
-      }, error);
-    }
-    return null;
+    throw new DetailedError({
+      userMessage: `Falha ao buscar aluno por ID. ${info.formatted?.userMessage || info.originalMessage}`,
+      fieldName: info.formatted?.fieldName || 'Aluno ID',
+      fieldValue: id,
+      fileName: FILE_NAME,
+      methodName,
+      lineNumber,
+      extraData: { firebaseErrorCode: info.fbCode }
+    }, error);
   }
 };
 
@@ -457,6 +449,7 @@ export const addAluno = async (aluno: Omit<Aluno, 'id'>): Promise<string | null>
 
     const q = query(
       collection(cachedDb!, 'alunos'),
+      ...await ownerConstraints(cachedAuth),
       where('nome', '==', nomeNorm),
       where('turma', '==', turmaNorm),
       where('serie', '==', serieNorm)
@@ -505,17 +498,14 @@ export const addAluno = async (aluno: Omit<Aluno, 'id'>): Promise<string | null>
       operation: 'adicionar aluno',
       collection: 'alunos'
     });
-    if (IS_DEV) {
-      throw new DetailedError({
-        userMessage: `Falha ao adicionar aluno. ${info.formatted?.userMessage || info.originalMessage}`,
-        fieldName: info.formatted?.fieldName,
-        fileName: FILE_NAME,
-        methodName,
-        lineNumber,
-        extraData: { firebaseErrorCode: info.fbCode }
-      }, error);
-    }
-    return null;
+    throw new DetailedError({
+      userMessage: `Falha ao adicionar aluno. ${info.formatted?.userMessage || info.originalMessage}`,
+      fieldName: info.formatted?.fieldName,
+      fileName: FILE_NAME,
+      methodName,
+      lineNumber,
+      extraData: { firebaseErrorCode: info.fbCode }
+    }, error);
   }
 };
 
@@ -589,18 +579,15 @@ export const updateAluno = async (id: string, data: Partial<Aluno>): Promise<boo
       operation: `atualizar aluno ID=${id?.substring(0, 8)}`,
       collection: 'alunos'
     });
-    if (IS_DEV) {
-      throw new DetailedError({
-        userMessage: `Falha ao atualizar aluno. ${info.formatted?.userMessage || info.originalMessage}`,
-        fieldName: info.formatted?.fieldName || 'Aluno ID',
-        fieldValue: id,
-        fileName: FILE_NAME,
-        methodName,
-        lineNumber,
-        extraData: { firebaseErrorCode: info.fbCode }
-      }, error);
-    }
-    return false;
+    throw new DetailedError({
+      userMessage: `Falha ao atualizar aluno. ${info.formatted?.userMessage || info.originalMessage}`,
+      fieldName: info.formatted?.fieldName || 'Aluno ID',
+      fieldValue: id,
+      fileName: FILE_NAME,
+      methodName,
+      lineNumber,
+      extraData: { firebaseErrorCode: info.fbCode }
+    }, error);
   }
 };
 
@@ -658,18 +645,15 @@ export const deleteAluno = async (id: string): Promise<boolean> => {
       operation: `deletar aluno ID=${id?.substring(0, 8)}`,
       collection: 'alunos'
     });
-    if (IS_DEV) {
-      throw new DetailedError({
-        userMessage: `Falha ao deletar aluno. ${info.formatted?.userMessage || info.originalMessage}`,
-        fieldName: info.formatted?.fieldName || 'Aluno ID',
-        fieldValue: id,
-        fileName: FILE_NAME,
-        methodName,
-        lineNumber,
-        extraData: { firebaseErrorCode: info.fbCode }
-      }, error);
-    }
-    return false;
+    throw new DetailedError({
+      userMessage: `Falha ao deletar aluno. ${info.formatted?.userMessage || info.originalMessage}`,
+      fieldName: info.formatted?.fieldName || 'Aluno ID',
+      fieldValue: id,
+      fileName: FILE_NAME,
+      methodName,
+      lineNumber,
+      extraData: { firebaseErrorCode: info.fbCode }
+    }, error);
   }
 };
 
@@ -734,17 +718,14 @@ export const addImportRecord = async (record: Omit<ImportRecord, 'id' | 'importe
       operation: 'salvar histórico de importação',
       collection: 'import_history'
     });
-    if (IS_DEV) {
-      throw new DetailedError({
-        userMessage: `Falha ao salvar histórico de importação. ${info.formatted?.userMessage || info.originalMessage}`,
-        fieldName: info.formatted?.fieldName,
-        fileName: FILE_NAME,
-        methodName,
-        lineNumber,
-        extraData: { firebaseErrorCode: info.fbCode }
-      }, error);
-    }
-    return null;
+    throw new DetailedError({
+      userMessage: `Falha ao salvar histórico de importação. ${info.formatted?.userMessage || info.originalMessage}`,
+      fieldName: info.formatted?.fieldName,
+      fileName: FILE_NAME,
+      methodName,
+      lineNumber,
+      extraData: { firebaseErrorCode: info.fbCode }
+    }, error);
   }
 };
 
@@ -796,16 +777,13 @@ export const getImportHistory = async (): Promise<ImportRecord[]> => {
       operation: 'buscar histórico de importações',
       collection: 'import_history'
     });
-    if (IS_DEV) {
-      throw new DetailedError({
-        userMessage: `Falha ao buscar histórico de importação. ${info.formatted?.userMessage || info.originalMessage}`,
-        fieldName: info.formatted?.fieldName,
-        fileName: FILE_NAME,
-        methodName,
-        lineNumber,
-        extraData: { firebaseErrorCode: info.fbCode }
-      }, error);
-    }
-    return [];
+    throw new DetailedError({
+      userMessage: `Falha ao buscar histórico de importação. ${info.formatted?.userMessage || info.originalMessage}`,
+      fieldName: info.formatted?.fieldName,
+      fileName: FILE_NAME,
+      methodName,
+      lineNumber,
+      extraData: { firebaseErrorCode: info.fbCode }
+    }, error);
   }
 };
