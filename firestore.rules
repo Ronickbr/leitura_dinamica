@@ -41,8 +41,17 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
-    match /research_identity_map/{id} { allow read, write: if isAdmin(); }
-    match /data_subject_requests/{id} { allow read, write: if isAdmin(); }
+    match /research_identity_map/{id} {
+      allow read, write: if isAdmin();
+    }
+
+    match /data_subject_requests/{id} {
+      allow create: if signedIn()
+                    && request.resource.data.professorId == request.auth.uid
+                    && request.resource.data.status == 'pending';
+      allow read, update, delete: if isAdmin();
+    }
+
     match /{document=**} { allow read, write: if false; }
   }
 }
