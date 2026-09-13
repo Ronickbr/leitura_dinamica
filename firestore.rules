@@ -29,7 +29,7 @@ service cloud.firestore {
       allow read: if isAdmin() || isOwner(resource.data);
       allow create: if isAdmin() || createsOwn();
       allow update: if isAdmin() || (isOwner(resource.data) && keepsOwner());
-      allow delete: if isAdmin() || isOwner(resource.data);
+      allow delete: if isAdmin();
     }
 
     match /import_history/{id} {
