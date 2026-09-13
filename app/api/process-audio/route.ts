@@ -1,22 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { writeFile, unlink } from "fs/promises";
+import crypto from "node:crypto";
 import os from "os";
 import path from "path";
 import { processReadingAudio } from "@/lib/analysisService";
-import {
-  DetailedError,
-  logDetailed,
-  formatErrorForUser,
-  IS_DEV,
-} from "@/lib/errorUtils";
-
+import { verifyFirebaseIdToken } from "@/lib/firebaseTokenVerifier";
+import { DetailedError, logDetailed, formatErrorForUser, IS_DEV } from "@/lib/errorUtils";
 import { z } from "zod";
 
 export const dynamic = "force-dynamic";
 
 const FILE_NAME = "app/api/process-audio/route.ts";
 const ENDPOINT = "POST /api/process-audio";
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+const MAX_FILE_SIZE = 10 * 1024 * 1024;
 const ALLOWED_MIME = [
   "audio/webm",
   "audio/mpeg",
@@ -32,388 +28,210 @@ const uploadSchema = z.object({
   file: z
     .any()
     .refine((file) => file instanceof File, "O campo 'file' deve ser um arquivo.")
-    .refine(
-      (file) => file?.size <= MAX_FILE_SIZE,
-      "Arquivo muito grande (máximo 10MB)."
-    )
+    .refine((file) => file?.size <= MAX_FILE_SIZE, "Arquivo muito grande (máximo 10MB).")
     .refine(
       (file) =>
         ALLOWED_MIME.includes(file?.type) ||
         file?.name.endsWith(".webm") ||
         file?.name.endsWith(".mp3") ||
-        file?.name.endsWith(".m4a"),
-      "Tipo de arquivo inválido. Use webm, mp3, wav ou m4a."
+        file?.name.endsWith(".wav") ||
+        file?.name.endsWith(".m4a") ||
+        file?.name.endsWith(".ogg"),
+      "Tipo de arquivo inválido. Use webm, mp3, wav, m4a ou ogg."
     ),
-  originalText: z
-    .string()
-    .min(1, "O texto original é obrigatório.")
-    .max(10000, "O texto original excede o limite de 10000 caracteres."),
-  studentGrade: z.string().optional(),
-  targetPCM: z
-    .string()
-    .optional()
-    .transform((v) => (v ? parseInt(v) : undefined)),
-  history: z
-    .string()
-    .optional()
-    .transform((v) => (v ? JSON.parse(v) : undefined)),
-  duration: z
-    .string()
-    .optional()
-    .transform((v) => (v ? parseFloat(v) : undefined)),
-  isForeigner: z
-    .string()
-    .optional()
-    .transform((v) => v === "true"),
-  isGlassesUser: z
-    .string()
-    .optional()
-    .transform((v) => v === "true"),
+  originalText: z.string().min(1).max(10000),
+  studentGrade: z.string().max(40).optional(),
+  targetPCM: z.string().optional().transform((v) => (v ? parseInt(v, 10) : undefined)),
+  history: z.string().optional().transform((v) => (v ? JSON.parse(v) : undefined)),
+  duration: z.string().optional().transform((v) => (v ? parseFloat(v) : undefined)),
 });
 
-function safeParseFormValue(val: FormDataEntryValue | null): unknown {
-  if (val === null) return null;
-  if (typeof val === "string") {
-    if (val.length > 100) return val.slice(0, 100) + `…(${val.length} chars)`;
-    return val;
-  }
-  return `[File:${val.name ?? "unknown"} ${val.size} bytes type=${val.type}]`;
+function getBearerToken(req: NextRequest): string | null {
+  const authorization = req.headers.get("authorization");
+  if (!authorization?.startsWith("Bearer ")) return null;
+  const token = authorization.slice(7).trim();
+  return token || null;
 }
 
-function buildStatusFromMessage(message: string, fallback: number = 500): number {
-  const msg = message.toLowerCase();
+function hashId(value: string): string {
+  return crypto.createHash("sha256").update(value).digest("hex").slice(0, 12);
+}
 
-  if (msg.includes("obrigatório") || msg.includes("inválido") || msg.includes("grande")) return 400;
-  if (msg.includes("autenticação") || msg.includes("autentic") || msg.includes("api key") || msg.includes("unauthorized")) return 401;
-  if (msg.includes("sem permissão") || msg.includes("permisi") || msg.includes("forbidden") || msg.includes("acesso negado")) return 403;
-  if (msg.includes("não encontrado") || msg.includes("nao encontrado") || msg.includes("not found")) return 404;
-  if (msg.includes("conflito") || msg.includes("já cadastrado") || msg.includes("ja cadastrado")) return 409;
-  if (msg.includes("extenso") || msg.includes("extensa") || msg.includes("payload") || msg.includes("muitos tokens")) return 413;
-  if (msg.includes("limite") || msg.includes("cota") || msg.includes("rate limit") || msg.includes("muitas requisições")) return 429;
-  if (msg.includes("timeout") || msg.includes("tempo esgotado") || msg.includes("timed out")) return 504;
+function minimizeHistory(history: unknown): Array<Record<string, unknown>> | undefined {
+  if (!Array.isArray(history)) return undefined;
+  return history.slice(-5).map((item) => {
+    const source = item && typeof item === "object" ? (item as Record<string, unknown>) : {};
+    return {
+      pcm: typeof source.pcm === "number" ? source.pcm : undefined,
+      precisao: typeof source.precisao === "number" ? source.precisao : undefined,
+      erros: typeof source.erros === "number" ? source.erros : undefined,
+      data: typeof source.data === "string" ? source.data.slice(0, 10) : undefined,
+    };
+  });
+}
 
-  return fallback;
+function statusFromError(error: unknown): number {
+  if (error instanceof DetailedError) return error.httpStatus || error.httpCode || 500;
+  const message = error instanceof Error ? error.message.toLowerCase() : "";
+  if (message.includes("token") || message.includes("autent")) return 401;
+  if (message.includes("permiss")) return 403;
+  if (message.includes("grande") || message.includes("payload")) return 413;
+  if (message.includes("rate") || message.includes("quota") || message.includes("cota")) return 429;
+  if (message.includes("timeout")) return 504;
+  return 500;
 }
 
 export async function POST(req: NextRequest) {
-  let tempPath: string | null = null;
+  const requestId = crypto.randomUUID();
   const startTime = Date.now();
-  const methodName = "POST handler";
-
-  const auditInfo = {
-    type: "AUDIT_LOG_AUDIO_PROCESS",
-    filename: "unknown",
-    fileSize: 0,
-    textLength: 0,
-  };
-
-  let validatedPayloadForLog: Record<string, unknown> | null = null;
-  let processingCompleted = false;
+  let tempPath: string | null = null;
+  let hashedUserId: string | undefined;
+  let fileSize = 0;
+  let textLength = 0;
 
   try {
+    const bearerToken = getBearerToken(req);
+    if (!bearerToken) {
+      return NextResponse.json({ detail: "Autenticação obrigatória.", requestId }, { status: 401 });
+    }
+
+    let decodedToken;
+    try {
+      decodedToken = await verifyFirebaseIdToken(bearerToken);
+      hashedUserId = hashId(decodedToken.uid);
+    } catch (authError) {
+      logDetailed({
+        level: "warn",
+        message: "Token Firebase recusado no endpoint de áudio.",
+        fileName: FILE_NAME,
+        methodName: "POST",
+        endpoint: ENDPOINT,
+        extraData: { requestId, reason: authError instanceof Error ? authError.message : "token inválido" },
+      });
+      return NextResponse.json({ detail: "Sessão inválida ou expirada.", requestId }, { status: 401 });
+    }
+
     const formData = await req.formData();
-    const file = formData.get("file");
-    const originalText = formData.get("original_text");
-    const studentGrade = formData.get("student_grade");
-    const targetPCM = formData.get("target_pcm");
-    const history = formData.get("history");
-    const duration = formData.get("duration");
-    const isForeigner = formData.get("is_foreigner");
-    const isGlassesUser = formData.get("is_glasses_user");
-
-    validatedPayloadForLog = {
-      file: safeParseFormValue(file),
-      originalText: safeParseFormValue(originalText),
-      student_grade: safeParseFormValue(studentGrade),
-      target_pcm: safeParseFormValue(targetPCM),
-      history:
-        typeof history === "string" && history.length > 200
-          ? history.slice(0, 200) + `…(${history.length} chars)`
-          : safeParseFormValue(history),
-      duration: safeParseFormValue(duration),
-      is_foreigner: safeParseFormValue(isForeigner),
-      is_glasses_user: safeParseFormValue(isGlassesUser),
-    };
-
-    logDetailed({
-      level: "info",
-      message: `[${ENDPOINT}] Requisição recebida para processamento de áudio.`,
-      fileName: FILE_NAME,
-      methodName,
-      lineNumber: 168,
-      userId: req.headers.get("x-user-id") || req.headers.get("authorization")?.slice(0, 40) || undefined,
-      parameters: validatedPayloadForLog,
-    });
-
     const validation = uploadSchema.safeParse({
-      file,
-      originalText,
-      studentGrade: studentGrade || undefined,
-      targetPCM: targetPCM || undefined,
-      history: history || undefined,
-      duration: duration || undefined,
-      isForeigner: isForeigner || undefined,
-      isGlassesUser: isGlassesUser || undefined,
+      file: formData.get("file"),
+      originalText: formData.get("original_text"),
+      studentGrade: formData.get("student_grade") || undefined,
+      targetPCM: formData.get("target_pcm") || undefined,
+      history: formData.get("history") || undefined,
+      duration: formData.get("duration") || undefined,
     });
 
     if (!validation.success) {
       const issue = validation.error.issues[0];
-      const fieldPath = issue.path.join(".") || "payload";
-      const errorMsg = issue.message;
-
       logDetailed({
         level: "warn",
-        message: `[${ENDPOINT}] Validação de payload falhou. Campo: ${fieldPath}. Motivo: ${errorMsg}`,
+        message: "Payload de áudio rejeitado por validação.",
         fileName: FILE_NAME,
-        methodName,
-        lineNumber: 196,
-        userId: req.headers.get("x-user-id") || undefined,
-        parameters: validatedPayloadForLog ?? undefined,
-        extraData: {
-          fieldName: fieldPath,
-          receivedValue:
-            fieldPath === "file"
-              ? validatedPayloadForLog?.file
-              : validatedPayloadForLog?.[fieldPath] ?? issue.path.join("."),
-          zodIssueCode: issue.code,
-          httpStatusCode: 400,
-        },
+        methodName: "POST",
+        endpoint: ENDPOINT,
+        userId: hashedUserId,
+        extraData: { requestId, field: issue.path.join("."), code: issue.code },
       });
-
-      return NextResponse.json(
-        {
-          detail: errorMsg,
-          fieldName: fieldPath === "payload" ? undefined : fieldPath,
-          httpStatus: 400,
-          endpoint: ENDPOINT,
-          arquivo: FILE_NAME,
-        },
-        { status: 400 }
-      );
+      return NextResponse.json({ detail: issue.message, requestId }, { status: 400 });
     }
 
-    const {
-      file: validatedFile,
-      originalText: validatedText,
-      studentGrade: validatedGrade,
-      targetPCM: validatedTarget,
-      history: validatedHistory,
-      duration: validatedDuration,
-    } = validation.data as {
-      file: File;
-      originalText: string;
-      studentGrade?: string;
-      targetPCM?: number;
-      history?: any[];
-      duration?: number;
-      isGlassesUser?: boolean;
-    };
+    const validatedFile = validation.data.file as File;
+    const validatedText = validation.data.originalText;
+    fileSize = validatedFile.size;
+    textLength = validatedText.length;
 
-    auditInfo.filename = validatedFile.name;
-    auditInfo.fileSize = validatedFile.size;
-    auditInfo.textLength = validatedText.length;
+    const bytes = await validatedFile.arrayBuffer();
+    tempPath = path.join(os.tmpdir(), `leitura-${requestId}.webm`);
+    await writeFile(tempPath, Buffer.from(bytes));
 
-    try {
-      const bytes = await validatedFile.arrayBuffer();
-      const buffer = Buffer.from(bytes);
-      tempPath = path.join(
-        os.tmpdir(),
-        `leitura-${Date.now()}-${validatedFile.name.replace(/\s+/g, "_")}`
-      );
-      await writeFile(tempPath, buffer);
-    } catch (fsErr) {
-      const error = fsErr instanceof Error ? fsErr : new Error(String(fsErr));
-      const code = (error as NodeJS.ErrnoException).code;
-
-      logDetailed({
-        level: "error",
-        message: `[${ENDPOINT}] Falha ao gravar arquivo temporário em disco.`,
-        fileName: FILE_NAME,
-        methodName,
-        lineNumber: 260,
-        userId: req.headers.get("x-user-id") || undefined,
-        parameters: {
-          filename: validatedFile.name,
-          fileSize: validatedFile.size,
-          tempPath: tempPath || null,
-          tmpDir: os.tmpdir(),
-        },
-        extraData: {
-          endpoint: ENDPOINT,
-          httpStatusCode: code === "ENOENT" ? 500 : code === "ENOSPC" ? 413 : 500,
-          syscall: (error as NodeJS.ErrnoException).syscall || "fs.writeFile",
-          errnoCode: code,
-          campo: "file",
-          valorRecebido: `[File ${validatedFile.name} ${validatedFile.size} bytes]`,
-        },
-        errorName: error.name,
-        errorMessage: error.message,
-        stackTrace: error.stack,
-      });
-
-      const userMessage =
-        code === "ENOENT"
-          ? "Diretório temporário indisponível no servidor. Contate o suporte técnico."
-          : code === "ENOSPC"
-          ? "Espaço em disco insuficiente no servidor para receber o arquivo. Tente novamente mais tarde ou contate o suporte."
-          : code === "EACCES"
-          ? "Permissão negada ao gravar arquivo temporário no servidor. Contate o suporte técnico."
-          : `Falha ao receber arquivo temporário (${code || error.name}). Contate o suporte se persistir.`;
-
-      return NextResponse.json(
-        {
-          detail: userMessage,
-          campo: "file",
-          endpoint: ENDPOINT,
-          arquivo: FILE_NAME,
-          metodo: methodName,
-          httpStatus: code === "ENOENT" ? 500 : code === "ENOSPC" ? 413 : 500,
-          ...(IS_DEV
-            ? { devStackTrace: error.stack, devErrnoCode: code }
-            : {}),
-        },
-        { status: code === "ENOENT" ? 500 : code === "ENOSPC" ? 413 : 500 }
-      );
-    }
+    logDetailed({
+      level: "info",
+      message: "Processamento de áudio iniciado.",
+      fileName: FILE_NAME,
+      methodName: "POST",
+      endpoint: ENDPOINT,
+      userId: hashedUserId,
+      extraData: { requestId, fileSize, textLength },
+    });
 
     const result = await processReadingAudio({
       filePath: tempPath,
       originalText: validatedText,
-      filename: validatedFile.name,
-      studentGrade: validatedGrade,
-      targetPCM: validatedTarget,
-      history: validatedHistory,
-      duration: validatedDuration,
-      isForeigner: validation.data.isForeigner,
-      isGlassesUser: validation.data.isGlassesUser,
+      filename: "reading.webm",
+      studentGrade: validation.data.studentGrade,
+      targetPCM: validation.data.targetPCM,
+      history: minimizeHistory(validation.data.history),
+      duration: validation.data.duration,
+      // Dados de nacionalidade/saúde não são enviados ao fornecedor por padrão.
+      isForeigner: false,
+      isGlassesUser: false,
     });
-
-    processingCompleted = true;
 
     logDetailed({
       level: "info",
-      message: `[${ENDPOINT}] Processamento de áudio concluído com sucesso.`,
+      message: "Processamento de áudio concluído.",
       fileName: FILE_NAME,
-      methodName,
-      lineNumber: 326,
-      userId: req.headers.get("x-user-id") || undefined,
-      parameters: {
-        filename: validatedFile.name,
-        fileSize: validatedFile.size,
-        textLength: validatedText.length,
-        durationMs: Date.now() - startTime,
-      },
+      methodName: "POST",
+      endpoint: ENDPOINT,
+      userId: hashedUserId,
       extraData: {
-        endpoint: ENDPOINT,
-        httpStatusCode: 200,
+        requestId,
+        durationMs: Date.now() - startTime,
         pcm: typeof (result as any)?.pcm === "number" ? (result as any).pcm : undefined,
-        nivel: (result as any)?.nivel ?? undefined,
+        precisao: typeof (result as any)?.precisao === "number" ? (result as any).precisao : undefined,
       },
     });
 
-    return NextResponse.json(result);
+    return NextResponse.json({ ...result, requestId });
   } catch (rawError) {
-    const error =
-      rawError instanceof Error ? rawError : new Error(String(rawError));
-
-    let httpStatus = buildStatusFromMessage(error.message, 500);
-    let campo: string | undefined = undefined;
-    let valorRecebido: unknown = undefined;
-
-    if (error instanceof DetailedError) {
-      httpStatus = error.httpStatus ?? httpStatus;
-      campo = error.fieldName ?? campo;
-      valorRecebido = error.fieldValue ?? valorRecebido;
-    }
+    const error = rawError instanceof Error ? rawError : new Error(String(rawError));
+    const status = statusFromError(error);
 
     logDetailed({
       level: "error",
-      message: `[${ENDPOINT}] Falha no processamento da requisição de áudio. ${error.message}`,
+      message: "Falha no processamento de áudio.",
       fileName: FILE_NAME,
-      methodName,
-      lineNumber: 365,
-      userId: req.headers.get("x-user-id") || req.headers.get("authorization")?.slice(0, 40) || undefined,
-      parameters: validatedPayloadForLog ?? { auditInfo },
-      extraData: {
-        endpoint: ENDPOINT,
-        httpStatusCode: httpStatus,
-        auditInfo,
-        processingCompletedBeforeError: processingCompleted,
-        tempPathCreated: !!tempPath,
-        campo,
-        valorRecebido,
-      },
+      methodName: "POST",
+      endpoint: ENDPOINT,
+      userId: hashedUserId,
+      httpStatusCode: status,
       errorName: error.name,
       errorMessage: error.message,
       stackTrace: error.stack,
+      extraData: { requestId, fileSize, textLength, durationMs: Date.now() - startTime },
     });
 
-    const userMessage = formatErrorForUser(error, {
-      operation: "processar áudio da avaliação de leitura",
-      fileName: FILE_NAME,
-      methodName,
-      endpoint: ENDPOINT,
-      httpStatus,
-      campo,
-      valorRecebido,
-    });
+    const detail = IS_DEV
+      ? formatErrorForUser(error, { operation: "processar áudio", endpoint: ENDPOINT, httpStatus: status })
+      : status === 401
+        ? "Sessão inválida ou expirada."
+        : "Não foi possível processar a avaliação. Informe o código da requisição ao suporte.";
 
-    return NextResponse.json(
-      {
-        detail: userMessage,
-        endpoint: ENDPOINT,
-        arquivo: FILE_NAME,
-        metodo: methodName,
-        httpStatus,
-        campo,
-        ...(IS_DEV
-          ? {
-              devStackTrace: error.stack,
-              devOriginalMessage: error.message,
-              devErrorName: error.name,
-            }
-          : {}),
-      },
-      { status: httpStatus }
-    );
+    return NextResponse.json({ detail, requestId }, { status });
   } finally {
     if (tempPath) {
       try {
         await unlink(tempPath);
         logDetailed({
           level: "debug",
-          message: `[${ENDPOINT}] Arquivo temporário removido com sucesso.`,
+          message: "Arquivo temporário de áudio removido.",
           fileName: FILE_NAME,
-          methodName: "POST handler/finally",
-          lineNumber: 424,
-          extraData: {
-            tempPath,
-            processingCompleted,
-            endpoint: ENDPOINT,
-          },
+          methodName: "POST/finally",
+          endpoint: ENDPOINT,
+          userId: hashedUserId,
+          extraData: { requestId },
         });
-      } catch (cleanupRaw) {
-        const cleanupErr =
-          cleanupRaw instanceof Error ? cleanupRaw : new Error(String(cleanupRaw));
-        const code = (cleanupErr as NodeJS.ErrnoException).code;
-
+      } catch (cleanupError) {
         logDetailed({
-          level: processingCompleted ? "warn" : "error",
-          message: `[${ENDPOINT}] Falha ao remover arquivo temporário de áudio após processamento. ${processingCompleted ? "A resposta já foi enviada ao usuário, apenas arquivos temporários acumulados." : "A operação principal também falhou, cleanup secundário também falhou."}`,
+          level: "error",
+          message: "Falha ao remover arquivo temporário de áudio.",
           fileName: FILE_NAME,
-          methodName: "POST handler/finally cleanup",
-          lineNumber: 444,
-          extraData: {
-            tempPath,
-            endpoint: ENDPOINT,
-            processingCompleted,
-            syscall: (cleanupErr as NodeJS.ErrnoException).syscall || "fs.unlink",
-            errnoCode: code,
-            totalDurationMs: Date.now() - startTime,
-          },
-          errorName: cleanupErr.name,
-          errorMessage: cleanupErr.message,
-          stackTrace: cleanupErr.stack,
+          methodName: "POST/finally",
+          endpoint: ENDPOINT,
+          userId: hashedUserId,
+          errorName: cleanupError instanceof Error ? cleanupError.name : "CleanupError",
+          errorMessage: cleanupError instanceof Error ? cleanupError.message : String(cleanupError),
+          extraData: { requestId },
         });
       }
     }
