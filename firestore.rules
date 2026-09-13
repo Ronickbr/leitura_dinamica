@@ -1,73 +1,48 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function isAdmin() { return signedIn() && request.auth.token.admin == true; }
+    function isOwner(data) { return signedIn() && data.professorId == request.auth.uid; }
+    function createsOwn() { return signedIn() && request.resource.data.professorId == request.auth.uid; }
+    function keepsOwner() { return resource.data.professorId == request.resource.data.professorId; }
 
-    function signedIn() {
-      return request.auth != null;
-    }
-
-    function isAdmin() {
-      return signedIn() && request.auth.token.admin == true;
-    }
-
-    function isOwner(resourceData) {
-      return signedIn() && resourceData.professorId == request.auth.uid;
-    }
-
-    function createsOwnResource() {
-      return signedIn() && request.resource.data.professorId == request.auth.uid;
-    }
-
-    function preservesOwnership() {
-      return resource.data.professorId == request.resource.data.professorId;
-    }
-
-    // Dados pessoais de estudantes: somente o professor proprietário ou admin.
-    match /alunos/{alunoId} {
+    match /alunos/{id} {
       allow read: if isAdmin() || isOwner(resource.data);
-      allow create: if isAdmin() || createsOwnResource();
-      allow update: if isAdmin() || (isOwner(resource.data) && preservesOwnership());
-      // Exclusão de cadastro identificável é uma operação administrativa deliberada.
+      allow create: if isAdmin() || createsOwn();
+      allow update: if isAdmin() || (isOwner(resource.data) && keepsOwner());
       allow delete: if isAdmin();
     }
 
-    // Avaliações pertencem ao professor responsável.
-    match /avaliacoes/{evalId} {
+    match /student_private/{id} {
       allow read: if isAdmin() || isOwner(resource.data);
-      allow create: if isAdmin() || createsOwnResource();
-      allow update: if isAdmin() || (isOwner(resource.data) && preservesOwnership());
+      allow create: if isAdmin() || createsOwn();
+      allow update: if isAdmin() || (isOwner(resource.data) && keepsOwner());
+      allow delete: if isAdmin();
+    }
+
+    match /avaliacoes/{id} {
+      allow read: if isAdmin() || isOwner(resource.data);
+      allow create: if isAdmin() || createsOwn();
+      allow update: if isAdmin() || (isOwner(resource.data) && keepsOwner());
       allow delete: if isAdmin() || isOwner(resource.data);
     }
 
-    // Histórico de importação também é segregado por professor.
     match /import_history/{id} {
       allow read: if isAdmin() || isOwner(resource.data);
-      allow create: if isAdmin() || createsOwnResource();
-      allow update: if isAdmin() || (isOwner(resource.data) && preservesOwnership());
+      allow create: if isAdmin() || createsOwn();
+      allow update: if isAdmin() || (isOwner(resource.data) && keepsOwner());
       allow delete: if isAdmin();
     }
 
-    // Biblioteca pedagógica: leitura para usuários autenticados.
-    // Escrita continua disponível a usuários autenticados por compatibilidade,
-    // pois textos não contêm dados pessoais de estudantes.
-    match /textos/{textoId} {
+    match /textos/{id} {
       allow read: if signedIn();
       allow create, update: if signedIn();
       allow delete: if isAdmin();
     }
 
-    // Mapeamento de pseudonimização: somente administrador/pesquisador principal.
-    match /research_identity_map/{id} {
-      allow read, write: if isAdmin();
-    }
-
-    // Registro mínimo de solicitações de exclusão/retirada.
-    match /data_subject_requests/{id} {
-      allow read, write: if isAdmin();
-    }
-
-    match /{document=**} {
-      allow read, write: if false;
-    }
+    match /research_identity_map/{id} { allow read, write: if isAdmin(); }
+    match /data_subject_requests/{id} { allow read, write: if isAdmin(); }
+    match /{document=**} { allow read, write: if false; }
   }
 }
