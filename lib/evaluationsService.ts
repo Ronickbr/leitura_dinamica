@@ -4,11 +4,10 @@ import {
   where,
   getDocs,
   addDoc,
-  orderBy,
   Timestamp,
   doc,
   getDoc,
-  Firestore
+  Firestore,
 } from 'firebase/firestore';
 import { Auth } from 'firebase/auth';
 import {
@@ -17,109 +16,51 @@ import {
   tryExtractFirebaseErrorCode,
   DetailedError,
   IS_DEV,
-  formatErrorForUser
 } from './errorUtils';
 
 let cachedDb: Firestore | null = null;
 let cachedAuth: Auth | null = null;
-
 const FILE_NAME = 'evaluationsService.ts';
 const ENDPOINT_PROCESS_AUDIO = '/api/process-audio';
 
-const getCurrentUserId = (): string | null => cachedAuth?.currentUser?.uid ?? null;
+function currentUid(): string | null {
+  return cachedAuth?.currentUser?.uid ?? null;
+}
 
-const ensureFirebaseReady = (context: { requireAuth?: boolean; methodName: string; lineNumber: number; parameters?: Record<string, unknown> }): boolean => {
-  if (!cachedDb) {
-    const err = new DetailedError({
-      userMessage: `Firebase/Firestore não inicializado antes de chamar ${context.methodName}. Aguarde o carregamento completo.`,
-      fileName: FILE_NAME,
-      methodName: context.methodName,
-      lineNumber: context.lineNumber,
-      extraData: {
-        checkList: [
-          'Verifique se FirebaseProvider está envolvendo a página',
-          'Confirme variáveis NEXT_PUBLIC_FIREBASE_*',
-          'Recarregue a página'
-        ]
-      }
-    });
+function ensureReady(methodName: string): { db: Firestore; auth: Auth; uid: string } | null {
+  const uid = currentUid();
+  if (!cachedDb || !cachedAuth || !uid) {
     logDetailed({
       level: 'warn',
-      message: `${context.methodName} chamado sem Firestore inicializado`,
+      message: 'Operação de avaliação bloqueada por ausência de sessão ou Firestore.',
       fileName: FILE_NAME,
-      methodName: context.methodName,
-      lineNumber: context.lineNumber,
-      parameters: context.parameters,
-      userId: getCurrentUserId() ?? undefined,
-      errorName: err.name,
-      errorMessage: err.message
+      methodName,
     });
-    if (IS_DEV) throw err;
-    return false;
+    return null;
   }
-  if (context.requireAuth && !cachedAuth?.currentUser) {
-    const err = new DetailedError({
-      userMessage: `Usuário não autenticado. É necessário login para executar ${context.methodName}.`,
-      fileName: FILE_NAME,
-      methodName: context.methodName,
-      lineNumber: context.lineNumber,
-      httpCode: 401
-    });
-    logDetailed({
-      level: 'warn',
-      message: `${context.methodName} chamado sem usuário autenticado`,
-      fileName: FILE_NAME,
-      methodName: context.methodName,
-      lineNumber: context.lineNumber,
-      parameters: context.parameters,
-      errorName: err.name,
-      errorMessage: err.message
-    });
-    if (IS_DEV) throw err;
-    return false;
-  }
-  return true;
-};
+  return { db: cachedDb, auth: cachedAuth, uid };
+}
 
-const logFirestoreError = (error: unknown, context: { methodName: string; lineNumber: number; parameters?: Record<string, unknown>; operation: string; collection: string }) => {
-  const fbCode = tryExtractFirebaseErrorCode(error);
-  const formatted = fbCode ? formatFirebaseFirestoreError(fbCode) : null;
-  const originalName = error instanceof Error ? error.name : 'UnknownError';
-  const originalMessage = error instanceof Error ? error.message : String(error);
-  const originalStack = error instanceof Error ? error.stack : undefined;
-
+function logFirestoreError(error: unknown, methodName: string, operation: string) {
+  const code = tryExtractFirebaseErrorCode(error);
+  const formatted = code ? formatFirebaseFirestoreError(code) : null;
   logDetailed({
     level: 'error',
-    message: `Erro ao ${context.operation} em ${context.collection}: ${formatted?.userMessage || originalMessage}`,
+    message: `Falha ao ${operation}.`,
     fileName: FILE_NAME,
-    methodName: context.methodName,
-    lineNumber: context.lineNumber,
-    parameters: context.parameters,
-    userId: getCurrentUserId() ?? undefined,
-    errorName: originalName,
-    errorMessage: originalMessage,
-    stackTrace: originalStack,
-    extraData: {
-      firebaseErrorCode: fbCode,
-      firestoreCollection: context.collection,
-      operation: context.operation,
-      campo: formatted?.fieldName
-    }
+    methodName,
+    userId: currentUid() ?? undefined,
+    errorName: error instanceof Error ? error.name : 'UnknownError',
+    errorMessage: error instanceof Error ? error.message : String(error),
+    stackTrace: error instanceof Error ? error.stack : undefined,
+    extraData: { firebaseErrorCode: code },
   });
-
-  return { fbCode, formatted, originalName, originalMessage };
-};
+  return formatted?.userMessage || 'Operação no banco de dados não concluída.';
+}
 
 export function setFirebaseInstances(dbInstance: Firestore, authInstance: Auth) {
   cachedDb = dbInstance;
   cachedAuth = authInstance;
-  logDetailed({
-    level: 'info',
-    message: 'Instâncias Firebase (Firestore + Auth) injetadas no evaluationsService',
-    fileName: FILE_NAME,
-    methodName: 'setFirebaseInstances',
-    extraData: { hasDb: !!dbInstance, hasAuth: !!authInstance, hasCurrentUser: !!authInstance?.currentUser }
-  });
 }
 
 export interface MetricasQualitativas {
@@ -154,6 +95,20 @@ export interface Avaliacao {
   fluencyMetrics?: any;
 }
 
+function minimizeHistory(history?: any[]): Array<Record<string, unknown>> | undefined {
+  if (!Array.isArray(history) || history.length === 0) return undefined;
+  return history.slice(-5).map((item) => ({
+    pcm: typeof item?.pcm === 'number' ? item.pcm : undefined,
+    precisao: typeof item?.precisao === 'number' ? item.precisao : undefined,
+    erros: typeof item?.erros === 'number' ? item.erros : undefined,
+    data: item?.data?.toDate && typeof item.data.toDate === 'function'
+      ? item.data.toDate().toISOString().slice(0, 10)
+      : typeof item?.data === 'string'
+        ? item.data.slice(0, 10)
+        : undefined,
+  }));
+}
+
 export const processAudio = async (
   audioBlob: Blob,
   originalText: string,
@@ -161,407 +116,155 @@ export const processAudio = async (
   targetPCM?: number,
   history?: any[],
   duration?: number,
-  isForeigner?: boolean,
-  isGlassesUser?: boolean
+  _isForeigner?: boolean,
+  _isGlassesUser?: boolean,
 ) => {
   const methodName = 'processAudio';
-  const lineNumber = 156;
-  const parameters = {
-    audioSizeBytes: audioBlob?.size ?? 0,
-    audioType: audioBlob?.type ?? '(desconhecido)',
-    originalTextLength: originalText?.length ?? 0,
-    studentGrade: studentGrade ?? '(sem série)',
-    targetPCM: targetPCM ?? '(sem meta)',
-    historyLength: history?.length ?? 0,
-    durationSec: duration ?? '(desconhecida)',
-    isForeigner: !!isForeigner,
-    isGlassesUser: !!isGlassesUser
-  };
-
-  const user = cachedAuth?.currentUser;
-  const userId = user?.uid;
-
-  logDetailed({
-    level: 'info',
-    message: `Iniciando processamento de áudio via ${ENDPOINT_PROCESS_AUDIO}`,
-    fileName: FILE_NAME,
-    methodName,
-    lineNumber,
-    userId: userId ?? undefined,
-    endpoint: ENDPOINT_PROCESS_AUDIO,
-    parameters
-  });
-
+  const ready = ensureReady(methodName);
+  if (!ready) throw new DetailedError({ userMessage: 'Sessão inválida. Faça login novamente.', httpCode: 401 });
   if (!audioBlob || !(audioBlob instanceof Blob) || audioBlob.size === 0) {
-    const err = new DetailedError({
-      userMessage: 'Falha no processamento do áudio. Campo: Arquivo de Áudio. Motivo: Nenhum arquivo de áudio foi recebido ou o arquivo está vazio.',
-      fieldName: 'Arquivo de Áudio',
-      fieldValue: audioBlob ? `(Blob size=${audioBlob.size} type=${audioBlob.type})` : '(nulo/undefined)',
-      fileName: FILE_NAME,
-      methodName,
-      lineNumber,
-      endpoint: ENDPOINT_PROCESS_AUDIO,
-      httpCode: 400,
-      userId
-    });
-    logDetailed({ level: 'warn', message: 'processAudio chamado sem audioBlob válido', fileName: FILE_NAME, methodName, lineNumber, userId: userId ?? undefined, endpoint: ENDPOINT_PROCESS_AUDIO, parameters, errorName: err.name, errorMessage: err.message });
-    throw err;
+    throw new DetailedError({ userMessage: 'Nenhum arquivo de áudio válido foi recebido.', httpCode: 400 });
+  }
+  if (!originalText?.trim()) {
+    throw new DetailedError({ userMessage: 'O texto original é obrigatório.', httpCode: 400 });
   }
 
-  if (!originalText || !originalText.trim()) {
-    const err = new DetailedError({
-      userMessage: 'Falha no processamento do áudio. Campo: Texto Original. Motivo: O texto original é obrigatório para o processamento e não foi informado.',
-      fieldName: 'Texto Original',
-      fieldValue: originalText ?? '(vazio)',
-      fileName: FILE_NAME,
-      methodName,
-      lineNumber,
-      endpoint: ENDPOINT_PROCESS_AUDIO,
-      httpCode: 400,
-      userId
-    });
-    logDetailed({ level: 'warn', message: 'processAudio chamado sem texto original válido', fileName: FILE_NAME, methodName, lineNumber, userId: userId ?? undefined, endpoint: ENDPOINT_PROCESS_AUDIO, parameters, errorName: err.name, errorMessage: err.message });
-    throw err;
-  }
-
-  const token = user ? await user.getIdToken().catch((e) => {
-    logDetailed({ level: 'warn', message: `Falha ao obter token de autenticação para processAudio: ${e instanceof Error ? e.message : String(e)}`, fileName: FILE_NAME, methodName, lineNumber, userId: userId ?? undefined, errorName: e instanceof Error ? e.name : 'UnknownError', errorMessage: e instanceof Error ? e.message : String(e) });
-    return null;
-  }) : null;
-
+  const token = await ready.auth.currentUser!.getIdToken(true);
   const formData = new FormData();
   formData.append('file', audioBlob, 'reading.webm');
   formData.append('original_text', originalText);
-  if (studentGrade) formData.append('student_grade', studentGrade);
-  if (targetPCM) formData.append('target_pcm', targetPCM.toString());
-  if (history) formData.append('history', JSON.stringify(history));
-  if (duration) formData.append('duration', duration.toString());
-  if (isForeigner) formData.append('is_foreigner', 'true');
-  if (isGlassesUser) formData.append('is_glasses_user', 'true');
+  if (studentGrade) formData.append('student_grade', studentGrade.slice(0, 40));
+  if (targetPCM !== undefined) formData.append('target_pcm', String(targetPCM));
+  const safeHistory = minimizeHistory(history);
+  if (safeHistory) formData.append('history', JSON.stringify(safeHistory));
+  if (duration !== undefined) formData.append('duration', String(duration));
 
+  const startedAt = Date.now();
   let response: Response;
-  const startTime = Date.now();
   try {
     response = await fetch(ENDPOINT_PROCESS_AUDIO, {
       method: 'POST',
-      headers: { ...(token ? { 'Authorization': `Bearer ${token}` } : {}) },
-      body: formData
+      headers: { Authorization: `Bearer ${token}` },
+      body: formData,
     });
-  } catch (networkError: unknown) {
-    const originalName = networkError instanceof Error ? networkError.name : 'UnknownError';
-    const originalMessage = networkError instanceof Error ? networkError.message : String(networkError);
-    const originalStack = networkError instanceof Error ? networkError.stack : undefined;
-
-    const isTimeout = originalMessage.toLowerCase().includes('timeout') || originalMessage.toLowerCase().includes('abort');
-    const isNetwork = originalMessage.toLowerCase().includes('network') || originalMessage.toLowerCase().includes('fetch') || originalMessage.toLowerCase().includes('failed to fetch');
-
+  } catch (error) {
     logDetailed({
       level: 'error',
-      message: `Falha de rede ao chamar ${ENDPOINT_PROCESS_AUDIO}: ${originalMessage}`,
+      message: 'Falha de rede no processamento de áudio.',
       fileName: FILE_NAME,
       methodName,
-      lineNumber,
       endpoint: ENDPOINT_PROCESS_AUDIO,
-      httpCode: 0,
-      userId: userId ?? undefined,
-      parameters,
-      errorName: originalName,
-      errorMessage: originalMessage,
-      stackTrace: originalStack,
-      extraData: { duracaoMs: Date.now() - startTime, categoria: isTimeout ? 'TIMEOUT' : isNetwork ? 'NETWORK' : 'DESCONHECIDO' }
+      userId: ready.uid,
+      errorName: error instanceof Error ? error.name : 'NetworkError',
+      errorMessage: error instanceof Error ? error.message : String(error),
+      extraData: { durationMs: Date.now() - startedAt, audioSizeBytes: audioBlob.size },
     });
-
-    throw new DetailedError({
-      userMessage: isTimeout
-        ? `Falha no processamento do áudio. Tempo limite de resposta excedido ao chamar ${ENDPOINT_PROCESS_AUDIO}. Verifique sua conexão e tente novamente.`
-        : isNetwork
-          ? `Falha de conexão ao chamar ${ENDPOINT_PROCESS_AUDIO}. Verifique sua internet e tente novamente.`
-          : `Falha ao comunicar com o servidor de processamento de áudio: ${originalMessage}`,
-      fileName: FILE_NAME,
-      methodName,
-      lineNumber,
-      endpoint: ENDPOINT_PROCESS_AUDIO,
-      httpCode: 0,
-      userId,
-      extraData: { duracaoMs: Date.now() - startTime }
-    }, networkError);
+    throw new DetailedError({ userMessage: 'Falha de conexão durante o processamento do áudio.', httpCode: 0 }, error);
   }
 
-  const duracaoMs = Date.now() - startTime;
+  let payload: any = null;
+  try {
+    payload = await response.json();
+  } catch {
+    // Resposta inválida é tratada abaixo sem registrar corpo bruto.
+  }
 
   if (!response.ok) {
-    let errorDetail: any = {};
-    try {
-      errorDetail = await response.json();
-    } catch (parseError: unknown) {
-      logDetailed({
-        level: 'warn',
-        message: `Não foi possível fazer parse do JSON de erro do response (HTTP ${response.status}). Resposta pode não ser JSON.`,
-        fileName: FILE_NAME,
-        methodName,
-        lineNumber,
-        endpoint: ENDPOINT_PROCESS_AUDIO,
-        httpCode: response.status,
-        userId: userId ?? undefined,
-        errorName: parseError instanceof Error ? parseError.name : 'UnknownError',
-        errorMessage: parseError instanceof Error ? parseError.message : String(parseError),
-        extraData: { responseStatus: response.status, responseStatusText: response.statusText, duracaoMs }
-      });
-    }
-
-    const detailMsg = typeof errorDetail?.detail === 'string' ? errorDetail.detail : JSON.stringify(errorDetail).substring(0, 500);
-    const detailLower = detailMsg.toLowerCase();
-
-    const isOpenAIQuotaError =
-      response.status === 429 &&
-      (detailLower.includes('insufficient_quota') ||
-       detailLower.includes('no credits remaining') ||
-       detailLower.includes('you have no credits remaining') ||
-       detailLower.includes('billing quota') ||
-       detailLower.includes('add credits') ||
-       detailLower.includes('exceeded your current quota'));
-
-    const userDetailMsg = isOpenAIQuotaError
-      ? 'A API da OpenAI está sem créditos disponíveis. Adicione créditos no painel de cobrança da OpenAI e tente novamente.'
-      : detailMsg;
-
+    const requestId = typeof payload?.requestId === 'string' ? payload.requestId : undefined;
     logDetailed({
       level: 'error',
-      message: `Endpoint ${ENDPOINT_PROCESS_AUDIO} retornou HTTP ${response.status} ${response.statusText}. Detalhe: ${detailMsg || '(sem detalhe)'}`,
+      message: 'Endpoint de áudio retornou erro.',
       fileName: FILE_NAME,
       methodName,
-      lineNumber,
       endpoint: ENDPOINT_PROCESS_AUDIO,
-      httpCode: response.status,
-      userId: userId ?? undefined,
-      parameters,
-      extraData: { responseStatus: response.status, responseStatusText: response.statusText, duracaoMs, corpoErro: errorDetail }
+      userId: ready.uid,
+      httpStatusCode: response.status,
+      extraData: { requestId, durationMs: Date.now() - startedAt },
     });
-
     throw new DetailedError({
-      userMessage: userDetailMsg
-        ? `Falha no processamento do áudio.\nMotivo: ${userDetailMsg}\nCódigo HTTP: ${response.status}`
-        : `Falha no processamento do áudio.\nO servidor retornou o código HTTP ${response.status} (${response.statusText}). Verifique o arquivo de áudio e tente novamente.`,
-      fileName: FILE_NAME,
-      methodName,
-      lineNumber,
-      endpoint: ENDPOINT_PROCESS_AUDIO,
+      userMessage: typeof payload?.detail === 'string' ? payload.detail : 'Não foi possível processar o áudio.',
       httpCode: response.status,
-      userId,
-      extraData: { responseStatus: response.status, duracaoMs, isOpenAIQuotaError }
+      endpoint: ENDPOINT_PROCESS_AUDIO,
+      extraData: { requestId },
     });
   }
 
-  try {
-    const result = await response.json();
-    logDetailed({
-      level: 'info',
-      message: `Processamento de áudio concluído com sucesso (HTTP ${response.status}) em ${duracaoMs}ms. PCM=${result?.pcm ?? '?'} | Precisão=${result?.precisao ?? '?'}%`,
-      fileName: FILE_NAME,
-      methodName,
-      lineNumber,
-      endpoint: ENDPOINT_PROCESS_AUDIO,
-      httpCode: response.status,
-      userId: userId ?? undefined,
-      extraData: {
-        duracaoMs,
-        pcmRetornado: result?.pcm,
-        precisaoRetornada: result?.precisao,
-        temDiagnostico: !!result?.diagnosticoIA,
-        temTranscricao: !!result?.transcricao,
-        temMarcacao: !!result?.transcricaoMarcada
-      }
-    });
-    return result;
-  } catch (parseError: unknown) {
-    const originalName = parseError instanceof Error ? parseError.name : 'UnknownError';
-    const originalMessage = parseError instanceof Error ? parseError.message : String(parseError);
-    const originalStack = parseError instanceof Error ? parseError.stack : undefined;
-
-    logDetailed({
-      level: 'error',
-      message: `Falha ao fazer parse da resposta JSON do processamento de áudio (HTTP ${response.status}): ${originalMessage}`,
-      fileName: FILE_NAME,
-      methodName,
-      lineNumber,
-      endpoint: ENDPOINT_PROCESS_AUDIO,
-      httpCode: response.status,
-      userId: userId ?? undefined,
-      parameters,
-      errorName: originalName,
-      errorMessage: originalMessage,
-      stackTrace: originalStack,
-      extraData: { responseStatus: response.status, duracaoMs }
-    });
-
-    throw new DetailedError({
-      userMessage: `Falha ao interpretar a resposta do servidor de processamento.\nMotivo: ${originalMessage}\nEndpoint: ${ENDPOINT_PROCESS_AUDIO}\nCódigo HTTP: ${response.status}`,
-      fileName: FILE_NAME,
-      methodName,
-      lineNumber,
-      endpoint: ENDPOINT_PROCESS_AUDIO,
-      httpCode: response.status,
-      userId
-    }, parseError);
+  if (!payload) {
+    throw new DetailedError({ userMessage: 'Resposta inválida do serviço de processamento.', httpCode: 502 });
   }
+  return payload;
 };
 
-export const saveAvaliacao = async (avaliacao: Omit<Avaliacao, 'id' | 'professorId'>): Promise<string | null> => {
-  const methodName = 'saveAvaliacao';
-  const lineNumber = 353;
-  const parameters = {
-    alunoId: avaliacao?.alunoId ?? '(vazio)',
-    textoId: avaliacao?.textoId ?? '(vazio)',
-    pcm: avaliacao?.pcm ?? 0,
-    precisao: avaliacao?.precisao ?? 0,
-    erros: avaliacao?.erros ?? 0,
-    transcricaoLength: avaliacao?.transcricao?.length ?? 0,
-    temDiagnostico: !!avaliacao?.diagnosticoIA,
-    temIntervencao: !!avaliacao?.intervencaoIA
-  };
-
-  if (!ensureFirebaseReady({ methodName, lineNumber, parameters, requireAuth: true })) return null;
-
-  if (!avaliacao) {
-    const err = new DetailedError({ userMessage: 'Falha ao salvar avaliação: nenhum dado de avaliação foi informado.', fileName: FILE_NAME, methodName, lineNumber, httpCode: 400 });
-    logDetailed({ level: 'warn', message: 'saveAvaliacao chamado com objeto nulo', fileName: FILE_NAME, methodName, lineNumber, errorName: err.name, errorMessage: err.message });
-    if (IS_DEV) throw err;
-    return null;
-  }
-  if (!avaliacao.alunoId || !avaliacao.alunoId.trim()) {
-    const err = new DetailedError({ userMessage: 'Falha ao salvar avaliação. Campo: alunoId. Motivo: O identificador do aluno é obrigatório.', fieldName: 'Aluno ID', fieldValue: avaliacao.alunoId ?? '(vazio)', fileName: FILE_NAME, methodName, lineNumber, httpCode: 400 });
-    logDetailed({ level: 'warn', message: 'Validação saveAvaliacao: alunoId vazio', fileName: FILE_NAME, methodName, lineNumber, parameters, errorName: err.name, errorMessage: err.message });
-    if (IS_DEV) throw err;
-    return null;
-  }
-  if (!avaliacao.textoId || !avaliacao.textoId.trim()) {
-    const err = new DetailedError({ userMessage: 'Falha ao salvar avaliação. Campo: textoId. Motivo: O identificador do texto é obrigatório.', fieldName: 'Texto ID', fieldValue: avaliacao.textoId ?? '(vazio)', fileName: FILE_NAME, methodName, lineNumber, httpCode: 400 });
-    logDetailed({ level: 'warn', message: 'Validação saveAvaliacao: textoId vazio', fileName: FILE_NAME, methodName, lineNumber, parameters, errorName: err.name, errorMessage: err.message });
-    if (IS_DEV) throw err;
-    return null;
-  }
+export const saveAvaliacao = async (
+  avaliacao: Omit<Avaliacao, 'id' | 'professorId'>
+): Promise<string | null> => {
+  const ready = ensureReady('saveAvaliacao');
+  if (!ready || !avaliacao?.alunoId?.trim() || !avaliacao?.textoId?.trim()) return null;
 
   try {
-    const currentUser = cachedAuth!.currentUser!;
-    logDetailed({ level: 'info', message: `Salvando avaliação: Aluno=${avaliacao.alunoId.substring(0, 8)}... | Texto=${avaliacao.textoId.substring(0, 8)}... | PCM=${avaliacao.pcm}`, fileName: FILE_NAME, methodName, lineNumber, userId: currentUser.uid, parameters });
-
-    const docRef = await addDoc(collection(cachedDb!, 'avaliacoes'), {
+    const docRef = await addDoc(collection(ready.db, 'avaliacoes'), {
       ...avaliacao,
-      professorId: currentUser.uid,
-      data: avaliacao.data || Timestamp.now()
+      professorId: ready.uid,
+      data: avaliacao.data || Timestamp.now(),
+      createdAt: Timestamp.now(),
     });
-
-    logDetailed({ level: 'info', message: `Avaliação salva. Novo ID: ${docRef.id.substring(0, 8)}...`, fileName: FILE_NAME, methodName, lineNumber, userId: currentUser.uid, extraData: { avaliacaoId: docRef.id } });
     return docRef.id;
   } catch (error) {
-    const info = logFirestoreError(error, { methodName, lineNumber, parameters, operation: 'salvar avaliação', collection: 'avaliacoes' });
-    if (IS_DEV) {
-      throw new DetailedError({
-        userMessage: `Falha ao salvar avaliação. ${info.formatted?.userMessage || info.originalMessage}`,
-        fieldName: info.formatted?.fieldName,
-        fileName: FILE_NAME,
-        methodName,
-        lineNumber,
-        userId: getCurrentUserId() ?? undefined,
-        extraData: { firebaseErrorCode: info.fbCode }
-      }, error);
-    }
+    const message = logFirestoreError(error, 'saveAvaliacao', 'salvar avaliação');
+    if (IS_DEV) throw new DetailedError({ userMessage: message, fileName: FILE_NAME, methodName: 'saveAvaliacao' }, error);
     return null;
   }
 };
 
 export const getAvaliacoesPorAluno = async (alunoId: string): Promise<Avaliacao[]> => {
-  const methodName = 'getAvaliacoesPorAluno';
-  const lineNumber = 430;
-  const parameters = { alunoId: alunoId ?? '(vazio)' };
-
-  if (!ensureFirebaseReady({ methodName, lineNumber, parameters })) return [];
-
-  if (!alunoId || !alunoId.trim()) {
-    const err = new DetailedError({ userMessage: 'Falha ao buscar avaliações do aluno. Campo: alunoId. Motivo: Não informado.', fieldName: 'Aluno ID', fieldValue: alunoId ?? '(vazio)', fileName: FILE_NAME, methodName, lineNumber, httpCode: 400 });
-    logDetailed({ level: 'warn', message: 'getAvaliacoesPorAluno com alunoId vazio', fileName: FILE_NAME, methodName, lineNumber, parameters, errorName: err.name, errorMessage: err.message });
-    if (IS_DEV) throw err;
-    return [];
-  }
-
+  const ready = ensureReady('getAvaliacoesPorAluno');
+  if (!ready || !alunoId?.trim()) return [];
   try {
-    logDetailed({ level: 'info', message: `Buscando avaliações do aluno id=${alunoId.substring(0, 8)}...`, fileName: FILE_NAME, methodName, lineNumber, userId: getCurrentUserId() ?? undefined, parameters });
-
-    const q = query(collection(cachedDb!, 'avaliacoes'), where('alunoId', '==', alunoId));
-    const querySnapshot = await getDocs(q);
-    const results = querySnapshot.docs.map(d => ({ id: d.id, ...d.data() } as Avaliacao)).sort((a, b) => {
-      const dateA = (a.data as any)?.seconds || 0;
-      const dateB = (b.data as any)?.seconds || 0;
-      return dateB - dateA;
-    });
-
-    logDetailed({ level: 'debug', message: `${results.length} avaliação(ões) encontrada(s) para o aluno.`, fileName: FILE_NAME, methodName, lineNumber, userId: getCurrentUserId() ?? undefined, extraData: { totalAvaliacoes: results.length, alunoId } });
-    return results;
+    const snapshot = await getDocs(query(
+      collection(ready.db, 'avaliacoes'),
+      where('professorId', '==', ready.uid),
+      where('alunoId', '==', alunoId),
+    ));
+    return snapshot.docs
+      .map((item) => ({ id: item.id, ...item.data() } as Avaliacao))
+      .sort((a, b) => Number((b.data as any)?.seconds || 0) - Number((a.data as any)?.seconds || 0));
   } catch (error) {
-    const info = logFirestoreError(error, { methodName, lineNumber, parameters, operation: `buscar avaliações do aluno ${alunoId?.substring(0, 8)}`, collection: 'avaliacoes' });
-    if (IS_DEV) {
-      throw new DetailedError({ userMessage: `Falha ao buscar avaliações do aluno. ${info.formatted?.userMessage || info.originalMessage}`, fieldName: info.formatted?.fieldName || 'Aluno ID', fieldValue: alunoId, fileName: FILE_NAME, methodName, lineNumber, extraData: { firebaseErrorCode: info.fbCode } }, error);
-    }
+    logFirestoreError(error, 'getAvaliacoesPorAluno', 'buscar avaliações do aluno');
+    if (IS_DEV) throw error;
     return [];
   }
 };
 
 export const getAllAvaliacoes = async (): Promise<Avaliacao[]> => {
-  const methodName = 'getAllAvaliacoes';
-  const lineNumber = 485;
-
-  if (!ensureFirebaseReady({ methodName, lineNumber })) return [];
-
+  const ready = ensureReady('getAllAvaliacoes');
+  if (!ready) return [];
   try {
-    logDetailed({ level: 'info', message: 'Buscando TODAS as avaliações (lista geral)', fileName: FILE_NAME, methodName, lineNumber, userId: getCurrentUserId() ?? undefined });
-    const q = query(collection(cachedDb!, 'avaliacoes'));
-    const querySnapshot = await getDocs(q);
-    const results = querySnapshot.docs.map(d => ({ id: d.id, ...d.data() } as Avaliacao)).sort((a, b) => {
-      const dateA = (a.data as any)?.seconds || 0;
-      const dateB = (b.data as any)?.seconds || 0;
-      return dateB - dateA;
-    });
-    logDetailed({ level: 'debug', message: `Busca geral concluída: ${results.length} avaliação(ões).`, fileName: FILE_NAME, methodName, lineNumber, extraData: { totalAvaliacoes: results.length } });
-    return results;
+    const snapshot = await getDocs(query(
+      collection(ready.db, 'avaliacoes'),
+      where('professorId', '==', ready.uid),
+    ));
+    return snapshot.docs
+      .map((item) => ({ id: item.id, ...item.data() } as Avaliacao))
+      .sort((a, b) => Number((b.data as any)?.seconds || 0) - Number((a.data as any)?.seconds || 0));
   } catch (error) {
-    const info = logFirestoreError(error, { methodName, lineNumber, operation: 'buscar todas as avaliações', collection: 'avaliacoes' });
-    if (IS_DEV) {
-      throw new DetailedError({ userMessage: `Falha ao buscar avaliações. ${info.formatted?.userMessage || info.originalMessage}`, fieldName: info.formatted?.fieldName, fileName: FILE_NAME, methodName, lineNumber, extraData: { firebaseErrorCode: info.fbCode } }, error);
-    }
+    logFirestoreError(error, 'getAllAvaliacoes', 'buscar avaliações do professor');
+    if (IS_DEV) throw error;
     return [];
   }
 };
 
 export const getAvaliacaoById = async (id: string): Promise<Avaliacao | null> => {
-  const methodName = 'getAvaliacaoById';
-  const lineNumber = 524;
-  const parameters = { avaliacaoId: id ?? '(vazio)' };
-
-  if (!ensureFirebaseReady({ methodName, lineNumber, parameters })) return null;
-
-  if (!id || !id.trim()) {
-    const err = new DetailedError({ userMessage: 'Falha ao buscar avaliação. Campo: Avaliação ID. Motivo: O identificador da avaliação é obrigatório e não foi informado.', fieldName: 'Avaliação ID', fieldValue: id ?? '(vazio)', fileName: FILE_NAME, methodName, lineNumber, httpCode: 400 });
-    logDetailed({ level: 'warn', message: 'getAvaliacaoById com id vazio', fileName: FILE_NAME, methodName, lineNumber, parameters, errorName: err.name, errorMessage: err.message });
-    if (IS_DEV) throw err;
-    return null;
-  }
-
+  const ready = ensureReady('getAvaliacaoById');
+  if (!ready || !id?.trim()) return null;
   try {
-    logDetailed({ level: 'debug', message: `Buscando avaliação por ID: ${id.substring(0, 8)}...`, fileName: FILE_NAME, methodName, lineNumber, userId: getCurrentUserId() ?? undefined, parameters });
-
-    const docRef = doc(cachedDb!, 'avaliacoes', id);
-    const docSnap = await getDoc(docRef);
-    if (docSnap.exists()) {
-      logDetailed({ level: 'debug', message: `Avaliação encontrada (id=${id.substring(0, 8)}...)`, fileName: FILE_NAME, methodName, lineNumber, extraData: { avaliacaoId: id } });
-      return { id: docSnap.id, ...docSnap.data() } as Avaliacao;
-    }
-    logDetailed({ level: 'warn', message: `Avaliação não encontrada no Firestore (id=${id.substring(0, 8)}...)`, fileName: FILE_NAME, methodName, lineNumber, extraData: { avaliacaoId: id } });
-    return null;
+    const snapshot = await getDoc(doc(ready.db, 'avaliacoes', id));
+    if (!snapshot.exists()) return null;
+    const data = snapshot.data() as Avaliacao;
+    if (data.professorId !== ready.uid) return null;
+    return { id: snapshot.id, ...data };
   } catch (error) {
-    const info = logFirestoreError(error, { methodName, lineNumber, parameters, operation: `buscar avaliação por ID=${id?.substring(0, 8)}`, collection: 'avaliacoes' });
-    if (IS_DEV) {
-      throw new DetailedError({ userMessage: `Falha ao buscar avaliação por ID. ${info.formatted?.userMessage || info.originalMessage}`, fieldName: info.formatted?.fieldName || 'Avaliação ID', fieldValue: id, fileName: FILE_NAME, methodName, lineNumber, extraData: { firebaseErrorCode: info.fbCode } }, error);
-    }
+    logFirestoreError(error, 'getAvaliacaoById', 'buscar avaliação');
+    if (IS_DEV) throw error;
     return null;
   }
 };
