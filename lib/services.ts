@@ -9,6 +9,8 @@ import {
   setDoc,
   updateDoc,
   deleteDoc,
+  deleteField,
+  writeBatch,
   Timestamp,
   orderBy,
   Firestore,
@@ -126,6 +128,31 @@ async function getPrivateMap(db: Firestore, uid: string): Promise<Map<string, St
   return new Map(snapshot.docs.map((item) => [item.id, item.data() as StudentPrivateData]));
 }
 
+async function migrateLegacyPrivateFields(
+  db: Firestore,
+  uid: string,
+  studentId: string,
+  data: Record<string, any>,
+): Promise<void> {
+  const hasLegacyDiagnosis = typeof data.diagnostico === 'string' && data.diagnostico.trim() !== '';
+  const hasLegacyNotes = typeof data.observacoes === 'string' && data.observacoes.trim() !== '';
+  if (!hasLegacyDiagnosis && !hasLegacyNotes) return;
+
+  await setDoc(doc(db, 'student_private', studentId), {
+    professorId: uid,
+    ...(hasLegacyDiagnosis ? { diagnostico: data.diagnostico.slice(0, 120) } : {}),
+    ...(hasLegacyNotes ? { observacoes: data.observacoes.slice(0, 500) } : {}),
+    ...(data.retentionUntil ? { retentionUntil: data.retentionUntil } : {}),
+    updatedAt: Timestamp.now(),
+  }, { merge: true });
+
+  await updateDoc(doc(db, 'alunos', studentId), {
+    diagnostico: deleteField(),
+    observacoes: deleteField(),
+    updatedAt: Timestamp.now(),
+  });
+}
+
 export const getAlunos = async (turma?: string): Promise<Aluno[]> => {
   const ready = ensureReady('getAlunos');
   if (!ready) return [];
@@ -137,9 +164,25 @@ export const getAlunos = async (turma?: string): Promise<Aluno[]> => {
       getPrivateMap(ready.db, ready.uid),
     ]);
 
-    return snapshot.docs
-      .map((item) => ({ id: item.id, ...item.data(), ...(privateMap.get(item.id) || {}) } as Aluno))
-      .sort((a, b) => (a.nome || '').localeCompare(b.nome || '', 'pt-BR'));
+    const migrations: Promise<void>[] = [];
+    const result = snapshot.docs.map((item) => {
+      const raw = item.data() as Record<string, any>;
+      if (raw.diagnostico || raw.observacoes) {
+        migrations.push(migrateLegacyPrivateFields(ready.db, ready.uid, item.id, raw));
+      }
+      return { id: item.id, ...raw, ...(privateMap.get(item.id) || {}) } as Aluno;
+    });
+
+    if (migrations.length > 0) {
+      void Promise.allSettled(migrations).then((settled) => {
+        const failures = settled.filter((entry) => entry.status === 'rejected').length;
+        if (failures > 0) {
+          logDetailed({ level: 'warn', message: 'Alguns registros legados não puderam ser migrados para a coleção privada.', fileName: FILE_NAME, methodName: 'getAlunos', extraData: { failures } });
+        }
+      });
+    }
+
+    return result.sort((a, b) => (a.nome || '').localeCompare(b.nome || '', 'pt-BR'));
   } catch (error) {
     logFirestoreError(error, 'getAlunos', 'buscar alunos do professor autenticado');
     if (IS_DEV) throw error;
@@ -169,10 +212,13 @@ export const getAlunoById = async (id: string): Promise<Aluno | null> => {
       getDoc(doc(ready.db, 'student_private', id)),
     ]);
     if (!snapshot.exists()) return null;
-    const data = snapshot.data() as Aluno;
-    if (data.professorId !== ready.uid) return null;
+    const raw = snapshot.data() as Record<string, any>;
+    if (raw.professorId !== ready.uid) return null;
     const privateData = privateSnapshot.exists() ? privateSnapshot.data() as StudentPrivateData : {};
-    return { id: snapshot.id, ...data, ...privateData };
+    if (raw.diagnostico || raw.observacoes) {
+      void migrateLegacyPrivateFields(ready.db, ready.uid, id, raw).catch(() => undefined);
+    }
+    return { id: snapshot.id, ...raw, ...privateData } as Aluno;
   } catch (error) {
     logFirestoreError(error, 'getAlunoById', 'buscar aluno');
     if (IS_DEV) throw error;
@@ -267,11 +313,30 @@ export const deleteAluno = async (id: string): Promise<boolean> => {
   const ready = ensureReady('deleteAluno');
   if (!ready || !id?.trim()) return false;
   try {
+    const evaluationSnapshot = await getDocs(query(
+      collection(ready.db, 'avaliacoes'),
+      where('professorId', '==', ready.uid),
+      where('alunoId', '==', id),
+    ));
+
+    let batch = writeBatch(ready.db);
+    let count = 0;
+    for (const evaluation of evaluationSnapshot.docs) {
+      batch.delete(evaluation.ref);
+      count += 1;
+      if (count >= 400) {
+        await batch.commit();
+        batch = writeBatch(ready.db);
+        count = 0;
+      }
+    }
+    if (count > 0) await batch.commit();
+
     await deleteDoc(doc(ready.db, 'student_private', id)).catch(() => undefined);
     await deleteDoc(doc(ready.db, 'alunos', id));
     return true;
   } catch (error) {
-    logFirestoreError(error, 'deleteAluno', 'excluir aluno');
+    logFirestoreError(error, 'deleteAluno', 'excluir dados vinculados ao aluno');
     if (IS_DEV) throw error;
     return false;
   }
