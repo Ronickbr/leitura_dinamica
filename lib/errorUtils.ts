@@ -39,15 +39,18 @@ export interface DetailedLogEntry {
   httpStatusCode?: number;
 }
 
-const SENSITIVE_KEY = /(authorization|token|password|senha|secret|api.?key|private.?key|cookie|nome|name|email|cpf|rg|telefone|phone|endereco|address|observa|diagnost|transcri|original.?text|history|historico|intervenc|prompt|contentpreview|audio|filename|file.?name)/i;
+const SENSITIVE_KEY = /(authorization|token|password|senha|secret|api.?key|private.?key|cookie|nome|name|email|cpf|rg|telefone|phone|endereco|address|observa|diagnost|transcri|original.?text|history|historico|intervenc|prompt|contentpreview|audio|filename|file.?name|aluno.?id|student.?id)/i;
 
 function redactString(value: string): string {
   let result = value
     .replace(/Bearer\s+[A-Za-z0-9._-]+/gi, "Bearer [REDACTED]")
     .replace(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi, "[EMAIL_REDACTED]");
 
-  if (!IS_DEV && result.length > 240) {
-    result = `${result.slice(0, 240)}…[TRUNCATED]`;
+  if (!IS_DEV) {
+    result = result
+      .replace(/"[^"\r\n]{1,180}"/g, '"[REDACTED]"')
+      .replace(/'[^'\r\n]{1,180}'/g, "'[REDACTED]'");
+    if (result.length > 240) result = `${result.slice(0, 240)}…[TRUNCATED]`;
   }
   return result;
 }
@@ -64,9 +67,8 @@ function sanitizeValue(value: unknown, key = "", depth = 0): unknown {
     return list;
   }
   if (typeof value === "object") {
-    const source = value as Record<string, unknown>;
     const output: Record<string, unknown> = {};
-    for (const [childKey, childValue] of Object.entries(source).slice(0, 40)) {
+    for (const [childKey, childValue] of Object.entries(value as Record<string, unknown>).slice(0, 40)) {
       output[childKey] = sanitizeValue(childValue, childKey, depth + 1);
     }
     return output;
@@ -127,7 +129,6 @@ export class DetailedError extends Error {
 
   public toDisplayString(includeStack = IS_DEV): string {
     if (!IS_DEV) return this.userMessage;
-
     const parts: string[] = [this.userMessage];
     if (this.fieldName) parts.push(`Campo: ${this.fieldName}`);
     if (this.fieldValue !== undefined) parts.push(`Valor Recebido: ${String(sanitizeValue(this.fieldValue, this.fieldName || "field"))}`);
@@ -143,14 +144,14 @@ export class DetailedError extends Error {
 }
 
 export function logDetailed(entry: Omit<DetailedLogEntry, "timestamp">): void {
-  // Em produção, INFO/DEBUG não são persistidos para reduzir coleta incidental de dados.
   if (!IS_DEV && (entry.level === "debug" || entry.level === "info")) return;
 
   const timestamp = new Date().toISOString();
   const httpCode = entry.httpStatusCode ?? entry.httpCode;
   const contextParts: string[] = [];
 
-  if (entry.userId) contextParts.push(`UserRef: ${redactString(entry.userId)}`);
+  // Identificadores de usuário só aparecem em desenvolvimento.
+  if (IS_DEV && entry.userId) contextParts.push(`User: ${redactString(entry.userId)}`);
   if (entry.methodName) contextParts.push(`Method: ${entry.methodName}()`);
   if (entry.endpoint) contextParts.push(`Endpoint: ${entry.endpoint}${httpCode ? ` HTTP ${httpCode}` : ""}`);
   else if (httpCode) contextParts.push(`HTTP ${httpCode}`);
