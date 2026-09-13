@@ -19,7 +19,8 @@ service cloud.firestore {
     }
 
     match /student_private/{id} {
-      allow read: if isAdmin() || ownsStudent(id);
+      allow get: if isAdmin() || isOwner(resource.data) || ownsStudent(id);
+      allow list: if isAdmin() || isOwner(resource.data);
       allow create: if isAdmin() || (ownsStudent(id) && createsOwn());
       allow update: if isAdmin() || (ownsStudent(id) && isOwner(resource.data) && keepsOwner());
       allow delete: if isAdmin();
