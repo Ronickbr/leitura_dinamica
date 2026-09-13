@@ -1,4 +1,4 @@
-const IS_DEV = process.env.NODE_ENV !== "production";
+export const IS_DEV = process.env.NODE_ENV !== "production";
 
 export type LogLevel = "debug" | "info" | "warn" | "error" | "fatal";
 
@@ -39,6 +39,46 @@ export interface DetailedLogEntry {
   httpStatusCode?: number;
 }
 
+const SENSITIVE_KEY = /(authorization|token|password|senha|secret|api.?key|private.?key|cookie|nome|name|email|cpf|rg|telefone|phone|endereco|address|observa|diagnost|transcri|original.?text|history|historico|intervenc|prompt|contentpreview|audio|filename|file.?name)/i;
+
+function redactString(value: string): string {
+  let result = value
+    .replace(/Bearer\s+[A-Za-z0-9._-]+/gi, "Bearer [REDACTED]")
+    .replace(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi, "[EMAIL_REDACTED]");
+
+  if (!IS_DEV && result.length > 240) {
+    result = `${result.slice(0, 240)}…[TRUNCATED]`;
+  }
+  return result;
+}
+
+function sanitizeValue(value: unknown, key = "", depth = 0): unknown {
+  if (depth > 5) return "[MAX_DEPTH]";
+  if (SENSITIVE_KEY.test(key)) return "[REDACTED]";
+  if (value === null || value === undefined) return value;
+  if (typeof value === "string") return redactString(value);
+  if (typeof value === "number" || typeof value === "boolean") return value;
+  if (Array.isArray(value)) {
+    const list = value.slice(0, 20).map((item) => sanitizeValue(item, key, depth + 1));
+    if (value.length > 20) list.push(`[+${value.length - 20} itens]`);
+    return list;
+  }
+  if (typeof value === "object") {
+    const source = value as Record<string, unknown>;
+    const output: Record<string, unknown> = {};
+    for (const [childKey, childValue] of Object.entries(source).slice(0, 40)) {
+      output[childKey] = sanitizeValue(childValue, childKey, depth + 1);
+    }
+    return output;
+  }
+  return String(value);
+}
+
+export function sanitizeForLog(data?: Record<string, unknown>): Record<string, unknown> | undefined {
+  if (!data) return undefined;
+  return sanitizeValue(data) as Record<string, unknown>;
+}
+
 export class DetailedError extends Error {
   public readonly userMessage: string;
   public readonly operation?: string;
@@ -59,9 +99,7 @@ export class DetailedError extends Error {
   public readonly extraData?: Record<string, unknown>;
 
   constructor(options: DetailedErrorOptions, originalError?: unknown) {
-    const resolvedUserMessage =
-      options.userMessage ||
-      (options.operation ? `Falha ao ${options.operation}.` : "Falha inesperada.");
+    const resolvedUserMessage = options.userMessage || (options.operation ? `Falha ao ${options.operation}.` : "Falha inesperada.");
     super(resolvedUserMessage);
     this.name = "DetailedError";
     this.userMessage = resolvedUserMessage;
@@ -83,136 +121,87 @@ export class DetailedError extends Error {
 
     if (originalError instanceof Error) {
       this.originalError = originalError;
-      if (originalError.stack && IS_DEV) {
-        this.stack = originalError.stack;
-      }
+      if (IS_DEV && originalError.stack) this.stack = originalError.stack;
     }
   }
 
   public toDisplayString(includeStack = IS_DEV): string {
+    if (!IS_DEV) return this.userMessage;
+
     const parts: string[] = [this.userMessage];
-
-    if (this.fieldName) {
-      parts.push(`Campo: ${this.fieldName}`);
-      if (this.fieldValue !== undefined) {
-        const safeValue = typeof this.fieldValue === "string" && this.fieldValue.length > 100
-          ? `${this.fieldValue.substring(0, 100)}... (${this.fieldValue.length} caracteres)`
-          : String(this.fieldValue);
-        parts.push(`Valor Recebido: ${safeValue}`);
-      }
-    }
-
-    if (this.fileName) {
-      parts.push(`Arquivo: ${this.fileName}`);
-    }
-
-    if (this.lineNumber) {
-      parts.push(`Linha: ${this.lineNumber}`);
-    }
-
-    if (this.methodName) {
-      parts.push(`Método: ${this.methodName}()`);
-    }
-
-    if (this.endpoint) {
-      parts.push(`Endpoint: ${this.endpoint}`);
-    }
-
-    if (this.httpCode) {
-      parts.push(`Código HTTP: ${this.httpCode}`);
-    }
-
-    if (this.originalError) {
-      parts.push(`Exceção Original: [${this.originalError.name}] ${this.originalError.message}`);
-    }
-
-    if (includeStack && this.stack) {
-      parts.push(`Stack Trace:\n${this.stack}`);
-    }
-
+    if (this.fieldName) parts.push(`Campo: ${this.fieldName}`);
+    if (this.fieldValue !== undefined) parts.push(`Valor Recebido: ${String(sanitizeValue(this.fieldValue, this.fieldName || "field"))}`);
+    if (this.fileName) parts.push(`Arquivo: ${this.fileName}`);
+    if (this.lineNumber) parts.push(`Linha: ${this.lineNumber}`);
+    if (this.methodName) parts.push(`Método: ${this.methodName}()`);
+    if (this.endpoint) parts.push(`Endpoint: ${this.endpoint}`);
+    if (this.httpCode) parts.push(`Código HTTP: ${this.httpCode}`);
+    if (this.originalError) parts.push(`Exceção Original: [${this.originalError.name}] ${redactString(this.originalError.message)}`);
+    if (includeStack && this.stack) parts.push(`Stack Trace:\n${this.stack}`);
     return parts.join("\n");
   }
 }
 
 export function logDetailed(entry: Omit<DetailedLogEntry, "timestamp">): void {
-  const fullEntry: DetailedLogEntry = {
-    ...entry,
-    timestamp: new Date().toISOString(),
-  };
+  // Em produção, INFO/DEBUG não são persistidos para reduzir coleta incidental de dados.
+  if (!IS_DEV && (entry.level === "debug" || entry.level === "info")) return;
 
-  const timestamp = new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
-
-  const prefix = `[${timestamp}] [${entry.level.toUpperCase()}]`;
-  const contextParts: string[] = [];
+  const timestamp = new Date().toISOString();
   const httpCode = entry.httpStatusCode ?? entry.httpCode;
+  const contextParts: string[] = [];
 
-  if (entry.userId) contextParts.push(`User: ${entry.userId}`);
+  if (entry.userId) contextParts.push(`UserRef: ${redactString(entry.userId)}`);
   if (entry.methodName) contextParts.push(`Method: ${entry.methodName}()`);
   if (entry.endpoint) contextParts.push(`Endpoint: ${entry.endpoint}${httpCode ? ` HTTP ${httpCode}` : ""}`);
   else if (httpCode) contextParts.push(`HTTP ${httpCode}`);
   if (entry.fileName) contextParts.push(`File: ${entry.fileName}${entry.lineNumber ? `:${entry.lineNumber}` : ""}`);
 
-  const context = contextParts.length > 0 ? ` {${contextParts.join(" | ")}}` : "";
+  const context = contextParts.length ? ` {${contextParts.join(" | ")}}` : "";
+  const baseMessage = `[${timestamp}] [${entry.level.toUpperCase()}]${context} ${redactString(entry.message)}`;
+  const parameters = sanitizeForLog(entry.parameters);
+  const extraData = sanitizeForLog(entry.extraData);
+  const safeErrorMessage = entry.errorMessage ? redactString(entry.errorMessage) : undefined;
 
-  const baseMessage = `${prefix}${context} ${entry.message}`;
-
-  switch (entry.level) {
-    case "debug":
-      if (IS_DEV) console.debug(baseMessage, entry.parameters ?? entry.extraData ?? "");
-      break;
-    case "info":
-      console.info(baseMessage, entry.parameters ?? entry.extraData ?? "");
-      break;
-    case "warn":
-      console.warn(baseMessage, entry.parameters ?? entry.extraData ?? "");
-      break;
-    case "error":
-    case "fatal":
-      console.error(baseMessage);
-      if (entry.parameters) console.error("  Parâmetros:", JSON.stringify(entry.parameters, null, 2));
-      if (entry.extraData) console.error("  Dados Extras:", JSON.stringify(entry.extraData, null, 2));
-      if (entry.errorName) console.error(`  Exceção: [${entry.errorName}] ${entry.errorMessage}`);
-      if (IS_DEV && entry.stackTrace) console.error(`  Stack:\n${entry.stackTrace}`);
-      break;
+  if (entry.level === "debug") console.debug(baseMessage, parameters ?? extraData ?? "");
+  else if (entry.level === "info") console.info(baseMessage, parameters ?? extraData ?? "");
+  else if (entry.level === "warn") console.warn(baseMessage, parameters ?? extraData ?? "");
+  else {
+    console.error(baseMessage);
+    if (parameters) console.error("  Parâmetros:", JSON.stringify(parameters));
+    if (extraData) console.error("  Dados Extras:", JSON.stringify(extraData));
+    if (entry.errorName || safeErrorMessage) console.error(`  Exceção: [${entry.errorName || "Error"}] ${safeErrorMessage || ""}`);
+    if (IS_DEV && entry.stackTrace) console.error(`  Stack:\n${entry.stackTrace}`);
   }
 }
 
 export function formatErrorForUser(error: unknown, context: Partial<DetailedErrorOptions> = {}): string {
-  if (error instanceof DetailedError) {
-    return error.toDisplayString(false);
+  if (!IS_DEV) {
+    if (error instanceof DetailedError) return error.userMessage;
+    return context.userMessage || (context.operation ? `Falha ao ${context.operation}.` : "Não foi possível concluir a operação.");
   }
 
+  if (error instanceof DetailedError) return error.toDisplayString(false);
   const resolvedField = context.fieldName ?? context.campo;
   const resolvedValue = context.fieldValue ?? context.valorRecebido;
   const resolvedFile = context.fileName ?? context.arquivo;
   const resolvedMethod = context.methodName ?? context.metodo;
   const resolvedHttp = context.httpStatus ?? context.httpCode;
-  const resolvedUserMessage =
-    context.userMessage ||
-    (context.operation ? `Falha ao ${context.operation}.` : "");
+  const resolvedUserMessage = context.userMessage || (context.operation ? `Falha ao ${context.operation}.` : "");
 
   if (error instanceof Error) {
-    const parts: string[] = [resolvedUserMessage || error.message || "Falha inesperada."];
-    if (resolvedField) {
-      parts.push(`Campo: ${resolvedField}`);
-      if (resolvedValue !== undefined) {
-        const safeValue =
-          typeof resolvedValue === "string" && resolvedValue.length > 100
-            ? `${resolvedValue.substring(0, 100)}... (${resolvedValue.length} caracteres)`
-            : String(resolvedValue);
-        parts.push(`Valor Recebido: ${safeValue}`);
-      }
-    }
+    const parts: string[] = [resolvedUserMessage || redactString(error.message) || "Falha inesperada."];
+    if (resolvedField) parts.push(`Campo: ${resolvedField}`);
+    if (resolvedValue !== undefined) parts.push(`Valor Recebido: ${String(sanitizeValue(resolvedValue, resolvedField || "field"))}`);
     if (resolvedFile) parts.push(`Arquivo: ${resolvedFile}`);
     if (context.lineNumber) parts.push(`Linha: ${context.lineNumber}`);
     if (resolvedMethod) parts.push(`Método: ${resolvedMethod}()`);
     if (context.endpoint) parts.push(`Endpoint: ${context.endpoint}`);
     if (resolvedHttp) parts.push(`Código HTTP: ${resolvedHttp}`);
-    parts.push(`Exceção Original: [${error.name}] ${error.message}`);
+    parts.push(`Exceção Original: [${error.name}] ${redactString(error.message)}`);
     return parts.join("\n");
   }
 
-  return resolvedUserMessage || `Falha inesperada durante a operação. Erro bruto: ${String(error)}`;
+  return resolvedUserMessage || "Falha inesperada durante a operação.";
 }
 
 export function handleServiceError<T>(
@@ -231,63 +220,44 @@ export function handleServiceError<T>(
     if (context.validation) {
       const validationResult = context.validation();
       if (!validationResult.ok) {
-        const detErr = new DetailedError(
-          {
-            userMessage: `Falha de validação ao ${context.methodName}.\nMotivo: ${validationResult.message}`,
-            fieldName: validationResult.field,
-            fieldValue: validationResult.value,
-            fileName: context.fileName,
-            methodName: context.methodName,
-            userId: context.userId,
-          },
-          null
-        );
+        const err = new DetailedError({
+          userMessage: `Falha de validação ao ${context.methodName}. ${validationResult.message}`,
+          fieldName: validationResult.field,
+          fieldValue: validationResult.value,
+          fileName: context.fileName,
+          methodName: context.methodName,
+          userId: context.userId,
+          httpCode: 400,
+        });
         logDetailed({
           level: "warn",
-          message: `Validação falhou em ${context.serviceName}.${context.methodName}: ${validationResult.message}`,
+          message: `Validação falhou em ${context.serviceName}.${context.methodName}.`,
           userId: context.userId,
           methodName: context.methodName,
           fileName: context.fileName,
           parameters: context.parameters,
-          extraData: { field: validationResult.field, value: validationResult.value },
         });
-        throw detErr;
+        throw err;
       }
     }
 
     try {
       return await operation();
-    } catch (error: unknown) {
-      const originalMessage = error instanceof Error ? error.message : String(error);
-      const originalName = error instanceof Error ? error.name : "UnknownError";
-      const originalStack = error instanceof Error ? error.stack : undefined;
-
+    } catch (error) {
       logDetailed({
         level: "error",
-        message: `Erro em ${context.serviceName}.${context.methodName}: ${originalMessage}`,
+        message: `Erro em ${context.serviceName}.${context.methodName}.`,
         userId: context.userId,
         methodName: context.methodName,
         fileName: context.fileName,
         parameters: context.parameters,
-        errorName: originalName,
-        errorMessage: originalMessage,
-        stackTrace: originalStack,
+        errorName: error instanceof Error ? error.name : "UnknownError",
+        errorMessage: error instanceof Error ? error.message : String(error),
+        stackTrace: error instanceof Error ? error.stack : undefined,
       });
-
-      const detErr = new DetailedError(
-        {
-          userMessage: `Falha ao executar ${context.methodName}.\nMotivo: ${originalMessage}`,
-          fileName: context.fileName,
-          methodName: context.methodName,
-          userId: context.userId,
-        },
-        error
-      );
-
       if (IS_DEV) {
-        throw detErr;
+        throw new DetailedError({ userMessage: `Falha ao executar ${context.methodName}.`, fileName: context.fileName, methodName: context.methodName }, error);
       }
-
       return context.fallbackValue;
     }
   })();
@@ -295,62 +265,33 @@ export function handleServiceError<T>(
 
 export function formatFirebaseAuthError(errorCode: string): { userMessage: string; fieldName?: string } {
   switch (errorCode) {
-    case "auth/invalid-email":
-      return { userMessage: "O e-mail informado tem um formato inválido. Verifique e tente novamente.", fieldName: "Email" };
-    case "auth/user-disabled":
-      return { userMessage: "Esta conta de usuário foi desativada. Entre em contato com o administrador.", fieldName: "Conta" };
-    case "auth/user-not-found":
-      return { userMessage: "Não existe usuário cadastrado com o e-mail informado.", fieldName: "Email" };
-    case "auth/wrong-password":
-      return { userMessage: "Senha incorreta. Verifique e tente novamente.", fieldName: "Senha" };
-    case "auth/email-already-in-use":
-      return { userMessage: "Este e-mail já está cadastrado no sistema.", fieldName: "Email" };
-    case "auth/operation-not-allowed":
-      return { userMessage: "Este método de autenticação não está habilitado.", fieldName: "Autenticação" };
-    case "auth/weak-password":
-      return { userMessage: "A senha é muito fraca. Use pelo menos 6 caracteres.", fieldName: "Senha" };
-    case "auth/network-request-failed":
-      return { userMessage: "Falha de conexão. Verifique sua internet e tente novamente.", fieldName: "Conexão" };
-    case "auth/too-many-requests":
-      return { userMessage: "Muitas tentativas de login. Aguarde alguns minutos e tente novamente.", fieldName: "Autenticação" };
-    case "auth/popup-closed-by-user":
-      return { userMessage: "Login cancelado. A janela de autenticação foi fechada.", fieldName: "Autenticação" };
-    case "auth/cancelled-popup-request":
-      return { userMessage: "Outra solicitação de login já está em andamento.", fieldName: "Autenticação" };
-    default:
-      return { userMessage: `Erro de autenticação: ${errorCode}`, fieldName: "Autenticação" };
+    case "auth/invalid-email": return { userMessage: "O e-mail informado tem formato inválido.", fieldName: "Email" };
+    case "auth/user-disabled": return { userMessage: "Esta conta foi desativada.", fieldName: "Conta" };
+    case "auth/user-not-found": return { userMessage: "Credenciais inválidas.", fieldName: "Autenticação" };
+    case "auth/wrong-password": return { userMessage: "Credenciais inválidas.", fieldName: "Autenticação" };
+    case "auth/email-already-in-use": return { userMessage: "Este e-mail já está cadastrado.", fieldName: "Email" };
+    case "auth/operation-not-allowed": return { userMessage: "Este método de autenticação não está habilitado.", fieldName: "Autenticação" };
+    case "auth/weak-password": return { userMessage: "A senha é muito fraca.", fieldName: "Senha" };
+    case "auth/network-request-failed": return { userMessage: "Falha de conexão. Tente novamente.", fieldName: "Conexão" };
+    case "auth/too-many-requests": return { userMessage: "Muitas tentativas. Aguarde e tente novamente.", fieldName: "Autenticação" };
+    default: return { userMessage: "Não foi possível autenticar o usuário.", fieldName: "Autenticação" };
   }
 }
 
 export function formatFirebaseFirestoreError(code: string): { userMessage: string; fieldName?: string } {
   switch (code) {
-    case "permission-denied":
-      return { userMessage: "Permissão negada ao acessar o banco de dados. Verifique suas credenciais e regras de segurança do Firestore.", fieldName: "Firestore / Permissões" };
-    case "unavailable":
-      return { userMessage: "Firestore temporariamente indisponível. Tente novamente em alguns instantes.", fieldName: "Conexão / Firestore" };
-    case "deadline-exceeded":
-      return { userMessage: "A operação no banco de dados expirou por tempo limite. Verifique sua conexão.", fieldName: "Timeout / Firestore" };
-    case "not-found":
-      return { userMessage: "O documento solicitado não foi encontrado no banco de dados.", fieldName: "Documento" };
-    case "already-exists":
-      return { userMessage: "O registro já existe no banco de dados.", fieldName: "Duplicidade" };
-    case "resource-exhausted":
-      return { userMessage: "Limite de cota do Firestore atingido. Tente novamente mais tarde.", fieldName: "Cota" };
-    case "invalid-argument":
-      return { userMessage: "Argumento inválido enviado ao Firestore. Verifique os dados informados.", fieldName: "Validação" };
-    default:
-      return { userMessage: `Erro no Firestore: [${code}]. Verifique as regras de segurança e permissões.`, fieldName: "Firestore" };
+    case "permission-denied": return { userMessage: "Permissão negada para esta operação.", fieldName: "Permissões" };
+    case "unavailable": return { userMessage: "Banco de dados temporariamente indisponível.", fieldName: "Conexão" };
+    case "deadline-exceeded": return { userMessage: "A operação excedeu o tempo limite.", fieldName: "Timeout" };
+    case "not-found": return { userMessage: "Registro não encontrado.", fieldName: "Documento" };
+    case "already-exists": return { userMessage: "O registro já existe.", fieldName: "Duplicidade" };
+    case "resource-exhausted": return { userMessage: "Limite de serviço temporariamente atingido.", fieldName: "Cota" };
+    case "invalid-argument": return { userMessage: "Dados inválidos enviados ao banco.", fieldName: "Validação" };
+    default: return { userMessage: "Não foi possível concluir a operação no banco de dados.", fieldName: "Firestore" };
   }
 }
 
 export function tryExtractFirebaseErrorCode(error: unknown): string | null {
-  if (error instanceof Error && "code" in (error as unknown as Record<string, unknown>)) {
-    return String((error as unknown as Record<string, unknown>).code);
-  }
-  if (typeof error === "object" && error !== null && "code" in error) {
-    return String((error as Record<string, unknown>).code);
-  }
+  if (typeof error === "object" && error !== null && "code" in error) return String((error as Record<string, unknown>).code);
   return null;
 }
-
-export { IS_DEV };
