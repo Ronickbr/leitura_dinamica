@@ -8,6 +8,7 @@ import { getStorage, FirebaseStorage } from 'firebase/storage';
 import { setFirebaseInstances as setServicesInstances } from '@/lib/services';
 import { setFirebaseInstances as setEvaluationsInstances } from '@/lib/evaluationsService';
 import { setFirebaseDbInstance } from '@/lib/textsService';
+import { setPrivacyRequestFirebaseInstances } from '@/lib/privacyRequestsService';
 import { logDetailed, formatErrorForUser } from "@/lib/errorUtils";
 
 const FILE_NAME = "app/components/FirebaseProvider.tsx";
@@ -27,28 +28,17 @@ const FirebaseContext = createContext<FirebaseContextType>({
   db: null,
   storage: null,
   initialized: false,
-  error: null
+  error: null,
 });
 
 export function useFirebase() {
   return useContext(FirebaseContext);
 }
 
-interface FirebaseProviderProps {
-  children: ReactNode;
-}
-
-export function FirebaseProvider({ children }: FirebaseProviderProps) {
+export function FirebaseProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<{ initialized: boolean; value: FirebaseContextType }>({
     initialized: false,
-    value: {
-      app: null,
-      auth: null,
-      db: null,
-      storage: null,
-      initialized: false,
-      error: null
-    }
+    value: { app: null, auth: null, db: null, storage: null, initialized: false, error: null },
   });
 
   useEffect(() => {
@@ -63,13 +53,12 @@ export function FirebaseProvider({ children }: FirebaseProviderProps) {
       if (!projectId) missingVars.push("NEXT_PUBLIC_FIREBASE_PROJECT_ID");
       logDetailed({
         level: "error",
-        message: "Firebase não configurado. Variáveis NEXT_PUBLIC_FIREBASE_* ausentes.",
+        message: "Firebase não configurado.",
         fileName: FILE_NAME,
         methodName: "FirebaseProvider/useEffect",
-        lineNumber: 58,
-        extraData: { missingVariables: missingVars }
+        extraData: { missingVariables: missingVars },
       });
-      const configError = new Error("Variáveis de ambiente do Firebase ausentes: " + missingVars.join(", "));
+      const configError = new Error("Configuração Firebase incompleta.");
       setState({
         initialized: true,
         value: {
@@ -79,12 +68,10 @@ export function FirebaseProvider({ children }: FirebaseProviderProps) {
           storage: null,
           initialized: true,
           error: formatErrorForUser(configError, {
-            operation: "inicializar configuração do Firebase",
-            fileName: FILE_NAME,
-            methodName: "FirebaseProvider/useEffect",
-            userMessage: "Firebase não configurado. Verifique as variáveis NEXT_PUBLIC_FIREBASE_* no ambiente."
-          })
-        }
+            operation: "inicializar Firebase",
+            userMessage: "Firebase não configurado.",
+          }),
+        },
       });
       return;
     }
@@ -95,7 +82,7 @@ export function FirebaseProvider({ children }: FirebaseProviderProps) {
       projectId,
       storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
       messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-      appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID
+      appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
     };
 
     try {
@@ -107,28 +94,21 @@ export function FirebaseProvider({ children }: FirebaseProviderProps) {
       setServicesInstances(db, auth);
       setEvaluationsInstances(db, auth);
       setFirebaseDbInstance(db);
+      setPrivacyRequestFirebaseInstances(db, auth);
 
       setState({
         initialized: true,
-        value: {
-          app,
-          auth,
-          db,
-          storage,
-          initialized: true,
-          error: null
-        }
+        value: { app, auth, db, storage, initialized: true, error: null },
       });
     } catch (error) {
       logDetailed({
         level: "error",
-        message: "Erro ao inicializar Firebase",
+        message: "Erro ao inicializar Firebase.",
         fileName: FILE_NAME,
         methodName: "FirebaseProvider/useEffect",
-        lineNumber: 103,
-        errorName: error instanceof Error ? error.name : String(error),
+        errorName: error instanceof Error ? error.name : "UnknownError",
         errorMessage: error instanceof Error ? error.message : String(error),
-        stackTrace: error instanceof Error ? error.stack : undefined
+        stackTrace: error instanceof Error ? error.stack : undefined,
       });
       setState({
         initialized: true,
@@ -140,18 +120,12 @@ export function FirebaseProvider({ children }: FirebaseProviderProps) {
           initialized: true,
           error: formatErrorForUser(error, {
             operation: "inicializar Firebase",
-            fileName: FILE_NAME,
-            methodName: "FirebaseProvider/useEffect",
-            userMessage: "Erro ao inicializar Firebase"
-          })
-        }
+            userMessage: "Erro ao inicializar Firebase.",
+          }),
+        },
       });
     }
-  }, []);
+  }, [state.initialized]);
 
-  return (
-    <FirebaseContext.Provider value={state.value}>
-      {children}
-    </FirebaseContext.Provider>
-  );
+  return <FirebaseContext.Provider value={state.value}>{children}</FirebaseContext.Provider>;
 }
