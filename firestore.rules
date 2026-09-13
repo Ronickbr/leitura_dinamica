@@ -2,32 +2,70 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return signedIn() && request.auth.token.admin == true;
+    }
+
+    function isOwner(resourceData) {
+      return signedIn() && resourceData.professorId == request.auth.uid;
+    }
+
+    function createsOwnResource() {
+      return signedIn() && request.resource.data.professorId == request.auth.uid;
+    }
+
+    function preservesOwnership() {
+      return resource.data.professorId == request.resource.data.professorId;
+    }
+
+    // Dados pessoais de estudantes: somente o professor proprietário ou admin.
     match /alunos/{alunoId} {
-      allow read, write: if request.auth != null;
-      // Permite que APENAS o administrador apague dados
-      allow delete: if request.auth != null && 
-                    request.auth.token.email == "kmkz.clan@gmail.com";
+      allow read: if isAdmin() || isOwner(resource.data);
+      allow create: if isAdmin() || createsOwnResource();
+      allow update: if isAdmin() || (isOwner(resource.data) && preservesOwnership());
+      // Exclusão de cadastro identificável é uma operação administrativa deliberada.
+      allow delete: if isAdmin();
     }
-    
-    // Filtro específico para o histórico de importação
-    match /import_history/{id} {
-      allow read, write: if request.auth != null;
-      allow delete: if request.auth.token.email == "kmkz.clan@gmail.com";
-    }
-    
+
+    // Avaliações pertencem ao professor responsável.
     match /avaliacoes/{evalId} {
-      allow read, write: if request.auth != null;
+      allow read: if isAdmin() || isOwner(resource.data);
+      allow create: if isAdmin() || createsOwnResource();
+      allow update: if isAdmin() || (isOwner(resource.data) && preservesOwnership());
+      allow delete: if isAdmin() || isOwner(resource.data);
     }
 
-    // Regras para a coleção de textos
+    // Histórico de importação também é segregado por professor.
+    match /import_history/{id} {
+      allow read: if isAdmin() || isOwner(resource.data);
+      allow create: if isAdmin() || createsOwnResource();
+      allow update: if isAdmin() || (isOwner(resource.data) && preservesOwnership());
+      allow delete: if isAdmin();
+    }
+
+    // Biblioteca pedagógica: leitura para usuários autenticados.
+    // Escrita continua disponível a usuários autenticados por compatibilidade,
+    // pois textos não contêm dados pessoais de estudantes.
     match /textos/{textoId} {
-      allow read, write: if request.auth != null;
-      // Opcional: restringir delete também para o admin
-      allow delete: if request.auth != null && 
-                    request.auth.token.email == "kmkz.clan@gmail.com";
+      allow read: if signedIn();
+      allow create, update: if signedIn();
+      allow delete: if isAdmin();
     }
 
-    // Bloqueio padrão para qualquer outra coleção
+    // Mapeamento de pseudonimização: somente administrador/pesquisador principal.
+    match /research_identity_map/{id} {
+      allow read, write: if isAdmin();
+    }
+
+    // Registro mínimo de solicitações de exclusão/retirada.
+    match /data_subject_requests/{id} {
+      allow read, write: if isAdmin();
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }
