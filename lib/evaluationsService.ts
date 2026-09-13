@@ -17,6 +17,7 @@ import {
   DetailedError,
   IS_DEV,
 } from './errorUtils';
+import { getResearchRetentionUntil } from './privacyConfig';
 
 let cachedDb: Firestore | null = null;
 let cachedAuth: Auth | null = null;
@@ -39,6 +40,19 @@ function ensureReady(methodName: string): { db: Firestore; auth: Auth; uid: stri
     return null;
   }
   return { db: cachedDb, auth: cachedAuth, uid };
+}
+
+function retentionForWrite(methodName: string): Timestamp | null | undefined {
+  const retention = getResearchRetentionUntil();
+  if (retention) return retention;
+  if (IS_DEV) return undefined;
+  logDetailed({
+    level: 'error',
+    message: 'Gravação bloqueada: prazo de retenção da pesquisa não configurado.',
+    fileName: FILE_NAME,
+    methodName,
+  });
+  return null;
 }
 
 function logFirestoreError(error: unknown, methodName: string, operation: string) {
@@ -93,6 +107,7 @@ export interface Avaliacao {
   professorId: string;
   words?: any[];
   fluencyMetrics?: any;
+  retentionUntil?: Timestamp;
 }
 
 function minimizeHistory(history?: any[]): Array<Record<string, unknown>> | undefined {
@@ -200,6 +215,8 @@ export const saveAvaliacao = async (
 ): Promise<string | null> => {
   const ready = ensureReady('saveAvaliacao');
   if (!ready || !avaliacao?.alunoId?.trim() || !avaliacao?.textoId?.trim()) return null;
+  const retentionUntil = retentionForWrite('saveAvaliacao');
+  if (retentionUntil === null) return null;
 
   try {
     const docRef = await addDoc(collection(ready.db, 'avaliacoes'), {
@@ -207,6 +224,7 @@ export const saveAvaliacao = async (
       professorId: ready.uid,
       data: avaliacao.data || Timestamp.now(),
       createdAt: Timestamp.now(),
+      ...(retentionUntil ? { retentionUntil } : {}),
     });
     return docRef.id;
   } catch (error) {
