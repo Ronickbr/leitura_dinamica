@@ -6,6 +6,10 @@ service cloud.firestore {
     function isOwner(data) { return signedIn() && data.professorId == request.auth.uid; }
     function createsOwn() { return signedIn() && request.resource.data.professorId == request.auth.uid; }
     function keepsOwner() { return resource.data.professorId == request.resource.data.professorId; }
+    function ownsStudent(studentId) {
+      return signedIn()
+        && get(/databases/$(database)/documents/alunos/$(studentId)).data.professorId == request.auth.uid;
+    }
 
     match /alunos/{id} {
       allow read: if isAdmin() || isOwner(resource.data);
@@ -15,9 +19,9 @@ service cloud.firestore {
     }
 
     match /student_private/{id} {
-      allow read: if isAdmin() || isOwner(resource.data);
-      allow create: if isAdmin() || createsOwn();
-      allow update: if isAdmin() || (isOwner(resource.data) && keepsOwner());
+      allow read: if isAdmin() || ownsStudent(id);
+      allow create: if isAdmin() || (ownsStudent(id) && createsOwn());
+      allow update: if isAdmin() || (ownsStudent(id) && isOwner(resource.data) && keepsOwner());
       allow delete: if isAdmin();
     }
 
