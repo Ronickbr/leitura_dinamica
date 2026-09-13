@@ -311,7 +311,14 @@ export const updateAluno = async (id: string, data: Partial<Aluno>): Promise<boo
 
 export const deleteAluno = async (id: string): Promise<boolean> => {
   const ready = ensureReady('deleteAluno');
-  if (!ready || !id?.trim()) return false;
+  if (!ready || !id?.trim() || !cachedAuth?.currentUser) return false;
+
+  const tokenResult = await cachedAuth.currentUser.getIdTokenResult(true);
+  if (tokenResult.claims.admin !== true) {
+    logDetailed({ level: 'warn', message: 'Exclusão bloqueada: operação exige privilégio administrativo.', fileName: FILE_NAME, methodName: 'deleteAluno' });
+    return false;
+  }
+
   try {
     const evaluationSnapshot = await getDocs(query(
       collection(ready.db, 'avaliacoes'),
