@@ -1,0 +1,45 @@
+cff-version: 1.2.0
+message: "Se este software contribuir para sua pesquisa, cite-o utilizando os metadados abaixo e, sempre que possível, informe também a versão e o commit SHA efetivamente utilizados na coleta/análise."
+title: "Leitura Digital"
+type: software
+version: "4.2.0"
+date-released: "2026-09-13"
+repository-code: "https://github.com/Ronickbr/leitura_dinamica"
+url: "https://github.com/Ronickbr/leitura_dinamica"
+license: "NOASSERTION"
+authors:
+  - name: "[PREENCHER NOME DA PESQUISADORA RESPONSÁVEL]"
+    affiliation: "[PREENCHER INSTITUIÇÃO]"
+    roles:
+      - conceptualization
+      - methodology
+      - validation
+      - writing-original-draft
+  - given-names: "Ronick"
+    family-names: "[PREENCHER SOBRENOME OU NOME COMPLETO, SE APLICÁVEL]"
+    alias: "Ronickbr"
+    affiliation: "[PREENCHER INSTITUIÇÃO/EMPRESA OU REMOVER SE NÃO SE APLICAR]"
+    roles:
+      - software
+      - data-curation
+      - validation
+      - maintenance
+keywords:
+  - fluência leitora
+  - avaliação de leitura
+  - inteligência artificial
+  - reconhecimento de fala
+  - educação
+  - software de pesquisa
+abstract: >-
+  Leitura Digital é uma aplicação web de apoio à avaliação de fluência leitora em contexto educacional e de pesquisa. O sistema registra leitura oral, utiliza serviço externo de reconhecimento de fala, executa processamento algorítmico para comparação entre texto de referência e transcrição, calcula métricas de leitura e pode produzir análise pedagógica complementar com modelo de linguagem. O software não substitui julgamento profissional e deve ser utilizado conforme protocolo ético aprovado, incluindo consentimento, assentimento, governança de dados e controles de privacidade documentados no repositório.
+preferred-citation:
+  type: software
+  title: "Leitura Digital"
+  authors:
+    - name: "[PREENCHER NOME DA PESQUISADORA RESPONSÁVEL]"
+    - given-names: "Ronick"
+      family-names: "[PREENCHER SOBRENOME OU NOME COMPLETO, SE APLICÁVEL]"
+  version: "4.2.0"
+  year: 2026
+  repository-code: "https://github.com/Ronickbr/leitura_dinamica"
