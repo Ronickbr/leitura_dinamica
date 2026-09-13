@@ -20,6 +20,7 @@ import {
   DetailedError,
   IS_DEV,
 } from './errorUtils';
+import { getResearchRetentionUntil } from './privacyConfig';
 
 let cachedDb: Firestore | null = null;
 let cachedAuth: Auth | null = null;
@@ -41,6 +42,19 @@ function ensureReady(methodName: string): { db: Firestore; uid: string } | null 
     return null;
   }
   return { db: cachedDb, uid };
+}
+
+function retentionForWrite(methodName: string): Timestamp | null | undefined {
+  const retention = getResearchRetentionUntil();
+  if (retention) return retention;
+  if (IS_DEV) return undefined;
+  logDetailed({
+    level: 'error',
+    message: 'Gravação bloqueada: prazo de retenção da pesquisa não configurado.',
+    fileName: FILE_NAME,
+    methodName,
+  });
+  return null;
 }
 
 function logFirestoreError(error: unknown, methodName: string, operation: string) {
@@ -76,6 +90,7 @@ export interface Aluno {
   professorId?: string;
   anoLetivo: string;
   metaPCM?: number;
+  retentionUntil?: Timestamp;
 }
 
 export interface ImportRecord {
@@ -85,6 +100,7 @@ export interface ImportRecord {
   errorCount: number;
   importedAt: Timestamp;
   professorId: string;
+  retentionUntil?: Timestamp;
 }
 
 export interface AlunoFilterOptions {
@@ -145,6 +161,8 @@ export const addAluno = async (aluno: Omit<Aluno, 'id'>): Promise<string | null>
   const ready = ensureReady('addAluno');
   if (!ready) return null;
   if (!aluno?.nome?.trim() || !aluno?.turma?.trim() || !aluno?.serie?.trim()) return null;
+  const retentionUntil = retentionForWrite('addAluno');
+  if (retentionUntil === null) return null;
 
   try {
     const nome = aluno.nome.trim();
@@ -169,6 +187,7 @@ export const addAluno = async (aluno: Omit<Aluno, 'id'>): Promise<string | null>
       metaPCM: aluno.metaPCM || 0,
       createdAt: Timestamp.now(),
       updatedAt: Timestamp.now(),
+      ...(retentionUntil ? { retentionUntil } : {}),
     });
     return document.id;
   } catch (error) {
@@ -188,6 +207,7 @@ export const updateAluno = async (id: string, data: Partial<Aluno>): Promise<boo
     const safeData = { ...data } as Record<string, unknown>;
     delete safeData.id;
     delete safeData.professorId;
+    delete safeData.retentionUntil;
     safeData.updatedAt = Timestamp.now();
     await updateDoc(doc(ready.db, 'alunos', id), safeData);
     return true;
@@ -202,7 +222,6 @@ export const deleteAluno = async (id: string): Promise<boolean> => {
   const ready = ensureReady('deleteAluno');
   if (!ready || !id?.trim()) return false;
   try {
-    // A Security Rule exige custom claim admin=true para exclusão identificável.
     await deleteDoc(doc(ready.db, 'alunos', id));
     return true;
   } catch (error) {
@@ -217,6 +236,9 @@ export const addImportRecord = async (
 ): Promise<string | null> => {
   const ready = ensureReady('addImportRecord');
   if (!ready || !record?.fileName?.trim()) return null;
+  const retentionUntil = retentionForWrite('addImportRecord');
+  if (retentionUntil === null) return null;
+
   try {
     const document = await addDoc(collection(ready.db, 'import_history'), {
       fileName: record.fileName.slice(0, 160),
@@ -224,6 +246,7 @@ export const addImportRecord = async (
       errorCount: Number(record.errorCount || 0),
       professorId: ready.uid,
       importedAt: Timestamp.now(),
+      ...(retentionUntil ? { retentionUntil } : {}),
     });
     return document.id;
   } catch (error) {
