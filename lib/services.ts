@@ -6,6 +6,7 @@ import {
   doc,
   getDoc,
   addDoc,
+  setDoc,
   updateDoc,
   deleteDoc,
   Timestamp,
@@ -33,12 +34,7 @@ function currentUid(): string | null {
 function ensureReady(methodName: string): { db: Firestore; uid: string } | null {
   const uid = currentUid();
   if (!cachedDb || !uid) {
-    logDetailed({
-      level: 'warn',
-      message: 'Operação bloqueada por ausência de sessão ou Firestore.',
-      fileName: FILE_NAME,
-      methodName,
-    });
+    logDetailed({ level: 'warn', message: 'Operação bloqueada por ausência de sessão ou Firestore.', fileName: FILE_NAME, methodName });
     return null;
   }
   return { db: cachedDb, uid };
@@ -48,12 +44,7 @@ function retentionForWrite(methodName: string): Timestamp | null | undefined {
   const retention = getResearchRetentionUntil();
   if (retention) return retention;
   if (IS_DEV) return undefined;
-  logDetailed({
-    level: 'error',
-    message: 'Gravação bloqueada: prazo de retenção da pesquisa não configurado.',
-    fileName: FILE_NAME,
-    methodName,
-  });
+  logDetailed({ level: 'error', message: 'Gravação bloqueada: prazo de retenção da pesquisa não configurado.', fileName: FILE_NAME, methodName });
   return null;
 }
 
@@ -93,6 +84,14 @@ export interface Aluno {
   retentionUntil?: Timestamp;
 }
 
+interface StudentPrivateData {
+  professorId: string;
+  diagnostico?: string;
+  observacoes?: string;
+  retentionUntil?: Timestamp;
+  updatedAt?: Timestamp;
+}
+
 export interface ImportRecord {
   id: string;
   fileName: string;
@@ -111,15 +110,35 @@ export interface AlunoFilterOptions {
   totalRegistros: number;
 }
 
+function splitStudentData(data: Partial<Aluno>) {
+  const { diagnostico, observacoes, ...publicData } = data;
+  return {
+    publicData,
+    privateData: {
+      ...(diagnostico !== undefined ? { diagnostico: diagnostico?.slice(0, 120) } : {}),
+      ...(observacoes !== undefined ? { observacoes: observacoes?.slice(0, 500) } : {}),
+    },
+  };
+}
+
+async function getPrivateMap(db: Firestore, uid: string): Promise<Map<string, StudentPrivateData>> {
+  const snapshot = await getDocs(query(collection(db, 'student_private'), where('professorId', '==', uid)));
+  return new Map(snapshot.docs.map((item) => [item.id, item.data() as StudentPrivateData]));
+}
+
 export const getAlunos = async (turma?: string): Promise<Aluno[]> => {
   const ready = ensureReady('getAlunos');
   if (!ready) return [];
   try {
     const constraints = [where('professorId', '==', ready.uid)];
     if (turma && turma !== 'Todas') constraints.push(where('turma', '==', turma));
-    const snapshot = await getDocs(query(collection(ready.db, 'alunos'), ...constraints));
+    const [snapshot, privateMap] = await Promise.all([
+      getDocs(query(collection(ready.db, 'alunos'), ...constraints)),
+      getPrivateMap(ready.db, ready.uid),
+    ]);
+
     return snapshot.docs
-      .map((item) => ({ id: item.id, ...item.data() } as Aluno))
+      .map((item) => ({ id: item.id, ...item.data(), ...(privateMap.get(item.id) || {}) } as Aluno))
       .sort((a, b) => (a.nome || '').localeCompare(b.nome || '', 'pt-BR'));
   } catch (error) {
     logFirestoreError(error, 'getAlunos', 'buscar alunos do professor autenticado');
@@ -145,11 +164,15 @@ export const getAlunoById = async (id: string): Promise<Aluno | null> => {
   const ready = ensureReady('getAlunoById');
   if (!ready || !id?.trim()) return null;
   try {
-    const snapshot = await getDoc(doc(ready.db, 'alunos', id));
+    const [snapshot, privateSnapshot] = await Promise.all([
+      getDoc(doc(ready.db, 'alunos', id)),
+      getDoc(doc(ready.db, 'student_private', id)),
+    ]);
     if (!snapshot.exists()) return null;
     const data = snapshot.data() as Aluno;
     if (data.professorId !== ready.uid) return null;
-    return { id: snapshot.id, ...data };
+    const privateData = privateSnapshot.exists() ? privateSnapshot.data() as StudentPrivateData : {};
+    return { id: snapshot.id, ...data, ...privateData };
   } catch (error) {
     logFirestoreError(error, 'getAlunoById', 'buscar aluno');
     if (IS_DEV) throw error;
@@ -177,8 +200,9 @@ export const addAluno = async (aluno: Omit<Aluno, 'id'>): Promise<string | null>
     ));
     if (!duplicate.empty) return duplicate.docs[0].id;
 
+    const { publicData, privateData } = splitStudentData(aluno);
     const document = await addDoc(collection(ready.db, 'alunos'), {
-      ...aluno,
+      ...publicData,
       nome,
       turma,
       serie,
@@ -189,6 +213,15 @@ export const addAluno = async (aluno: Omit<Aluno, 'id'>): Promise<string | null>
       updatedAt: Timestamp.now(),
       ...(retentionUntil ? { retentionUntil } : {}),
     });
+
+    if (Object.keys(privateData).length > 0) {
+      await setDoc(doc(ready.db, 'student_private', document.id), {
+        ...privateData,
+        professorId: ready.uid,
+        updatedAt: Timestamp.now(),
+        ...(retentionUntil ? { retentionUntil } : {}),
+      });
+    }
     return document.id;
   } catch (error) {
     const message = logFirestoreError(error, 'addAluno', 'adicionar aluno');
@@ -204,12 +237,24 @@ export const updateAluno = async (id: string, data: Partial<Aluno>): Promise<boo
   try {
     const existing = await getAlunoById(id);
     if (!existing) return false;
-    const safeData = { ...data } as Record<string, unknown>;
+    const { publicData, privateData } = splitStudentData(data);
+    const safeData = { ...publicData } as Record<string, unknown>;
     delete safeData.id;
     delete safeData.professorId;
     delete safeData.retentionUntil;
-    safeData.updatedAt = Timestamp.now();
-    await updateDoc(doc(ready.db, 'alunos', id), safeData);
+
+    if (Object.keys(safeData).length > 0) {
+      safeData.updatedAt = Timestamp.now();
+      await updateDoc(doc(ready.db, 'alunos', id), safeData);
+    }
+
+    if (Object.keys(privateData).length > 0) {
+      await setDoc(doc(ready.db, 'student_private', id), {
+        ...privateData,
+        professorId: ready.uid,
+        updatedAt: Timestamp.now(),
+      }, { merge: true });
+    }
     return true;
   } catch (error) {
     logFirestoreError(error, 'updateAluno', 'atualizar aluno');
@@ -222,6 +267,7 @@ export const deleteAluno = async (id: string): Promise<boolean> => {
   const ready = ensureReady('deleteAluno');
   if (!ready || !id?.trim()) return false;
   try {
+    await deleteDoc(doc(ready.db, 'student_private', id)).catch(() => undefined);
     await deleteDoc(doc(ready.db, 'alunos', id));
     return true;
   } catch (error) {
