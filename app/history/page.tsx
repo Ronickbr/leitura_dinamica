@@ -37,6 +37,72 @@ function performanceLevel(pcm: number) {
   return "Fluente";
 }
 
+function PcmEvolution({ evaluations, target }: { evaluations: Avaliacao[]; target?: number }) {
+  const chronological = [...evaluations]
+    .filter((evaluation) => Number.isFinite(evaluation.pcm))
+    .sort((a, b) => (toDate(a.data)?.getTime() || 0) - (toDate(b.data)?.getTime() || 0));
+
+  if (chronological.length === 0) return null;
+
+  const values = chronological.map((evaluation) => evaluation.pcm);
+  const first = values[0];
+  const latest = values[values.length - 1];
+  const delta = latest - first;
+  const width = 520;
+  const height = 150;
+  const paddingX = 26;
+  const paddingY = 22;
+  const minimum = Math.min(...values, target ?? Infinity);
+  const maximum = Math.max(...values, target ?? -Infinity);
+  const range = Math.max(maximum - minimum, 10);
+  const x = (index: number) => chronological.length === 1
+    ? width / 2
+    : paddingX + (index / (chronological.length - 1)) * (width - paddingX * 2);
+  const y = (value: number) => paddingY + ((maximum - value) / range) * (height - paddingY * 2);
+  const points = values.map((value, index) => `${x(index)},${y(value)}`).join(" ");
+  const trendClass = delta > 0 ? "is-positive" : delta < 0 ? "is-negative" : "is-neutral";
+
+  return (
+    <div className="history-chart-block">
+      <div className="history-chart-heading">
+        <div>
+          <span className="mobile-data-label">Evolução do PCM</span>
+          <strong className={`history-pcm-delta ${trendClass}`}>
+            {delta > 0 ? "+" : ""}{delta} PCM
+          </strong>
+        </div>
+        <div className="history-chart-range">
+          <span>Inicial <strong>{first}</strong></span>
+          <span>Atual <strong>{latest}</strong></span>
+        </div>
+      </div>
+      <div className="history-chart-canvas">
+        <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label={`Evolução de ${first} para ${latest} PCM em ${chronological.length} avaliações`}>
+          <line x1={paddingX} y1={height - paddingY} x2={width - paddingX} y2={height - paddingY} className="history-chart-axis" />
+          {target && target > 0 && target >= minimum - range * 0.2 && target <= maximum + range * 0.2 && (
+            <line x1={paddingX} y1={y(target)} x2={width - paddingX} y2={y(target)} className="history-chart-target" />
+          )}
+          {chronological.length > 1 && <polyline points={points} className="history-chart-line" />}
+          {chronological.map((evaluation, index) => (
+            <g key={evaluation.id ?? `${index}-${evaluation.pcm}`}>
+              <circle cx={x(index)} cy={y(evaluation.pcm)} r="5" className="history-chart-point" />
+              {(index === 0 || index === chronological.length - 1) && (
+                <text x={x(index)} y={Math.max(14, y(evaluation.pcm) - 10)} textAnchor="middle" className="history-chart-value">
+                  {evaluation.pcm}
+                </text>
+              )}
+            </g>
+          ))}
+        </svg>
+      </div>
+      <div className="history-chart-caption">
+        {chronological.length} {chronological.length === 1 ? "avaliação" : "avaliações"}
+        {target && target > 0 ? ` • Meta individual: ${target} PCM` : ""}
+      </div>
+    </div>
+  );
+}
+
 export default function HistoryPage() {
   const router = useRouter();
   const { initialized, auth } = useFirebase();
@@ -81,7 +147,7 @@ export default function HistoryPage() {
         setLoading(false);
       }
     })();
-  }, [initialized, auth]);
+  }, [initialized, auth?.currentUser?.uid]);
 
   const filteredGroups = useMemo(() => groups.filter((group) =>
     (!filterAnoLetivo || group.aluno?.anoLetivo === filterAnoLetivo) &&
@@ -241,6 +307,7 @@ export default function HistoryPage() {
                     <button className="btn-outline" onClick={() => latest?.id && router.push(`/history/${latest.id}`)}>Ver detalhes</button>
                   </div>
                 </div>
+                <PcmEvolution evaluations={group.evaluations} target={group.aluno?.metaPCM} />
               </div>
             );
           })}
