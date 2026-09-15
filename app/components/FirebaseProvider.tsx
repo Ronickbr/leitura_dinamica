@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, type ReactNode } from "react";
+import { createContext, useContext, useMemo, type ReactNode } from "react";
 import { SessionProvider, useSession } from "next-auth/react";
 
 interface AppUser {
@@ -24,21 +24,28 @@ const AuthContext = createContext<AuthContextValue>({ auth: null, db: null, stor
 function AuthState({ children }: { children: ReactNode }) {
   const { data, status } = useSession();
   const email = data?.user?.email ?? null;
-  const currentUser = email ? {
-    uid: email.toLowerCase(),
-    email,
-    displayName: data?.user?.name ?? null,
-    photoURL: data?.user?.image ?? null,
-    role: data!.user.role,
-  } : null;
+  const name = data?.user?.name ?? null;
+  const image = data?.user?.image ?? null;
+  const role = data?.user?.role;
+  const value = useMemo<AuthContextValue>(() => {
+    const currentUser = email && role ? {
+      uid: email.toLowerCase(),
+      email,
+      displayName: name,
+      photoURL: image,
+      role,
+    } : null;
 
-  return <AuthContext.Provider value={{
-    auth: currentUser ? { currentUser } : null,
-    db: null,
-    storage: null,
-    initialized: status !== "loading",
-    error: null,
-  }}>{children}</AuthContext.Provider>;
+    return {
+      auth: currentUser ? { currentUser } : null,
+      db: null,
+      storage: null,
+      initialized: status !== "loading",
+      error: null,
+    };
+  }, [email, image, name, role, status]);
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 export function useFirebase() { return useContext(AuthContext); }
