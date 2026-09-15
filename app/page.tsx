@@ -23,7 +23,7 @@ interface RecentEvaluation extends Avaliacao {
 }
 
 export default function Dashboard() {
-  const { auth: firebaseAuth, initialized } = useFirebase();
+  const { auth, initialized } = useFirebase();
   const router = useRouter();
   const [stats, setStats] = useState({
     totalStudents: 0,
@@ -33,22 +33,7 @@ export default function Dashboard() {
   });
   const [recentEvaluations, setRecentEvaluations] = useState<RecentEvaluation[]>([]);
   const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState<any>(null);
-
-  useEffect(() => {
-    if (!initialized || !firebaseAuth) {
-      setLoading(false);
-      return;
-    }
-
-    import("firebase/auth").then(({ onAuthStateChanged }) => {
-      const unsubscribe = onAuthStateChanged(firebaseAuth, (currentUser) => {
-        setUser(currentUser);
-        setLoading(false);
-      });
-      return () => unsubscribe();
-    });
-  }, [initialized, firebaseAuth]);
+  const user = auth?.currentUser ?? null;
 
   useEffect(() => {
     if (!user || !initialized) return;
@@ -80,7 +65,7 @@ export default function Dashboard() {
         }));
         setRecentEvaluations(recent);
       } catch (error) {
-        const userId = firebaseAuth?.currentUser?.uid;
+        const userId = auth?.currentUser?.uid;
         const erro = error instanceof Error ? error : new Error(String(error));
         logDetailed({
           level: "error",

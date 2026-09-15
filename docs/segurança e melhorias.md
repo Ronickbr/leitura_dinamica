@@ -1,5 +1,8 @@
 # 🚀 Roadmap Completo: Segurança + Robustez Acadêmica
 
+> **Documento histórico:** os itens Firebase abaixo descrevem a arquitetura
+> anterior. A versão atual usa Auth.js e Neon PostgreSQL com APIs server-side.
+
 ## PARTE 1: SEGURANÇA
 
 ### Fase 1 - Crítico (Semana 1)
