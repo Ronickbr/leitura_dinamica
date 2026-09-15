@@ -452,6 +452,11 @@ export default function StudentsPage() {
               <textarea rows={3} value={formData.observacoes} onChange={e => setFormData({ ...formData, observacoes: e.target.value })} placeholder="Observações adicionais sobre o aluno..." className="glass-panel" style={{ width: '100%', resize: 'vertical' }} />
             </div>
           </div>
+          {error && (
+            <div role="alert" style={{ marginBottom: '1rem', padding: '0.75rem 1rem', borderRadius: '10px', background: 'rgba(239, 68, 68, 0.1)', color: 'var(--error)', border: '1px solid rgba(239, 68, 68, 0.25)' }}>
+              {error}
+            </div>
+          )}
           <button type="submit" disabled={saving} className="btn-primary">
             {saving ? 'Salvando...' : 'Salvar Aluno'}
           </button>
