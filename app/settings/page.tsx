@@ -431,7 +431,7 @@ export default function SettingsPage() {
             <div className="settings-grid">
 
                 {isAdmin && (
-                    <div className="glass-card settings-admin-card">
+                    <div className="glass-card settings-card settings-admin-card">
                         <h2 style={{ fontSize: "1.25rem", fontWeight: 700, marginBottom: "0.5rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
                             <span>🛡️</span> Administradores
                         </h2>
@@ -492,7 +492,7 @@ export default function SettingsPage() {
                 )}
 
                 {/* Card de Anonimização */}
-                <div className="glass-card">
+                <div className="glass-card settings-card">
                     <h2 style={{ fontSize: "1.25rem", fontWeight: 700, marginBottom: "0.5rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
                         <span>👀</span> Privacidade e Apresentação
                     </h2>
@@ -521,7 +521,7 @@ export default function SettingsPage() {
                 </div>
 
                 {/* Card de Importação */}
-                <div className="glass-card">
+                <div className="glass-card settings-card settings-import-card">
                     <h2 style={{ fontSize: "1.25rem", fontWeight: 700, marginBottom: "0.5rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
                         <span>📥</span> Importação Lote
                     </h2>
@@ -559,7 +559,7 @@ export default function SettingsPage() {
                             <h3 style={{ fontSize: '0.9rem', fontWeight: 800, color: 'var(--text-muted)', marginBottom: '1rem', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
                                 🕒 Histórico Recente
                             </h3>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                            <div className="settings-import-history-list">
                                 {history.map(item => (
                                     <div key={item.id} className="glass-panel" style={{ padding: '0.75rem 1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                         <div style={{ minWidth: 0 }}>
@@ -588,7 +588,7 @@ export default function SettingsPage() {
                 </div>
 
                 {/* Card de Importação de Histórico */}
-                <div className="glass-card">
+                <div className="glass-card settings-card">
                     <h2 style={{ fontSize: "1.25rem", fontWeight: 700, marginBottom: "0.5rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
                         <span>📊</span> Importar Histórico (Excel)
                     </h2>
