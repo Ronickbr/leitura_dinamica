@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { logDetailed, formatErrorForUser } from "@/lib/errorUtils";
-import { getAlunos, addAluno, updateAluno, deleteAluno, getAlunoFilterOptions, type Aluno, type AlunoFilterOptions } from "@/lib/services";
+import { getAlunos, addAluno, updateAluno, deleteAluno, type Aluno, type AlunoFilterOptions } from "@/lib/services";
 import { MobileCard, MobileCardList, MobileDataGrid, MobileDataPoint } from "../components/MobileCards";
 import { useSettings } from "../components/SettingsProvider";
 import { useFirebase } from "../components/FirebaseProvider";
@@ -140,12 +140,11 @@ export default function StudentsPage() {
   }, [searchTerm, filterTurma, filterSerie, filterTurno, filterDiagnostico, filterAnoLetivo]);
 
 
-  useEffect(() => {
-    if (firebaseInitialized) {
+  const currentUserId = auth?.currentUser?.uid;
 
-      loadAlunos();
-    }
-  }, [firebaseInitialized, auth]);
+  useEffect(() => {
+    if (firebaseInitialized && currentUserId) loadAlunos();
+  }, [firebaseInitialized, currentUserId]);
 
   // Lógica para abrir edição via query param
   useEffect(() => {
@@ -167,10 +166,17 @@ export default function StudentsPage() {
     setError(null);
     setFiltersError(null);
     try {
-      const [data, dynamicOptions] = await Promise.all([
-        getAlunos(),
-        getAlunoFilterOptions()
-      ]);
+      const data = await getAlunos();
+      const unique = (values: Array<string | undefined>) => Array.from(
+        new Set(values.map(value => value?.trim()).filter(Boolean) as string[])
+      ).sort((a, b) => a.localeCompare(b, "pt-BR"));
+      const dynamicOptions: AlunoFilterOptions = {
+        turmas: unique(data.map(aluno => aluno.turma)),
+        series: unique(data.map(aluno => aluno.serie)),
+        turnos: unique(data.map(aluno => aluno.turno)),
+        diagnosticos: unique(data.map(aluno => aluno.diagnostico)),
+        totalRegistros: data.length,
+      };
 
       setAlunos(data);
       setFilterOptions(dynamicOptions);
