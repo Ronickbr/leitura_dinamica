@@ -77,6 +77,11 @@ const EMPTY_FILTER_OPTIONS: AlunoFilterOptions = {
   totalRegistros: 0
 };
 
+const emptyStudentForm = () => ({
+  nome: '', turma: '', serie: '', turno: '', diagnostico: '', observacoes: '',
+  anoLetivo: new Date().getFullYear().toString(), metaPCM: 0,
+});
+
 export default function StudentsPage() {
   const router = useRouter();
   const { anonymizeName, anonymizeText } = useSettings();
@@ -87,7 +92,7 @@ export default function StudentsPage() {
   const [error, setError] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [formData, setFormData] = useState({ nome: '', turma: '', serie: '', turno: '', diagnostico: '', observacoes: '', anoLetivo: new Date().getFullYear().toString(), metaPCM: 0 });
+  const [formData, setFormData] = useState(emptyStudentForm);
   const [saving, setSaving] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 15;
@@ -102,6 +107,32 @@ export default function StudentsPage() {
   const [filterOptions, setFilterOptions] = useState<AlunoFilterOptions>(EMPTY_FILTER_OPTIONS);
   const [filtersLoading, setFiltersLoading] = useState(true);
   const [filtersError, setFiltersError] = useState<string | null>(null);
+
+  const closeForm = () => {
+    if (saving) return;
+    setShowForm(false);
+    setEditingId(null);
+    setFormData(emptyStudentForm());
+  };
+
+  const openNewForm = () => {
+    setEditingId(null);
+    setFormData(emptyStudentForm());
+    setError(null);
+    setShowForm(true);
+  };
+
+  const openEditForm = (aluno: Aluno) => {
+    setEditingId(aluno.id);
+    setFormData({
+      nome: aluno.nome ?? '', turma: aluno.turma ?? '', serie: aluno.serie ?? '',
+      turno: aluno.turno ?? '', diagnostico: aluno.diagnostico ?? '',
+      observacoes: aluno.observacoes ?? '', anoLetivo: aluno.anoLetivo ?? '',
+      metaPCM: aluno.metaPCM ?? 0,
+    });
+    setError(null);
+    setShowForm(true);
+  };
 
   // Resetar para a página 1 se os filtros mudarem
   useEffect(() => {
@@ -123,18 +154,7 @@ export default function StudentsPage() {
     if (editId && alunos.length > 0) {
       const alunoParaEditar = alunos.find(a => a.id === editId);
       if (alunoParaEditar) {
-        setFormData({ 
-          nome: alunoParaEditar.nome, 
-          turma: alunoParaEditar.turma, 
-          serie: alunoParaEditar.serie, 
-          turno: alunoParaEditar.turno || '', 
-          diagnostico: alunoParaEditar.diagnostico || '', 
-          observacoes: alunoParaEditar.observacoes || '', 
-          anoLetivo: alunoParaEditar.anoLetivo, 
-          metaPCM: alunoParaEditar.metaPCM || 0 
-        });
-        setEditingId(alunoParaEditar.id);
-        setShowForm(true);
+        openEditForm(alunoParaEditar);
         // Limpar a URL sem recarregar a página
         window.history.replaceState({}, '', window.location.pathname);
       }
@@ -180,16 +200,15 @@ export default function StudentsPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
+    setError(null);
     try {
       if (editingId) {
         await updateAluno(editingId, formData);
       } else {
         await addAluno(formData as Omit<Aluno, 'id'>);
       }
-      setShowForm(false);
-      setEditingId(null);
-      setFormData({ nome: '', turma: '', serie: '', turno: '', diagnostico: '', observacoes: '', anoLetivo: new Date().getFullYear().toString(), metaPCM: 0 });
-      loadAlunos();
+      closeForm();
+      await loadAlunos();
     } catch (err) {
       const userId = auth?.currentUser?.uid;
       const erro = err instanceof Error ? err : new Error(String(err));
@@ -207,6 +226,10 @@ export default function StudentsPage() {
         errorMessage: erro.message,
         stackTrace: erro.stack
       });
+      setError(formatErrorForUser(err, {
+        operation: editingId ? 'atualizar o aluno' : 'salvar o aluno',
+        userMessage: editingId ? 'Não foi possível atualizar o aluno.' : 'Não foi possível salvar o aluno.',
+      }));
     } finally {
       setSaving(false);
     }
@@ -339,15 +362,19 @@ export default function StudentsPage() {
           </div>
         </div>
         <div className="page-header-actions">
-          <button onClick={() => { if (showForm) { setEditingId(null); setFormData({ nome: '', turma: '', serie: '', turno: '', diagnostico: '', observacoes: '', anoLetivo: new Date().getFullYear().toString(), metaPCM: 0 }); } setShowForm(!showForm); }} className="btn-primary">
+          <button onClick={showForm ? closeForm : openNewForm} className="btn-primary">
             {showForm ? 'Cancelar' : '+ Novo'}
           </button>
         </div>
       </header>
 
       {showForm && (
-        <form onSubmit={handleSubmit} className="glass-card animate-in fade-in slide-in-from-top-4 duration-500" style={{ marginBottom: '2rem', padding: '2rem' }}>
-          <h3 style={{ marginBottom: '1.5rem', fontWeight: 800, fontSize: '1.25rem' }}>{editingId ? '✏️ Editar Aluno' : '✨ Novo Aluno'}</h3>
+        <div className="app-overlay" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) closeForm(); }}>
+        <form onSubmit={handleSubmit} role="dialog" aria-modal="true" aria-labelledby="student-form-title" className="glass-card app-sheet animate-in" style={{ maxWidth: '760px', maxHeight: '90vh', overflowY: 'auto', padding: '2rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem' }}>
+            <h3 id="student-form-title" style={{ margin: 0, fontWeight: 800, fontSize: '1.25rem' }}>{editingId ? '✏️ Editar Aluno' : '✨ Novo Aluno'}</h3>
+            <button type="button" onClick={closeForm} disabled={saving} className="btn-icon" aria-label="Fechar formulário">✕</button>
+          </div>
           <div className="responsive-form-grid" style={{ marginBottom: '1.5rem' }}>
             <div className="form-group">
               <label className="mobile-data-label">Nome Completo</label>
@@ -428,7 +455,9 @@ export default function StudentsPage() {
           <button type="submit" disabled={saving} className="btn-primary">
             {saving ? 'Salvando...' : 'Salvar Aluno'}
           </button>
+          <button type="button" onClick={closeForm} disabled={saving} className="btn-outline" style={{ marginLeft: '0.75rem' }}>Cancelar</button>
         </form>
+        </div>
       )}
 
       {error && (
@@ -576,7 +605,7 @@ export default function StudentsPage() {
                     </div>
                     <div className="students-grid-cell students-grid-cell-actions">
                       <button onClick={() => router.push(`/students/${aluno.id}`)} className="btn-icon" title="Visualizar">👁️</button>
-                      <button onClick={() => { setFormData({ nome: aluno.nome, turma: aluno.turma, serie: aluno.serie, turno: aluno.turno || '', diagnostico: aluno.diagnostico || '', observacoes: aluno.observacoes || '', anoLetivo: aluno.anoLetivo, metaPCM: aluno.metaPCM || 0 }); setEditingId(aluno.id); setShowForm(true); window.scrollTo(0, 0); }} className="btn-icon" title="Editar">✏️</button>
+                      <button onClick={() => openEditForm(aluno)} className="btn-icon" title="Editar">✏️</button>
                       <button onClick={() => handleDelete(aluno.id)} className="btn-icon" title="Excluir">🗑️</button>
                     </div>
                   </div>
@@ -637,9 +666,7 @@ export default function StudentsPage() {
                       <button 
                         onClick={(e) => { 
                           e.stopPropagation();
-                          setEditingId(aluno.id!); 
-                          setFormData({ nome: aluno.nome, turma: aluno.turma, serie: aluno.serie, turno: aluno.turno || '', diagnostico: aluno.diagnostico || '', observacoes: aluno.observacoes || '', anoLetivo: aluno.anoLetivo, metaPCM: aluno.metaPCM || 0 }); 
-                          setShowForm(true); 
+                          openEditForm(aluno);
                           window.scrollTo({ top: 0, behavior: 'smooth' }); 
                         }} 
                         className="btn-outline-round" 
