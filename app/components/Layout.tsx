@@ -4,7 +4,7 @@ import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
-import { onAuthStateChanged, signOut, User } from "firebase/auth";
+import { signOut } from "next-auth/react";
 import { useFirebase } from "./FirebaseProvider";
 import { useMobileExperience } from "./MobileExperienceProvider";
 import { resetDatabase } from "@/lib/resetDatabaseService";
@@ -19,10 +19,10 @@ const MobileNav = dynamic(() => import("./MobileNav"), {
 });
 
 export default function Layout({ children }: { children: React.ReactNode }) {
-  const { auth, db, initialized } = useFirebase();
+  const { auth, initialized } = useFirebase();
   const { isMobile, isTouchDevice } = useMobileExperience();
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const user = auth?.currentUser ?? null;
+  const loading = !initialized;
   const [resetting, setResetting] = useState(false);
   const [showResetModal, setShowResetModal] = useState(false);
   const [showUserDropdown, setShowUserDropdown] = useState(false);
@@ -31,18 +31,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const publicRoutes = ["/login", "/mobile-preview"];
   const isPublicRoute = publicRoutes.includes(pathname);
-
-  useEffect(() => {
-    if (!initialized || !auth) {
-      setLoading(false);
-      return;
-    }
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-      setLoading(false);
-    });
-    return () => unsubscribe();
-  }, [initialized, auth]);
 
   useEffect(() => {
     if (!loading) {
@@ -54,7 +42,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     }
   }, [user, loading, router, pathname]);
 
-  // Permite que rotas publicas renderizem sem depender do bootstrap global do Firebase.
+  // Permite que a rota de login renderize antes da sessão global.
   if (isPublicRoute) {
     return <>{children}</>;
   }
@@ -73,10 +61,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
   const handleLogout = async () => {
     try {
-      if (auth) {
-        await signOut(auth);
-      }
-      router.push("/login");
+      await signOut({ callbackUrl: "/login" });
     } catch (error) {
       logDetailed({
         level: "error",
@@ -91,7 +76,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const isAdmin = user?.email === process.env.NEXT_PUBLIC_ADMIN_EMAIL;
+  const isAdmin = user?.role === "administrador";
 
   const handleResetDb = async () => {
     if (selectedCollections.length === 0) return;
@@ -99,11 +84,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     const confirmText = window.prompt(`AÇÃO DESTRUTIVA!\n\nTem certeza que deseja apagar permanentemente as coleções abaixo?\n[ ${selectedCollections.join(', ')} ]\n\nDigite 'APAGAR' para confirmar:`);
     if (confirmText !== "APAGAR") return;
 
-    if (!db) return;
-
     setResetting(true);
     try {
-      const success = await resetDatabase(db, selectedCollections);
+      const success = await resetDatabase(selectedCollections);
       if (success) {
         alert("Coleções selecionadas apagadas com sucesso.");
         setShowResetModal(false);
@@ -122,7 +105,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           operation: "resetar banco de dados",
           fileName: FILE_NAME,
           methodName: "Layout/handleResetDb",
-          userMessage: "Falha ao resetar banco de dados. Verifique o console ou suas regras de segurança do Firebase."
+            userMessage: "Falha ao resetar banco de dados. Verifique a API e as permissões do Neon."
         }));
       }
     } catch (err) {

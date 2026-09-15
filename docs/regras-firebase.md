@@ -1,5 +1,8 @@
 # Guia de Regras de Segurança - Firebase Firestore
 
+> **Arquivado:** mantido somente como referência de rollback. A aplicação atual
+> não usa Firestore; a autorização está nas APIs server-side conectadas ao Neon.
+
 Para garantir que a plataforma "Leitura" seja segura em produção, é CRÍTICO configurar as regras de segurança no Console do Firebase. Abaixo está a configuração recomendada.
 
 ## Princípios de Segurança

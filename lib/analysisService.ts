@@ -180,6 +180,10 @@ function createAIClients() {
   const lineNumber = 55;
   const openRouterKey = process.env.OPENROUTER_API_KEY;
   const openAiKey = process.env.OPENAI_API_KEY;
+
+  if (process.env.NODE_ENV === "production" && !openAiKey) {
+    getRequiredEnv("OPENAI_API_KEY");
+  }
   
   if (!openAiKey && !openRouterKey) {
     getRequiredEnv("OPENAI_API_KEY");
@@ -187,7 +191,7 @@ function createAIClients() {
   
   const isOpenAi = !!openAiKey;
   const apiKey = openAiKey || openRouterKey || "";
-  const isOpenRouter = !isOpenAi && !!openRouterKey;
+  const isOpenRouter = process.env.NODE_ENV !== "production" && !isOpenAi && !!openRouterKey;
 
   const maskedKey = apiKey.length > 8 ? `${apiKey.substring(0, 4)}...${apiKey.substring(apiKey.length - 4)}` : "(chave muito curta)";
   logDetailed({

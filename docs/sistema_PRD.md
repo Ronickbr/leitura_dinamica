@@ -1,5 +1,8 @@
 PRD: Agente de IA para Fluência Leitora (PCM)
 
+> **Documento histórico:** a implementação atual usa Auth.js/Google e Neon
+> PostgreSQL. Consulte o README e os controles LGPD atualizados.
+
 Sistema de Avaliação Inteligente da Leitura em Contexto Escolar 
 
 1. Visão Geral e Objetivos

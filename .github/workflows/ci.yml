@@ -40,12 +40,12 @@ jobs:
       - name: Build application
         env:
           NEXT_TELEMETRY_DISABLED: "1"
-          NEXT_PUBLIC_FIREBASE_API_KEY: ci-placeholder
-          NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: ci-placeholder.firebaseapp.com
-          NEXT_PUBLIC_FIREBASE_PROJECT_ID: ci-placeholder
-          NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: ci-placeholder.appspot.com
-          NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: "1234567890"
-          NEXT_PUBLIC_FIREBASE_APP_ID: 1:1234567890:web:ci-placeholder
+          DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
+          AUTH_SECRET: ci-placeholder-secret-ci-placeholder-secret
+          AUTH_GOOGLE_ID: ci-placeholder
+          AUTH_GOOGLE_SECRET: ci-placeholder
+          ADMIN_EMAIL: admin@example.com
           NEXT_PUBLIC_RESEARCH_RETENTION_UNTIL: "2099-12-31"
+          RESEARCH_RETENTION_UNTIL: "2099-12-31"
           OPENAI_API_KEY: ci-placeholder
         run: npm run build

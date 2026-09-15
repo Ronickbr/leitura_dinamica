@@ -1,5 +1,9 @@
 # PRD — Plataforma de Avaliação de Fluência Leitora (PCM Reader)
 
+> **Atualização arquitetural — 15/09/2026:** as seções que descrevem Firebase
+> registram a arquitetura anterior. A implementação atual usa Auth.js/Google e
+> Neon PostgreSQL; consulte `README.md` e `docs/LGPD_CONTROLES_TECNICOS.md`.
+
 **Versão Atual**: 4.1.5  
 **Última Atualização**: 2026-08-07  
 **Autor**: Projeto Leitura — Equipe Pedagógica & Tecnologia  

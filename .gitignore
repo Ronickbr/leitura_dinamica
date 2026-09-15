@@ -25,6 +25,8 @@ Thumbs.db
 !tsconfig*.json
 !firebase.json
 !*.schema.json
+backup_firestore.json
+backup_firestore*.json
 .env
 .env.*
 !.env.example

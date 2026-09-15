@@ -4,7 +4,7 @@ import crypto from "node:crypto";
 import os from "os";
 import path from "path";
 import { processReadingAudio } from "@/lib/analysisService";
-import { verifyFirebaseIdToken } from "@/lib/firebaseTokenVerifier";
+import { requireActor } from "@/lib/server/authz";
 import { DetailedError, logDetailed, formatErrorForUser, IS_DEV } from "@/lib/errorUtils";
 import { z } from "zod";
 
@@ -46,13 +46,6 @@ const uploadSchema = z.object({
   duration: z.string().optional().transform((v) => (v ? parseFloat(v) : undefined)),
 });
 
-function getBearerToken(req: NextRequest): string | null {
-  const authorization = req.headers.get("authorization");
-  if (!authorization?.startsWith("Bearer ")) return null;
-  const token = authorization.slice(7).trim();
-  return token || null;
-}
-
 function hashId(value: string): string {
   return crypto.createHash("sha256").update(value).digest("hex").slice(0, 12);
 }
@@ -90,19 +83,13 @@ export async function POST(req: NextRequest) {
   let textLength = 0;
 
   try {
-    const bearerToken = getBearerToken(req);
-    if (!bearerToken) {
-      return NextResponse.json({ detail: "Autenticação obrigatória.", requestId }, { status: 401 });
-    }
-
-    let decodedToken;
     try {
-      decodedToken = await verifyFirebaseIdToken(bearerToken);
-      hashedUserId = hashId(decodedToken.uid);
+      const actor = await requireActor();
+      hashedUserId = hashId(actor.email);
     } catch (authError) {
       logDetailed({
         level: "warn",
-        message: "Token Firebase recusado no endpoint de áudio.",
+        message: "Sessão recusada no endpoint de áudio.",
         fileName: FILE_NAME,
         methodName: "POST",
         endpoint: ENDPOINT,

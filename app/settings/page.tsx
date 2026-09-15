@@ -4,10 +4,10 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useSettings } from "../components/SettingsProvider";
 import { useFirebase } from "../components/FirebaseProvider";
-import * as XLSX from "xlsx";
+import { readSheet } from "read-excel-file/browser";
 import { addAluno, getAlunos, Aluno, addImportRecord, getImportHistory, ImportRecord } from "@/lib/services";
 import { saveAvaliacao } from "@/lib/evaluationsService";
-import { Timestamp } from "firebase/firestore";
+import { AppTimestamp } from "@/lib/timestamps";
 import { logDetailed, formatErrorForUser } from "@/lib/errorUtils";
 
 const FILE_NAME = "app/settings/page.tsx";
@@ -39,11 +39,7 @@ export default function SettingsPage() {
         setUploadStatus({ message: 'Lendo arquivo...', type: '' });
 
         try {
-            const data = await file.arrayBuffer();
-            const workbook = XLSX.read(data, { type: 'array' });
-            const firstSheetName = workbook.SheetNames[0];
-            const worksheet = workbook.Sheets[firstSheetName];
-            const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as any[][];
+            const jsonData = await readSheet(file) as any[][];
 
             if (jsonData.length < 1) {
                 setUploadStatus({ message: 'O arquivo parece estar vazio ou sem dados.', type: 'error' });
@@ -221,10 +217,7 @@ export default function SettingsPage() {
         setUploadStatus({ message: 'Lendo histórico...', type: '' });
 
         try {
-            const buffer = await file.arrayBuffer();
-            const workbook = XLSX.read(buffer, { type: 'array' });
-            const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-            const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as any[][];
+            const jsonData = await readSheet(file) as any[][];
 
             if (jsonData.length < 2) {
                 setUploadStatus({ message: 'O arquivo de histórico parece estar vazio.', type: 'error' });
@@ -305,7 +298,7 @@ export default function SettingsPage() {
                         transcricao: "Importação histórica de planilha",
                         diagnosticoIA: row[idxDiag] || "Importado do histórico anterior",
                         intervencaoIA: "Continuidade do acompanhamento",
-                        data: Timestamp.fromDate(dataAval),
+                        data: AppTimestamp.fromDate(dataAval),
                         metricasQualitativas: {
                             leitura_precisa: (parseInt(row[idxPrec]) || 100) >= 90,
                             leitura_silabada: false,

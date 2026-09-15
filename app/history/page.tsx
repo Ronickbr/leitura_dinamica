@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import * as XLSX from "xlsx";
+import writeXlsxFile from "write-excel-file/browser";
 import { getAllAvaliacoes, type Avaliacao } from "@/lib/evaluationsService";
 import { getAlunos, type Aluno } from "@/lib/services";
 import { useFirebase } from "../components/FirebaseProvider";
@@ -92,7 +92,7 @@ export default function HistoryPage() {
   const series = useMemo(() => Array.from(new Set(groups.map((g) => g.aluno?.serie).filter(Boolean) as string[])).sort(), [groups]);
   const turmas = useMemo(() => Array.from(new Set(groups.map((g) => g.aluno?.turma).filter(Boolean) as string[])).sort(), [groups]);
 
-  const handleOperationalExcel = () => {
+  const handleOperationalExcel = async () => {
     const rows: Array<Record<string, unknown>> = [];
     for (const group of filteredGroups) {
       for (const evaluation of group.evaluations) {
@@ -107,10 +107,23 @@ export default function HistoryPage() {
         });
       }
     }
-    const sheet = XLSX.utils.json_to_sheet(rows);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, sheet, "Histórico Operacional");
-    XLSX.writeFile(workbook, `Historico_Operacional_${new Date().toISOString().slice(0, 10)}.xlsx`);
+    const columns = [
+      { key: "nome", label: "Nome", width: 28 }, { key: "serie", label: "Série", width: 12 },
+      { key: "turma", label: "Turma", width: 16 }, { key: "data", label: "Data", width: 14 },
+      { key: "pcm", label: "PCM", width: 10 }, { key: "precisao", label: "Precisão", width: 12 },
+      { key: "erros", label: "Erros", width: 10 },
+    ] as const;
+    const sheetData = [
+      columns.map(column => ({ value: column.label, fontWeight: "bold" as const })),
+      ...rows.map(row => columns.map(column => {
+        const value = row[column.key];
+        return typeof value === "number" || typeof value === "boolean" || value instanceof Date ? value : String(value ?? "");
+      })),
+    ];
+    await writeXlsxFile(sheetData, {
+      sheet: "Histórico Operacional",
+      columns: columns.map(column => ({ width: column.width })),
+    }).toFile(`Historico_Operacional_${new Date().toISOString().slice(0, 10)}.xlsx`);
   };
 
   const handleResearchJSON = () => {
