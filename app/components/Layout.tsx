@@ -153,6 +153,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               <Link
                 key={item.href}
                 href={item.href}
+                onClick={(event) => {
+                  if (pathname === item.href) event.preventDefault();
+                }}
                 className={`desktop-nav-link ${pathname === item.href ? 'active' : ''}`}
                 style={{ color: pathname === item.href ? "var(--primary)" : undefined }}
               >

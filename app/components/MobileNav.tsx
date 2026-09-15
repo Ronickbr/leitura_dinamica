@@ -20,6 +20,9 @@ export default function MobileNav() {
                     key={item.href}
                     href={item.href}
                     aria-current={pathname === item.href ? "page" : undefined}
+                    onClick={(event) => {
+                        if (pathname === item.href) event.preventDefault();
+                    }}
                     className={`mobile-nav-link ${pathname === item.href ? 'active' : ''}`}
                 >
                     <span className="mobile-nav-icon">

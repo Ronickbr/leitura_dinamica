@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { logDetailed, formatErrorForUser } from "@/lib/errorUtils";
-import { getAlunos, addAluno, updateAluno, deleteAluno, getAlunoFilterOptions, type Aluno, type AlunoFilterOptions } from "@/lib/services";
+import { getAlunos, addAluno, updateAluno, deleteAluno, type Aluno, type AlunoFilterOptions } from "@/lib/services";
 import { MobileCard, MobileCardList, MobileDataGrid, MobileDataPoint } from "../components/MobileCards";
 import { useSettings } from "../components/SettingsProvider";
 import { useFirebase } from "../components/FirebaseProvider";
@@ -77,6 +77,11 @@ const EMPTY_FILTER_OPTIONS: AlunoFilterOptions = {
   totalRegistros: 0
 };
 
+const emptyStudentForm = () => ({
+  nome: '', turma: '', serie: '', turno: '', diagnostico: '', observacoes: '',
+  anoLetivo: new Date().getFullYear().toString(), metaPCM: 0,
+});
+
 export default function StudentsPage() {
   const router = useRouter();
   const { anonymizeName, anonymizeText } = useSettings();
@@ -87,7 +92,7 @@ export default function StudentsPage() {
   const [error, setError] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [formData, setFormData] = useState({ nome: '', turma: '', serie: '', turno: '', diagnostico: '', observacoes: '', anoLetivo: new Date().getFullYear().toString(), metaPCM: 0 });
+  const [formData, setFormData] = useState(emptyStudentForm);
   const [saving, setSaving] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 15;
@@ -103,18 +108,43 @@ export default function StudentsPage() {
   const [filtersLoading, setFiltersLoading] = useState(true);
   const [filtersError, setFiltersError] = useState<string | null>(null);
 
+  const closeForm = () => {
+    if (saving) return;
+    setShowForm(false);
+    setEditingId(null);
+    setFormData(emptyStudentForm());
+  };
+
+  const openNewForm = () => {
+    setEditingId(null);
+    setFormData(emptyStudentForm());
+    setError(null);
+    setShowForm(true);
+  };
+
+  const openEditForm = (aluno: Aluno) => {
+    setEditingId(aluno.id);
+    setFormData({
+      nome: aluno.nome ?? '', turma: aluno.turma ?? '', serie: aluno.serie ?? '',
+      turno: aluno.turno ?? '', diagnostico: aluno.diagnostico ?? '',
+      observacoes: aluno.observacoes ?? '', anoLetivo: aluno.anoLetivo ?? '',
+      metaPCM: aluno.metaPCM ?? 0,
+    });
+    setError(null);
+    setShowForm(true);
+  };
+
   // Resetar para a página 1 se os filtros mudarem
   useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm, filterTurma, filterSerie, filterTurno, filterDiagnostico, filterAnoLetivo]);
 
 
-  useEffect(() => {
-    if (firebaseInitialized) {
+  const currentUserId = auth?.currentUser?.uid;
 
-      loadAlunos();
-    }
-  }, [firebaseInitialized, auth]);
+  useEffect(() => {
+    if (firebaseInitialized && currentUserId) loadAlunos();
+  }, [firebaseInitialized, currentUserId]);
 
   // Lógica para abrir edição via query param
   useEffect(() => {
@@ -123,18 +153,7 @@ export default function StudentsPage() {
     if (editId && alunos.length > 0) {
       const alunoParaEditar = alunos.find(a => a.id === editId);
       if (alunoParaEditar) {
-        setFormData({ 
-          nome: alunoParaEditar.nome, 
-          turma: alunoParaEditar.turma, 
-          serie: alunoParaEditar.serie, 
-          turno: alunoParaEditar.turno || '', 
-          diagnostico: alunoParaEditar.diagnostico || '', 
-          observacoes: alunoParaEditar.observacoes || '', 
-          anoLetivo: alunoParaEditar.anoLetivo, 
-          metaPCM: alunoParaEditar.metaPCM || 0 
-        });
-        setEditingId(alunoParaEditar.id);
-        setShowForm(true);
+        openEditForm(alunoParaEditar);
         // Limpar a URL sem recarregar a página
         window.history.replaceState({}, '', window.location.pathname);
       }
@@ -147,10 +166,17 @@ export default function StudentsPage() {
     setError(null);
     setFiltersError(null);
     try {
-      const [data, dynamicOptions] = await Promise.all([
-        getAlunos(),
-        getAlunoFilterOptions()
-      ]);
+      const data = await getAlunos();
+      const unique = (values: Array<string | undefined>) => Array.from(
+        new Set(values.map(value => value?.trim()).filter(Boolean) as string[])
+      ).sort((a, b) => a.localeCompare(b, "pt-BR"));
+      const dynamicOptions: AlunoFilterOptions = {
+        turmas: unique(data.map(aluno => aluno.turma)),
+        series: unique(data.map(aluno => aluno.serie)),
+        turnos: unique(data.map(aluno => aluno.turno)),
+        diagnosticos: unique(data.map(aluno => aluno.diagnostico)),
+        totalRegistros: data.length,
+      };
 
       setAlunos(data);
       setFilterOptions(dynamicOptions);
@@ -180,16 +206,15 @@ export default function StudentsPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
+    setError(null);
     try {
       if (editingId) {
         await updateAluno(editingId, formData);
       } else {
         await addAluno(formData as Omit<Aluno, 'id'>);
       }
-      setShowForm(false);
-      setEditingId(null);
-      setFormData({ nome: '', turma: '', serie: '', turno: '', diagnostico: '', observacoes: '', anoLetivo: new Date().getFullYear().toString(), metaPCM: 0 });
-      loadAlunos();
+      closeForm();
+      await loadAlunos();
     } catch (err) {
       const userId = auth?.currentUser?.uid;
       const erro = err instanceof Error ? err : new Error(String(err));
@@ -207,6 +232,10 @@ export default function StudentsPage() {
         errorMessage: erro.message,
         stackTrace: erro.stack
       });
+      setError(formatErrorForUser(err, {
+        operation: editingId ? 'atualizar o aluno' : 'salvar o aluno',
+        userMessage: editingId ? 'Não foi possível atualizar o aluno.' : 'Não foi possível salvar o aluno.',
+      }));
     } finally {
       setSaving(false);
     }
@@ -339,15 +368,19 @@ export default function StudentsPage() {
           </div>
         </div>
         <div className="page-header-actions">
-          <button onClick={() => { if (showForm) { setEditingId(null); setFormData({ nome: '', turma: '', serie: '', turno: '', diagnostico: '', observacoes: '', anoLetivo: new Date().getFullYear().toString(), metaPCM: 0 }); } setShowForm(!showForm); }} className="btn-primary">
+          <button onClick={showForm ? closeForm : openNewForm} className="btn-primary">
             {showForm ? 'Cancelar' : '+ Novo'}
           </button>
         </div>
       </header>
 
       {showForm && (
-        <form onSubmit={handleSubmit} className="glass-card animate-in fade-in slide-in-from-top-4 duration-500" style={{ marginBottom: '2rem', padding: '2rem' }}>
-          <h3 style={{ marginBottom: '1.5rem', fontWeight: 800, fontSize: '1.25rem' }}>{editingId ? '✏️ Editar Aluno' : '✨ Novo Aluno'}</h3>
+        <div className="app-overlay" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) closeForm(); }}>
+        <form onSubmit={handleSubmit} role="dialog" aria-modal="true" aria-labelledby="student-form-title" className="glass-card app-sheet animate-in" style={{ maxWidth: '760px', maxHeight: '90vh', overflowY: 'auto', padding: '2rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem' }}>
+            <h3 id="student-form-title" style={{ margin: 0, fontWeight: 800, fontSize: '1.25rem' }}>{editingId ? '✏️ Editar Aluno' : '✨ Novo Aluno'}</h3>
+            <button type="button" onClick={closeForm} disabled={saving} className="btn-icon" aria-label="Fechar formulário">✕</button>
+          </div>
           <div className="responsive-form-grid" style={{ marginBottom: '1.5rem' }}>
             <div className="form-group">
               <label className="mobile-data-label">Nome Completo</label>
@@ -425,10 +458,17 @@ export default function StudentsPage() {
               <textarea rows={3} value={formData.observacoes} onChange={e => setFormData({ ...formData, observacoes: e.target.value })} placeholder="Observações adicionais sobre o aluno..." className="glass-panel" style={{ width: '100%', resize: 'vertical' }} />
             </div>
           </div>
+          {error && (
+            <div role="alert" style={{ marginBottom: '1rem', padding: '0.75rem 1rem', borderRadius: '10px', background: 'rgba(239, 68, 68, 0.1)', color: 'var(--error)', border: '1px solid rgba(239, 68, 68, 0.25)' }}>
+              {error}
+            </div>
+          )}
           <button type="submit" disabled={saving} className="btn-primary">
             {saving ? 'Salvando...' : 'Salvar Aluno'}
           </button>
+          <button type="button" onClick={closeForm} disabled={saving} className="btn-outline" style={{ marginLeft: '0.75rem' }}>Cancelar</button>
         </form>
+        </div>
       )}
 
       {error && (
@@ -576,7 +616,7 @@ export default function StudentsPage() {
                     </div>
                     <div className="students-grid-cell students-grid-cell-actions">
                       <button onClick={() => router.push(`/students/${aluno.id}`)} className="btn-icon" title="Visualizar">👁️</button>
-                      <button onClick={() => { setFormData({ nome: aluno.nome, turma: aluno.turma, serie: aluno.serie, turno: aluno.turno || '', diagnostico: aluno.diagnostico || '', observacoes: aluno.observacoes || '', anoLetivo: aluno.anoLetivo, metaPCM: aluno.metaPCM || 0 }); setEditingId(aluno.id); setShowForm(true); window.scrollTo(0, 0); }} className="btn-icon" title="Editar">✏️</button>
+                      <button onClick={() => openEditForm(aluno)} className="btn-icon" title="Editar">✏️</button>
                       <button onClick={() => handleDelete(aluno.id)} className="btn-icon" title="Excluir">🗑️</button>
                     </div>
                   </div>
@@ -637,9 +677,7 @@ export default function StudentsPage() {
                       <button 
                         onClick={(e) => { 
                           e.stopPropagation();
-                          setEditingId(aluno.id!); 
-                          setFormData({ nome: aluno.nome, turma: aluno.turma, serie: aluno.serie, turno: aluno.turno || '', diagnostico: aluno.diagnostico || '', observacoes: aluno.observacoes || '', anoLetivo: aluno.anoLetivo, metaPCM: aluno.metaPCM || 0 }); 
-                          setShowForm(true); 
+                          openEditForm(aluno);
                           window.scrollTo({ top: 0, behavior: 'smooth' }); 
                         }} 
                         className="btn-outline-round" 

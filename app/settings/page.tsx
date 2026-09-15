@@ -9,6 +9,7 @@ import { addAluno, getAlunos, Aluno, addImportRecord, getImportHistory, ImportRe
 import { saveAvaliacao } from "@/lib/evaluationsService";
 import { AppTimestamp } from "@/lib/timestamps";
 import { logDetailed, formatErrorForUser } from "@/lib/errorUtils";
+import { createAdmin, getAdmins, setAdminActive, type AdminAccount } from "@/lib/adminService";
 
 const FILE_NAME = "app/settings/page.tsx";
 
@@ -19,16 +20,62 @@ export default function SettingsPage() {
     const [loading, setLoading] = useState(false);
     const [uploadStatus, setUploadStatus] = useState<{ message: string; type: 'success' | 'error' | '' }>({ message: '', type: '' });
     const [history, setHistory] = useState<ImportRecord[]>([]);
+    const [admins, setAdmins] = useState<AdminAccount[]>([]);
+    const [adminEmail, setAdminEmail] = useState("");
+    const [adminLoading, setAdminLoading] = useState(false);
+    const [adminStatus, setAdminStatus] = useState<{ message: string; type: 'success' | 'error' | '' }>({ message: '', type: '' });
+    const isAdmin = auth?.currentUser?.role === "administrador";
 
     useEffect(() => {
         if (firebaseInitialized) {
             loadHistory();
+            if (isAdmin) loadAdmins();
         }
-    }, [firebaseInitialized]);
+    }, [firebaseInitialized, isAdmin]);
 
     async function loadHistory() {
         const data = await getImportHistory();
         setHistory(data);
+    }
+
+    async function loadAdmins() {
+        try {
+            setAdmins(await getAdmins());
+        } catch (error) {
+            setAdminStatus({ message: error instanceof Error ? error.message : "Não foi possível carregar os administradores.", type: 'error' });
+        }
+    }
+
+    async function handleCreateAdmin(event: React.FormEvent) {
+        event.preventDefault();
+        const email = adminEmail.trim().toLowerCase();
+        if (!email) return;
+        setAdminLoading(true);
+        setAdminStatus({ message: '', type: '' });
+        try {
+            await createAdmin(email);
+            setAdminEmail("");
+            setAdminStatus({ message: `${email} foi autorizado como administrador.`, type: 'success' });
+            await loadAdmins();
+        } catch (error) {
+            setAdminStatus({ message: error instanceof Error ? error.message : "Não foi possível criar o administrador.", type: 'error' });
+        } finally {
+            setAdminLoading(false);
+        }
+    }
+
+    async function handleAdminStatus(account: AdminAccount) {
+        setAdminLoading(true);
+        setAdminStatus({ message: '', type: '' });
+        try {
+            await setAdminActive(account.email, !account.active);
+            setAdminStatus({ message: `${account.email} foi ${account.active ? "desativado" : "reativado"}.`, type: 'success' });
+            await loadAdmins();
+        } catch (error) {
+            setAdminStatus({ message: error instanceof Error ? error.message : "Não foi possível alterar o administrador.", type: 'error' });
+        } finally {
+            setAdminLoading(false);
+        }
     }
 
     const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -383,8 +430,69 @@ export default function SettingsPage() {
 
             <div className="settings-grid">
 
+                {isAdmin && (
+                    <div className="glass-card settings-card settings-admin-card">
+                        <h2 style={{ fontSize: "1.25rem", fontWeight: 700, marginBottom: "0.5rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                            <span>🛡️</span> Administradores
+                        </h2>
+                        <p style={{ color: "var(--text-muted)", fontSize: "0.95rem", marginBottom: "1.5rem" }}>
+                            Autorize outro e-mail Google a acessar o sistema como administrador. O usuário deverá entrar usando exatamente o endereço cadastrado abaixo.
+                        </p>
+
+                        <form onSubmit={handleCreateAdmin} className="settings-admin-form">
+                            <label htmlFor="new-admin-email" className="mobile-data-label">E-mail do novo administrador</label>
+                            <div className="settings-admin-form-row">
+                                <input
+                                    id="new-admin-email"
+                                    type="email"
+                                    value={adminEmail}
+                                    onChange={(event) => setAdminEmail(event.target.value)}
+                                    placeholder="novo.admin@gmail.com"
+                                    autoComplete="email"
+                                    required
+                                    disabled={adminLoading}
+                                    className="filter-search-input"
+                                />
+                                <button type="submit" className="btn-primary" disabled={adminLoading || !adminEmail.trim()}>
+                                    {adminLoading ? "Aguarde..." : "Adicionar administrador"}
+                                </button>
+                            </div>
+                        </form>
+
+                        {adminStatus.message && (
+                            <div className={`settings-admin-message ${adminStatus.type}`} role="status">{adminStatus.message}</div>
+                        )}
+
+                        <div className="settings-admin-list">
+                            {admins.map((account) => (
+                                <div key={account.email} className="settings-admin-row">
+                                    <div className="settings-admin-identity">
+                                        <span className="settings-admin-avatar">{(account.displayName || account.email).charAt(0).toUpperCase()}</span>
+                                        <div>
+                                            <strong>{account.displayName || "Administrador"}</strong>
+                                            <span>{account.email}</span>
+                                        </div>
+                                    </div>
+                                    <div className="settings-admin-actions">
+                                        <span className={`settings-admin-badge ${account.active ? "active" : "inactive"}`}>
+                                            {account.active ? "Ativo" : "Inativo"}
+                                        </span>
+                                        {account.protected ? (
+                                            <span className="settings-admin-protected">Principal</span>
+                                        ) : (
+                                            <button type="button" className="btn-outline" disabled={adminLoading} onClick={() => handleAdminStatus(account)}>
+                                                {account.active ? "Desativar" : "Reativar"}
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
                 {/* Card de Anonimização */}
-                <div className="glass-card">
+                <div className="glass-card settings-card">
                     <h2 style={{ fontSize: "1.25rem", fontWeight: 700, marginBottom: "0.5rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
                         <span>👀</span> Privacidade e Apresentação
                     </h2>
@@ -413,7 +521,7 @@ export default function SettingsPage() {
                 </div>
 
                 {/* Card de Importação */}
-                <div className="glass-card">
+                <div className="glass-card settings-card settings-import-card">
                     <h2 style={{ fontSize: "1.25rem", fontWeight: 700, marginBottom: "0.5rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
                         <span>📥</span> Importação Lote
                     </h2>
@@ -451,7 +559,7 @@ export default function SettingsPage() {
                             <h3 style={{ fontSize: '0.9rem', fontWeight: 800, color: 'var(--text-muted)', marginBottom: '1rem', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
                                 🕒 Histórico Recente
                             </h3>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                            <div className="settings-import-history-list">
                                 {history.map(item => (
                                     <div key={item.id} className="glass-panel" style={{ padding: '0.75rem 1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                         <div style={{ minWidth: 0 }}>
@@ -480,7 +588,7 @@ export default function SettingsPage() {
                 </div>
 
                 {/* Card de Importação de Histórico */}
-                <div className="glass-card">
+                <div className="glass-card settings-card">
                     <h2 style={{ fontSize: "1.25rem", fontWeight: 700, marginBottom: "0.5rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
                         <span>📊</span> Importar Histórico (Excel)
                     </h2>

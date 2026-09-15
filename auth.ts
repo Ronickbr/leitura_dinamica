@@ -17,12 +17,31 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       const configuredAdmin = normalizeEmail(process.env.ADMIN_EMAIL);
       const email = normalizeEmail(user.email);
       const verified = (profile as { email_verified?: boolean } | undefined)?.email_verified;
-      return Boolean(configuredAdmin && email === configuredAdmin && account?.provider === "google" && verified !== false);
+      if (!email || account?.provider !== "google" || verified === false) return false;
+      if (configuredAdmin && email === configuredAdmin) return true;
+      try {
+        const { query } = await import("@/lib/server/db");
+        const result = await query<{ allowed: boolean }>(`SELECT TRUE AS allowed FROM app_users
+          WHERE email=$1 AND role='administrador' AND active=TRUE LIMIT 1`, [email]);
+        return result.rows[0]?.allowed === true;
+      } catch {
+        return false;
+      }
     },
     async jwt({ token }) {
-      token.role = normalizeEmail(token.email) === normalizeEmail(process.env.ADMIN_EMAIL)
-        ? "administrador"
-        : "professor";
+      const email = normalizeEmail(token.email);
+      if (email && email === normalizeEmail(process.env.ADMIN_EMAIL)) {
+        token.role = "administrador";
+        return token;
+      }
+      try {
+        const { query } = await import("@/lib/server/db");
+        const result = await query<{ role: "administrador" | "professor" }>(
+          "SELECT role FROM app_users WHERE email=$1 AND active=TRUE LIMIT 1", [email]);
+        token.role = result.rows[0]?.role ?? "professor";
+      } catch {
+        token.role = "professor";
+      }
       return token;
     },
     async session({ session, token }) {
